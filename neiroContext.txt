@@ -1,0 +1,1601 @@
+КОНТЕКСТ ПРОЕКТА ДЛЯ НЕЙРОСЕТИ
+
+Проект: DevOps pet-проект advanced-уровня.
+Название: Платформа для рецептов и планирования питания.
+Возможное англоязычное название: RecipeMeal Planner / Recipe Platform.
+
+ОБЩАЯ ЦЕЛЬ ПРОЕКТА
+
+Цель проекта — реализовать полноценное приложение с использованием современного DevOps-стека и научиться работать с каждой технологией на практике.
+
+Проект не должен использовать технологии «для галочки». Каждая технология должна выполнять реальную задачу в архитектуре, разработке, доставке, эксплуатации или масштабировании приложения.
+
+Приложение должно быть production-like, то есть максимально приближенным к реальному промышленному проекту: с инфраструктурой в облаке, CI/CD, Kubernetes, мониторингом, логированием, безопасностью, backup/restore, несколькими окружениями и документацией.
+
+ОБЯЗАТЕЛЬНЫЙ СТЕК
+
+В проекте обязательно используются:
+
+- Docker
+- Linux
+- Git
+- Cloud services
+- Networking
+- Ansible
+- Terraform
+- CI/CD
+- Kubernetes
+- Nginx
+
+Выбранное облако: Yandex Cloud.
+Kubernetes: Yandex Managed Kubernetes.
+CI/CD: GitHub + GitHub Actions.
+Container Registry: GitHub Container Registry.
+Уровень сложности: Advanced.
+Окружения: local, dev, staging, production.
+Домен и HTTPS: нужны.
+Observability: нужен полный стек мониторинга, логирования, трассировки и алертов.
+
+ОСНОВНОЕ ОПИСАНИЕ ПРОДУКТА
+
+Платформа для рецептов и планирования питания — это сервис, где пользователи публикуют рецепты, планируют меню на неделю и автоматически формируют список покупок.
+
+Платформа должна быть доступна через:
+
+- Web-приложение
+- Android-приложение
+- Desktop-приложение для Windows
+- Desktop-приложение для Linux
+
+Целевая аудитория:
+
+1. Обычные пользователи:
+   - ищут рецепты
+   - планируют питание
+   - составляют список покупок
+   - сохраняют любимые блюда
+   - публикуют собственные рецепты
+
+2. Авторы рецептов:
+   - регулярно публикуют рецепты
+   - получают подписчиков
+   - взаимодействуют с аудиторией через комментарии
+
+3. Администраторы и модераторы:
+   - проверяют жалобы
+   - модерируют рецепты, комментарии и пользователей
+   - управляют категориями
+   - блокируют нарушителей
+
+РОЛИ ПОЛЬЗОВАТЕЛЕЙ
+
+В системе есть роли:
+
+- Гость
+- Пользователь
+- Автор
+- Модератор
+- Администратор
+
+Гость может:
+- просматривать публичные рецепты
+- искать рецепты
+- фильтровать рецепты по категориям
+- просматривать страницу рецепта
+- перейти к регистрации или авторизации
+
+Гость не может:
+- лайкать
+- комментировать
+- подписываться
+- создавать рецепты
+- планировать питание
+
+Пользователь может:
+- управлять профилем
+- создавать рецепты
+- редактировать свои рецепты
+- загружать фотографии
+- делать рецепты публичными или приватными
+- лайкать рецепты
+- комментировать рецепты
+- подписываться на авторов
+- добавлять рецепты в недельный план питания
+- формировать список покупок
+- сохранять избранные рецепты
+- жаловаться на контент
+
+Модератор может:
+- просматривать список жалоб
+- скрывать рецепты
+- удалять или скрывать комментарии
+- блокировать публикации
+- отправлять предупреждения пользователям
+- просматривать историю модерации
+
+Администратор может:
+- управлять пользователями
+- назначать роли
+- управлять категориями рецептов
+- управлять системными настройками
+- просматривать техническую статистику
+- видеть аудит действий пользователей и модераторов
+
+ФУНКЦИОНАЛЬНОСТЬ ПРОЕКТА
+
+1. Регистрация и авторизация
+
+Система поддерживает несколько способов входа:
+
+- Email + password
+- Google OAuth
+- Яндекс OAuth
+
+При регистрации по email пользователь вводит:
+- email
+- пароль
+- имя пользователя
+
+Система должна:
+- проверить уникальность email
+- проверить сложность пароля
+- сохранить пользователя
+- отправить письмо подтверждения email
+- выдать access token и refresh token после подтверждения или успешного входа
+
+При авторизации по email пользователь вводит:
+- email
+- пароль
+
+Система должна:
+- проверить email и пароль
+- выдать JWT access token
+- выдать refresh token
+- сохранить информацию о сессии
+
+OAuth через Google и Яндекс:
+- пользователь перенаправляется на страницу Google или Яндекс
+- приложение получает OAuth callback
+- создаёт пользователя, если его ещё нет
+- привязывает OAuth-аккаунт к существующему пользователю, если email совпадает
+- выдаёт собственные JWT-токены приложения
+
+JWT — JSON Web Token.
+Это строка-токен, которую сервер выдаёт пользователю после входа.
+Пользователь отправляет JWT в каждом запросе к API в заголовке:
+
+Authorization: Bearer <token>
+
+JWT позволяет серверу понять:
+- кто сделал запрос
+- какие права у пользователя
+- когда токен истекает
+
+В проекте используются:
+- Access token — короткоживущий токен, например 15 минут
+- Refresh token — долгоживущий токен, например 7–30 дней, используется для получения нового access token
+
+2. Профиль пользователя
+
+Профиль содержит:
+- имя
+- username
+- email
+- аватар
+- описание профиля
+- ссылки на соцсети
+- дата регистрации
+- количество подписчиков
+- количество подписок
+- количество опубликованных рецептов
+
+Функции:
+- просмотр профиля
+- редактирование профиля
+- загрузка аватара
+- просмотр рецептов пользователя
+- просмотр публичного профиля другого автора
+
+3. Рецепты
+
+Пользователь может создать рецепт со следующими полями:
+
+- название
+- описание
+- категория
+- список ингредиентов
+- количество ингредиентов
+- единицы измерения
+- шаги приготовления
+- время приготовления
+- количество порций
+- калорийность
+- белки/жиры/углеводы
+- сложность
+- фотографии
+- теги
+- статус приватности
+
+Статусы рецепта:
+
+- Draft — черновик
+- Public — публичный
+- Private — приватный
+- Hidden — скрыт модератором
+- Deleted — удалён
+
+Автор рецепта может:
+- изменить название
+- изменить описание
+- изменить ингредиенты
+- изменить фотографии
+- изменить категорию
+- изменить статус приватности
+- удалить рецепт
+
+Страница рецепта отображает:
+- название
+- фотографии
+- автора
+- категорию
+- ингредиенты
+- шаги приготовления
+- время приготовления
+- сложность
+- количество порций
+- КБЖУ
+- лайки
+- комментарии
+- кнопку добавления в план питания
+- кнопку добавления в избранное
+
+4. Категории блюд
+
+Система поддерживает категории:
+
+- завтраки
+- обеды
+- ужины
+- десерты
+- напитки
+- супы
+- салаты
+- закуски
+- вегетарианские блюда
+- детское питание
+- диетические блюда
+
+Администратор может:
+- создавать категории
+- редактировать категории
+- удалять категории
+- скрывать категории
+
+5. Фото рецептов
+
+Пользователь может загрузить одну или несколько фотографий рецепта.
+
+Требования:
+- поддержка JPEG, PNG, WebP
+- ограничение размера файла
+- автоматическая генерация preview/thumbnail
+- хранение оригинала и thumbnail
+- проверка MIME-типа
+- запрет загрузки исполняемых файлов
+- хранение файлов в object storage
+
+6. Поиск по ингредиентам
+
+Пользователь может искать рецепты по:
+
+- названию
+- ингредиентам
+- категориям
+- тегам
+- автору
+- времени приготовления
+- сложности
+- калорийности
+
+Примеры запросов:
+- курица рис
+- без сахара
+- завтрак до 15 минут
+- рецепты с творогом
+
+Поиск должен поддерживать:
+- частичное совпадение
+- фильтры
+- сортировку
+- поиск по нескольким ингредиентам
+- исключение ингредиентов
+
+Пример логики:
+Включить: курица, рис
+Исключить: майонез
+
+7. Лайки и избранное
+
+Пользователь может:
+- поставить лайк рецепту
+- убрать лайк
+- добавить рецепт в избранное
+- удалить рецепт из избранного
+
+Система должна:
+- не позволять одному пользователю поставить несколько лайков одному рецепту
+- отображать количество лайков
+- хранить список избранных рецептов пользователя
+
+8. Комментарии
+
+Пользователь может:
+- оставлять комментарии к рецептам
+- редактировать свои комментарии
+- удалять свои комментарии
+- отвечать на комментарии
+
+Модератор может:
+- скрывать комментарии
+- удалять комментарии
+- блокировать пользователя за нарушения
+
+Статусы комментариев:
+- active
+- hidden
+- deleted
+
+9. Подписки на авторов
+
+Пользователь может:
+- подписаться на автора
+- отписаться от автора
+- просматривать ленту рецептов авторов, на которых он подписан
+
+Система должна:
+- показывать количество подписчиков
+- показывать количество подписок
+- отправлять уведомления о новых рецептах автора
+
+10. План питания на неделю
+
+Пользователь может составлять меню на неделю.
+
+План включает:
+- дату
+- день недели
+- приём пищи
+- рецепт
+- количество порций
+
+Типы приёмов пищи:
+- завтрак
+- перекус
+- обед
+- полдник
+- ужин
+
+Пользователь может:
+- добавить рецепт в план
+- удалить рецепт из плана
+- изменить количество порций
+- скопировать план на следующую неделю
+- очистить план
+
+11. Автоматический список покупок
+
+Система формирует список покупок на основе плана питания.
+
+Алгоритм:
+1. Пользователь добавляет рецепты в недельный план.
+2. Система получает ингредиенты всех рецептов.
+3. Система пересчитывает количество ингредиентов с учётом порций.
+4. Система объединяет одинаковые ингредиенты.
+5. Система группирует продукты по категориям.
+6. Пользователь получает список покупок.
+
+Пример:
+
+Овощи:
+- Картофель — 2 кг
+- Морковь — 500 г
+
+Мясо:
+- Куриное филе — 1.5 кг
+
+Молочные продукты:
+- Молоко — 2 л
+
+Пользователь может:
+- отметить продукт как купленный
+- добавить продукт вручную
+- удалить продукт
+- изменить количество
+- экспортировать список
+
+12. Публичные и приватные рецепты
+
+Рецепт может быть:
+- публичным
+- приватным
+- черновиком
+- скрытым модератором
+
+Приватный рецепт доступен только автору.
+Публичный рецепт доступен всем пользователям.
+Черновик доступен только автору.
+Скрытый рецепт недоступен публично, но доступен модераторам и администраторам.
+
+13. Админ-модерация контента
+
+Админ-панель позволяет:
+- просматривать список пользователей
+- блокировать пользователей
+- управлять ролями
+- просматривать рецепты
+- скрывать рецепты
+- просматривать комментарии
+- скрывать комментарии
+- обрабатывать жалобы
+- управлять категориями
+- просматривать аудит действий
+
+14. Уведомления
+
+Система отправляет уведомления:
+- о новом комментарии
+- о лайке рецепта
+- о новом подписчике
+- о новом рецепте автора
+- о решении модерации
+
+Каналы уведомлений:
+- внутри приложения
+- email
+
+Push-уведомления для Android можно добавить как расширение.
+
+15. Жалобы на контент
+
+Пользователь может пожаловаться на:
+- рецепт
+- комментарий
+- пользователя
+
+Причины жалоб:
+- спам
+- оскорбления
+- запрещённый контент
+- нарушение авторских прав
+- другое
+
+Модератор может:
+- принять жалобу
+- отклонить жалобу
+- скрыть контент
+- заблокировать пользователя
+
+НЕФУНКЦИОНАЛЬНЫЕ ТРЕБОВАНИЯ
+
+Производительность:
+- главная страница открывается до 2 секунд
+- большинство API-запросов отвечают до 500 мс
+- изображения загружаются через object storage/CDN
+- популярные рецепты кэшируются
+- backend-сервисы масштабируются горизонтально
+
+Надёжность:
+- автоматический перезапуск контейнеров
+- health checks
+- readiness/liveness probes в Kubernetes
+- резервное копирование БД
+- пользовательские файлы хранятся вне контейнеров
+- rolling update без простоя
+
+Безопасность:
+- HTTPS
+- хранение паролей в виде хэшей
+- защита JWT
+- refresh token rotation
+- ограничение CORS
+- rate limiting
+- защита от brute force
+- валидация загружаемых файлов
+- разграничение прав доступа
+- хранение секретов вне Git
+- сканирование Docker-образов
+- минимальные права Kubernetes ServiceAccount
+
+Масштабируемость:
+- масштабирование frontend
+- масштабирование backend
+- масштабирование worker-сервисов
+- отдельное хранение файлов
+- независимое обновление сервисов
+- автоскейлинг под нагрузкой
+
+Наблюдаемость:
+- метрики
+- централизованные логи
+- трейсинг
+- алерты
+- дашборды
+
+РЕКОМЕНДУЕМЫЙ ТЕХНОЛОГИЧЕСКИЙ СТЕК
+
+Backend:
+- Python 3.12
+- FastAPI
+- SQLAlchemy
+- Alembic
+- Pydantic
+- Celery
+- Redis
+- PostgreSQL
+
+FastAPI выбран потому что:
+- быстро разрабатывается
+- имеет автоматическую OpenAPI-документацию
+- удобно контейнеризуется
+- легко отдаёт health-check endpoints
+- хорошо работает в Kubernetes
+- подходит для модульного монолита и дальнейшего выделения микросервисов
+
+Frontend Web:
+- React
+- TypeScript
+- Vite
+- TanStack Query
+- React Router
+- Tailwind CSS
+
+React выбран потому что:
+- имеет большую экосистему
+- подходит для SPA
+- легко деплоится через Nginx как статическое приложение
+
+Android:
+- Kotlin
+- Jetpack Compose
+- Retrofit
+- Room
+- Firebase Cloud Messaging опционально для push-уведомлений
+
+Desktop для Windows и Linux:
+- Tauri
+- React
+- Rust runtime
+
+Tauri выбран потому что:
+- легче Electron
+- использует web frontend
+- позволяет переиспользовать React-компоненты
+- собирается под Windows и Linux
+- подходит для pet-проекта
+
+База данных:
+- PostgreSQL
+
+PostgreSQL хранит:
+- пользователей
+- рецепты
+- ингредиенты
+- комментарии
+- лайки
+- подписки
+- планы питания
+- списки покупок
+- роли
+- аудит модерации
+
+Redis используется для:
+- кэширования популярных рецептов
+- rate limiting
+- хранения временных токенов
+- очередей Celery
+- временных данных OAuth
+- сессий refresh token при необходимости
+
+Object Storage:
+- Yandex Object Storage
+
+Хранит:
+- фотографии рецептов
+- аватары пользователей
+- thumbnails
+- экспортированные списки покупок
+
+Поиск:
+- OpenSearch
+
+Используется для:
+- полнотекстового поиска по рецептам
+- поиска по ингредиентам
+- фильтрации
+- ранжирования результатов
+
+Для упрощённого варианта можно использовать PostgreSQL full-text search, но для advanced-варианта рекомендуется OpenSearch.
+
+Очереди и фоновые задачи:
+- Celery + Redis
+
+Фоновые задачи:
+- отправка email
+- генерация thumbnail
+- обработка изображений
+- пересчёт списков покупок
+- отправка уведомлений
+- синхронизация поискового индекса
+
+АРХИТЕКТУРА ПРИЛОЖЕНИЯ
+
+Рекомендуемый стиль: модульный монолит с возможностью дальнейшего выделения микросервисов.
+
+Компоненты:
+1. Web frontend
+2. Backend API
+3. PostgreSQL
+4. Redis
+5. Celery worker
+6. Celery beat scheduler
+7. OpenSearch
+8. Object Storage
+9. Nginx Ingress Controller
+10. Monitoring stack
+11. Logging stack
+12. CI/CD pipeline
+13. Terraform infrastructure
+14. Ansible configuration management
+
+Backend API отвечает за:
+- REST API
+- авторизацию
+- пользователей
+- рецепты
+- комментарии
+- лайки
+- подписки
+- планы питания
+- списки покупок
+- модерацию
+- интеграцию с OAuth
+- выдачу pre-signed URL для загрузки изображений
+
+Frontend Web отвечает за:
+- пользовательский интерфейс
+- отображение рецептов
+- регистрацию и вход
+- план питания
+- список покупок
+- админ-панель
+
+Worker отвечает за:
+- фоновые задачи
+- обработку изображений
+- отправку писем
+- индексацию рецептов
+- уведомления
+
+Scheduler отвечает за периодические задачи:
+- очистка истёкших токенов
+- пересчёт статистики
+- отправка недельных напоминаний
+- проверка задач модерации
+
+РОЛЬ ОБЯЗАТЕЛЬНЫХ ТЕХНОЛОГИЙ
+
+Docker:
+- контейнеризация backend, frontend, worker, scheduler
+- локальная разработка через Docker Compose
+- одинаковое окружение для разработки и production
+- изоляция сервисов
+- сборка Docker-образов
+- поставка образов в Kubernetes
+
+В проекте должны быть:
+- backend/Dockerfile
+- frontend/Dockerfile
+- docker-compose.yml
+- docker-compose.override.yml
+- .dockerignore
+
+Linux:
+- основная серверная среда
+- базовая ОС для Docker-образов
+- серверы в Yandex Cloud
+- self-hosted GitHub runner
+- bastion host
+- диагностика сети и сервисов
+- работа с systemd, journalctl, ssh, iptables/nftables
+- настройка пользователей
+- SSH-доступ
+- hardening
+- установка Docker
+- настройка firewall
+- работа с логами
+- диагностика нагрузки
+
+Git:
+- хранение кода
+- работа по веткам
+- code review
+- запуск CI/CD
+- версионирование инфраструктуры
+- версионирование Kubernetes-манифестов
+- откаты
+
+Рекомендуемая стратегия ветвления:
+- main — production
+- develop — development
+- feature/* — новые функции
+- release/* — подготовка релиза
+- hotfix/* — срочные исправления
+
+Cloud services — Yandex Cloud:
+Используемые сервисы:
+- Yandex Managed Kubernetes — запуск приложения
+- GitHub Container Registry — хранение Docker-образов
+- Yandex Container Registry — опционально как mirror
+- Yandex VPC — сети
+- Yandex Managed PostgreSQL — основная БД
+- Yandex Managed Redis — кэш и брокер задач
+- Yandex Object Storage — хранение фото и файлов
+- Yandex DNS — управление доменом
+- Yandex Certificate Manager — TLS-сертификаты при необходимости
+- Yandex Lockbox — хранение секретов
+- Yandex Monitoring — облачные метрики
+- Yandex Cloud Logging — системные логи
+- Yandex Compute Cloud — bastion/self-hosted runner
+
+Networking:
+Используется для построения безопасной сетевой архитектуры.
+
+Должны быть настроены:
+- VPC
+- public subnet
+- private subnet
+- NAT gateway
+- security groups
+- routing tables
+- Kubernetes network policies
+- ingress traffic
+- egress traffic
+- DNS
+- TLS
+- доступ к БД только из Kubernetes
+- доступ к Redis только из Kubernetes
+- bastion host для администрирования
+
+Сетевая схема:
+
+Internet
+  |
+  v
+DNS -> HTTPS Load Balancer / Ingress
+  |
+  v
+Nginx Ingress Controller
+  |
+  v
+Kubernetes Services
+  |
+  v
+Backend Pods -> PostgreSQL / Redis / Object Storage / OpenSearch
+
+Ansible:
+Используется для настройки Linux-серверов.
+
+Задачи Ansible:
+- установка Docker на bastion/self-hosted runner
+- создание пользователей
+- настройка SSH
+- настройка firewall
+- установка системных пакетов
+- установка GitHub Actions self-hosted runner
+- hardening Linux
+- настройка fail2ban
+- настройка node exporter на VM
+- обновление системных пакетов
+
+Ansible не должен дублировать Terraform.
+Terraform создаёт инфраструктуру, Ansible настраивает ОС внутри VM.
+
+Terraform:
+Используется для описания и создания cloud-инфраструктуры в Yandex Cloud.
+
+Terraform создаёт:
+- VPC
+- подсети
+- security groups
+- NAT
+- Managed Kubernetes cluster
+- node groups
+- Managed PostgreSQL
+- Managed Redis
+- Object Storage bucket
+- service accounts
+- IAM permissions
+- Compute instance для bastion или self-hosted runner
+- DNS-записи
+- Lockbox secrets
+- static IP
+- managed certificates при необходимости
+
+Terraform state должен храниться удалённо, например в Yandex Object Storage, с включённым versioning и ограниченным доступом.
+
+CI/CD:
+Реализуется через GitHub Actions.
+
+Pipeline выполняет:
+1. Проверку кода
+2. Запуск тестов
+3. Security scan
+4. Сборку Docker-образов
+5. Push образов в GitHub Container Registry
+6. Обновление Helm chart values
+7. Deploy в dev
+8. Deploy в staging
+9. Manual approval для production
+10. Deploy в production
+11. Smoke tests после deploy
+12. Rollback при ошибке
+
+Kubernetes:
+Yandex Managed Kubernetes используется для запуска приложения.
+
+В Kubernetes должны быть:
+- namespace для окружений
+- Deployment
+- Service
+- Ingress
+- ConfigMap
+- Secret
+- ServiceAccount
+- Role/RoleBinding
+- HorizontalPodAutoscaler
+- PodDisruptionBudget
+- NetworkPolicy
+- CronJob
+- Job для миграций
+- probes
+- resource requests/limits
+
+Nginx:
+Используется в двух ролях:
+
+1. Nginx Ingress Controller:
+- принимает внешний HTTPS-трафик
+- маршрутизирует на frontend
+- маршрутизирует на backend API
+- маршрутизирует на admin frontend
+- может ограничивать rate limiting
+
+2. Nginx внутри frontend image:
+- отдаёт собранное React-приложение
+- отдаёт статические файлы
+- настраивает gzip/brotli
+- добавляет cache headers
+- добавляет security headers
+
+ОКРУЖЕНИЯ
+
+Local:
+Локальная разработка через Docker Compose.
+
+Состав:
+- backend
+- frontend
+- PostgreSQL
+- Redis
+- OpenSearch
+- MinIO как локальный S3
+- Mailhog для теста email
+- worker
+- scheduler
+
+Назначение:
+- локальная разработка
+- быстрый запуск
+- тестирование API
+- отладка фоновых задач
+
+Dev:
+Окружение для автоматического деплоя из ветки develop.
+
+Назначение:
+- интеграционное тестирование
+- проверка новых функций
+- автоматический deploy после merge
+
+Особенности:
+- минимальные ресурсы
+- тестовые OAuth credentials
+- отдельная БД
+- отдельный namespace Kubernetes
+
+Staging:
+Окружение максимально близкое к production.
+
+Назначение:
+- финальное тестирование релиза
+- проверка миграций
+- нагрузочное тестирование
+- проверка инфраструктурных изменений
+
+Особенности:
+- отдельная БД
+- отдельный bucket
+- отдельные secrets
+- production-like настройки
+- деплой из release/*
+
+Production:
+Production-окружение для публичного доступа.
+
+Назначение:
+- стабильная версия приложения
+- реальные пользователи
+- реальные данные
+
+Особенности:
+- manual approval перед деплоем
+- backup
+- monitoring
+- alerting
+- autoscaling
+- strict security
+- отдельные secrets
+- ограниченный доступ
+
+ИНФРАСТРУКТУРА В YANDEX CLOUD
+
+Сетевые ресурсы:
+Terraform должен создать:
+- VPC network
+- public subnet
+- private subnet
+- route table
+- NAT gateway
+- security groups
+
+Public subnet используется для:
+- load balancer
+- bastion host
+- NAT
+
+Private subnet используется для:
+- Kubernetes worker nodes
+- PostgreSQL
+- Redis
+- внутренних сервисов
+
+Kubernetes cluster:
+- Yandex Managed Kubernetes
+- control plane managed by Yandex
+- worker nodes в private subnet
+- node groups для разных типов нагрузки
+
+Node groups:
+- system — ingress, monitoring, system pods
+- app — backend/frontend/worker
+- spot/preemptible — dev/staging workloads, если подходит
+
+PostgreSQL:
+- Yandex Managed PostgreSQL
+- отдельные БД для dev/staging/prod
+- automated backups
+- point-in-time recovery, если доступно
+- доступ только из Kubernetes security group
+- отдельные пользователи БД
+- TLS при необходимости
+
+Redis:
+- Yandex Managed Redis
+- используется для кэша, очередей, rate limiting, временных данных
+- доступ только из Kubernetes
+
+Object Storage:
+Buckets:
+- recipe-platform-dev
+- recipe-platform-staging
+- recipe-platform-prod
+
+Используется для:
+- фото рецептов
+- аватаров
+- thumbnails
+- backup exports
+- Terraform state
+
+Должны быть настроены:
+- IAM-доступ
+- lifecycle rules
+- запрет публичной записи
+- доступ через signed URLs
+- versioning для production bucket
+
+DNS и HTTPS:
+Домены:
+- dev.example.com
+- staging.example.com
+- example.com
+- api.example.com
+- grafana.example.com
+
+HTTPS:
+- cert-manager в Kubernetes
+- Let’s Encrypt ClusterIssuer
+- автоматическое обновление сертификатов
+- redirect HTTP на HTTPS
+
+KUBERNETES И HELM
+
+Рекомендуется использовать Helm.
+
+Структура:
+
+deploy или infra/helm/
+  recipe-platform/
+    Chart.yaml
+    values.yaml
+    values-dev.yaml
+    values-staging.yaml
+    values-prod.yaml
+    templates/
+      backend-deployment.yaml
+      frontend-deployment.yaml
+      worker-deployment.yaml
+      service.yaml
+      ingress.yaml
+      configmap.yaml
+      secret.yaml
+      hpa.yaml
+      pdb.yaml
+      networkpolicy.yaml
+      migration-job.yaml
+
+Backend Deployment:
+- минимум 2 реплики в production
+- rolling update
+- readinessProbe
+- livenessProbe
+- resource requests/limits
+- env из ConfigMap и Secret
+- запуск от non-root пользователя
+- graceful shutdown
+
+Frontend Deployment:
+- nginx-based image
+- минимум 2 реплики в production
+- readinessProbe
+- livenessProbe
+- gzip
+- security headers
+- cache-control для static assets
+
+Worker Deployment:
+- отдельный deployment
+- autoscaling по CPU или queue length
+- отдельные resources
+- доступ к Redis
+- graceful shutdown
+
+Migration Job:
+Перед обновлением backend должен запускаться Kubernetes Job:
+alembic upgrade head
+
+Миграции должны выполняться до выката новой версии приложения.
+
+CI/CD ТРЕБОВАНИЯ
+
+Pull Request pipeline:
+- lint backend
+- lint frontend
+- unit tests backend
+- unit tests frontend
+- type checks
+- Docker build test
+- security scan
+- Terraform format
+- Helm templates
+
+Pipeline для develop:
+- тесты
+- сборка Docker images
+- push в GHCR
+- deploy в dev
+- smoke tests
+
+Pipeline для release:
+- тесты
+- сборка release-кандидата
+- deploy в staging
+- запуск миграций
+- e2e tests
+- нагрузочные smoke tests
+
+Pipeline для main:
+- тесты
+- сборка production images
+- push images в GHCR
+- manual approval
+- deploy в production
+- smoke tests
+- notification
+- rollback при ошибке
+
+Версионирование Docker images:
+
+ghcr.io/<owner>/recipe-backend:<git-sha>
+ghcr.io/<owner>/recipe-backend:v1.2.0
+ghcr.io/<owner>/recipe-frontend:<git-sha>
+ghcr.io/<owner>/recipe-worker:<git-sha>
+
+OBSERVABILITY
+
+Monitoring:
+Использовать:
+- Prometheus
+- Grafana
+- Alertmanager
+- kube-state-metrics
+- node-exporter
+- blackbox-exporter
+
+Метрики:
+- CPU/RAM pod
+- request rate
+- error rate
+- latency
+- database connections
+- Redis usage
+- queue length
+- failed jobs
+- ingress 4xx/5xx
+- disk usage
+- Kubernetes node health
+
+Logging:
+Использовать:
+- Loki
+- Promtail или Grafana Alloy
+- Grafana
+
+Логи собираются с:
+- backend
+- frontend nginx
+- worker
+- ingress controller
+- Kubernetes events
+
+Требования к логам:
+- JSON format
+- request ID
+- user ID, если применимо
+- trace ID
+- error stacktrace
+- уровень логирования
+
+Tracing:
+Использовать:
+- OpenTelemetry
+- Tempo или Jaeger
+
+Трассировать:
+- HTTP-запросы
+- обращения к БД
+- обращения к Redis
+- фоновые задачи
+- обращения к Object Storage
+
+Alerts:
+- backend down
+- frontend down
+- высокий процент 5xx
+- высокая latency
+- pod crashloop
+- node not ready
+- PostgreSQL недоступен
+- Redis недоступен
+- очередь задач растёт
+- истекает TLS-сертификат
+- заканчивается место
+- failed deploy
+
+SECURITY
+
+Секреты:
+Использовать:
+- GitHub Actions Secrets
+- Yandex Lockbox
+- Kubernetes Secrets
+- External Secrets Operator
+
+Секреты:
+- database password
+- JWT secret
+- OAuth client secrets
+- S3 credentials
+- Redis password
+- SMTP credentials
+
+Секреты запрещено хранить в Git.
+
+Container security:
+- non-root user
+- minimal base images
+- multi-stage builds
+- image scan через Trivy
+- .dockerignore
+- no secrets in images
+- pinned dependencies
+
+Kubernetes security:
+- RBAC
+- NetworkPolicy
+- PodSecurity Standards
+- readOnlyRootFilesystem где возможно
+- resource limits
+- service accounts per component
+- ограничение доступа к monitoring
+- запрет privileged containers
+
+Application security:
+- password hashing через Argon2 или bcrypt
+- JWT expiration
+- refresh token rotation
+- CORS whitelist
+- rate limiting
+- email verification
+- защита от CSRF, где нужно
+- проверка прав доступа
+- валидация входных данных
+- защита загрузки файлов
+
+BACKUP И DISASTER RECOVERY
+
+PostgreSQL backup:
+- automated daily backup
+- backup retention минимум 7–14 дней
+- проверка восстановления на staging
+- manual backup перед production deploy
+
+Object Storage backup:
+- versioning для production bucket
+- lifecycle policy
+- защита от случайного удаления
+
+Terraform state backup:
+- state хранится удалённо
+- versioning bucket
+- ограниченный IAM-доступ
+- запрет публичного доступа
+
+РЕКОМЕНДУЕМАЯ СТРУКТУРА РЕПОЗИТОРИЯ
+
+recipe-platform/
+  backend/
+    app/
+    tests/
+    alembic/
+    Dockerfile
+    pyproject.toml
+  frontend/
+    src/
+    public/
+    Dockerfile
+    package.json
+  android/
+  desktop/
+  infra/
+    terraform/
+      envs/
+        dev/
+        staging/
+        prod/
+      modules/
+        network/
+        kubernetes/
+        postgres/
+        redis/
+        object-storage/
+        compute/
+        dns/
+    ansible/
+      inventories/
+        dev/
+        prod/
+      playbooks/
+      roles/
+        common/
+        docker/
+        github-runner/
+        hardening/
+    k8s/
+    helm/
+  .github/
+    workflows/
+      pull-request.yml
+      deploy-dev.yml
+      deploy-staging.yml
+      deploy-prod.yml
+      terraform.yml
+  docker-compose.yml
+  README.md
+
+API
+
+Backend предоставляет REST API.
+
+Документация:
+- /api/docs
+- /api/openapi.json
+
+Основные группы endpoints:
+- /auth
+- /users
+- /profiles
+- /recipes
+- /categories
+- /ingredients
+- /comments
+- /likes
+- /favorites
+- /follows
+- /meal-plans
+- /shopping-lists
+- /admin
+- /moderation
+- /notifications
+- /uploads
+- /search
+
+Примеры endpoints:
+
+Auth:
+POST /api/auth/register
+POST /api/auth/login
+POST /api/auth/refresh
+POST /api/auth/logout
+GET  /api/auth/google/login
+GET  /api/auth/google/callback
+GET  /api/auth/yandex/login
+GET  /api/auth/yandex/callback
+
+Recipes:
+GET    /api/recipes
+POST   /api/recipes
+GET    /api/recipes/{id}
+PATCH  /api/recipes/{id}
+DELETE /api/recipes/{id}
+POST   /api/recipes/{id}/like
+DELETE /api/recipes/{id}/like
+POST   /api/recipes/{id}/comments
+
+Meal plans:
+GET    /api/meal-plans/week
+POST   /api/meal-plans/items
+PATCH  /api/meal-plans/items/{id}
+DELETE /api/meal-plans/items/{id}
+POST   /api/meal-plans/copy-next-week
+
+Shopping lists:
+GET   /api/shopping-lists/current
+POST  /api/shopping-lists/recalculate
+PATCH /api/shopping-lists/items/{id}
+
+ОСНОВНЫЕ СУЩНОСТИ БАЗЫ ДАННЫХ
+
+Минимальные таблицы:
+
+- users
+- user_oauth_accounts
+- refresh_tokens
+- roles
+- user_roles
+- profiles
+- recipes
+- recipe_steps
+- ingredients
+- recipe_ingredients
+- categories
+- recipe_photos
+- comments
+- likes
+- favorites
+- follows
+- meal_plans
+- meal_plan_items
+- shopping_lists
+- shopping_list_items
+- notifications
+- reports
+- moderation_actions
+- audit_logs
+
+КРИТЕРИИ ГОТОВНОСТИ ПРОЕКТА
+
+Проект считается выполненным, если:
+
+1. Приложение доступно по HTTPS-домену.
+2. Пользователь может зарегистрироваться и войти.
+3. Работает OAuth через Google и Яндекс.
+4. Пользователь может создать рецепт с фото.
+5. Работает поиск по рецептам и ингредиентам.
+6. Работают лайки, комментарии, подписки.
+7. Работает недельный план питания.
+8. Формируется список покупок.
+9. Есть админ-модерация.
+10. Frontend и backend контейнеризованы.
+11. Docker Compose запускает проект локально.
+12. Terraform создаёт инфраструктуру в Yandex Cloud.
+13. Ansible настраивает Linux VM.
+14. GitHub Actions выполняет CI/CD.
+15. Docker images публикуются в GHCR.
+16. Приложение развёрнуто в Yandex Managed Kubernetes.
+17. Nginx Ingress принимает внешний трафик.
+18. Настроен HTTPS.
+19. Настроены мониторинг, логи и алерты.
+20. Есть backup БД.
+21. Есть README с инструкцией запуска.
+22. Все секреты вынесены из Git.
+23. Kubernetes-манифесты или Helm chart находятся в репозитории.
+24. Есть smoke tests после деплоя.
+25. Есть возможность rollback.
+
+ADVANCED-РАСШИРЕНИЯ
+
+GitOps:
+Можно добавить Argo CD:
+- отдельный repository или директория для manifests
+- автоматическая синхронизация dev/staging
+- manual sync для production
+
+Canary deploy:
+Можно добавить:
+- Argo Rollouts
+- разделение трафика 90/10 или поэтапно
+- автоматический rollback при росте 5xx
+
+Load testing:
+Использовать k6.
+
+Сценарии:
+- просмотр рецептов
+- поиск
+- авторизация
+- создание рецепта
+- план питания
+
+Policy as Code:
+Добавить OPA Gatekeeper или Kyverno.
+
+Проверять:
+- запрет privileged pods
+- обязательные resource limits
+- запрет latest tag
+- обязательные labels
+
+ИТОГОВАЯ РОЛЬ ТЕХНОЛОГИЙ
+
+Docker:
+Контейнеризация backend, frontend, worker, локальный запуск.
+
+Linux:
+Серверная ОС, bastion, runner, диагностика, hardening.
+
+Git:
+Версионирование кода, инфраструктуры, workflows.
+
+Cloud services:
+Yandex Cloud для Kubernetes, БД, Redis, Object Storage, DNS.
+
+Networking:
+VPC, subnets, NAT, DNS, TLS, ingress, network policies.
+
+Ansible:
+Настройка Linux VM и self-hosted runner.
+
+Terraform:
+Создание cloud-инфраструктуры.
+
+CI/CD:
+Автоматическая сборка, тестирование, деплой.
+
+Kubernetes:
+Оркестрация приложения и масштабирование.
+
+Nginx:
+Ingress Controller и отдача frontend-статики.
+
+РЕКОМЕНДУЕМЫЙ ОБЩИЙ ПОРЯДОК РЕАЛИЗАЦИИ
+
+1. Базовое приложение:
+   - Backend FastAPI
+   - Frontend React
+   - PostgreSQL
+   - Redis
+   - Docker Compose
+   - Регистрация и логин
+   - CRUD рецептов
+
+2. Основная функциональность:
+   - Фото рецептов
+   - Комментарии
+   - Лайки
+   - Категории
+   - Поиск
+   - План питания
+   - Список покупок
+
+3. Инфраструктура:
+   - Terraform Yandex Cloud
+   - Managed Kubernetes
+   - Managed PostgreSQL
+   - Managed Redis
+   - Object Storage
+   - DNS
+
+4. Kubernetes deploy:
+   - Helm chart
+   - Nginx Ingress
+   - cert-manager
+   - External Secrets
+   - HPA
+   - NetworkPolicy
+
+5. CI/CD:
+   - GitHub Actions
+   - Build images
+   - Push to GHCR
+   - Deploy dev/staging/prod
+   - Smoke tests
+   - Rollback
+
+6. Observability и Security:
+   - Prometheus
+   - Grafana
+   - Loki
+   - Tempo/Jaeger
+   - Alertmanager
+   - Trivy
+   - Backups
+   - Hardening
+
+7. Advanced:
+   - Android
+   - Desktop
+   - GitOps
+   - Canary deploy
+   - Load testing
+   - Policy as Code
+
+ВАЖНЫЕ ПРИНЦИПЫ ДЛЯ НЕЙРОСЕТИ-ПОМОЩНИКА
+
+При помощи в разработке этого проекта нужно учитывать:
+
+1. Это DevOps pet-проект advanced-уровня.
+2. Нельзя предлагать технологии без реальной роли в проекте.
+3. Все решения должны быть production-like, но допустимо адаптировать их под pet-проект.
+4. Предпочтительно использовать Yandex Cloud.
+5. Kubernetes — Yandex Managed Kubernetes.
+6. CI/CD — GitHub Actions.
+7. Docker images — GitHub Container Registry.
+8. Backend — FastAPI, если пользователь не выберет другое.
+9. Frontend — React + TypeScript.
+10. Android — Kotlin + Jetpack Compose.
+11. Desktop — Tauri + React.
+12. Инфраструктура описывается Terraform.
+13. Linux VM настраиваются Ansible.
+14. Секреты не должны попадать в Git.
+15. Для деплоя использовать Helm.
+16. Для входящего трафика использовать Nginx Ingress Controller.
+17. Для HTTPS использовать cert-manager и Let’s Encrypt.
+18. Для мониторинга использовать Prometheus/Grafana.
+19. Для логов использовать Loki.
+20. Для трассировки использовать OpenTelemetry + Tempo или Jaeger.
+21. Нужно поддерживать local/dev/staging/production окружения.
+22. Нужно объяснять не только «что сделать», но и «зачем это нужно».
+23. Нужно помогать писать код, конфиги, Terraform, Ansible, Helm, Dockerfile, GitHub Actions и документацию.
+24. Если есть несколько вариантов решения, желательно предлагать оптимальный и объяснять компромиссы.
+25. Решения должны быть безопасными, воспроизводимыми и пригодными для портфолио.
