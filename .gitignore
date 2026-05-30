@@ -1,0 +1,466 @@
+# =========================
+# OS / Editors
+# =========================
+
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.example.json
+
+*.swp
+*.swo
+*~
+*.tmp
+*.temp
+
+# =========================
+# Logs
+# =========================
+
+*.log
+logs/
+log/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# =========================
+# Environment files / Secrets
+# =========================
+
+.env
+.env.*
+!.env.example
+!.env.template
+!.env.local.example
+!.env.dev.example
+!.env.staging.example
+!.env.prod.example
+
+*.env
+*.env.*
+!*.env.example
+
+secrets/
+secret/
+*.secret
+*.secrets
+*.key
+*.pem
+*.crt
+*.csr
+*.p12
+*.pfx
+*.jks
+*.keystore
+
+# Yandex Cloud / Cloud credentials
+yc-sa-key.json
+authorized_key.json
+service-account-key.json
+*.sa.json
+cloud-credentials.json
+
+# AWS/S3 compatible credentials, including Yandex Object Storage local configs
+.aws/
+.s3cfg
+mc_config.json
+
+# =========================
+# Python / FastAPI Backend
+# =========================
+
+__pycache__/
+*.py[cod]
+*$py.class
+
+*.so
+.Python
+.python-version
+
+backend/.venv/
+backend/venv/
+backend/env/
+backend/ENV/
+.venv/
+venv/
+env/
+ENV/
+
+pip-wheel-metadata/
+*.egg-info/
+.eggs/
+dist/
+build/
+htmlcov/
+.coverage
+.coverage.*
+coverage.xml
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pyre/
+.pytype/
+.tox/
+.nox/
+.cache/
+
+.dmypy.json
+dmypy.json
+
+# Alembic runtime/local artifacts
+backend/alembic/*.pyc
+
+# Local SQLite if used for quick tests
+*.sqlite
+*.sqlite3
+*.db
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# =========================
+# Node / Frontend / Vite / React
+# =========================
+
+node_modules/
+frontend/node_modules/
+desktop/node_modules/
+
+npm-cache/
+.npm/
+.pnpm-store/
+.yarn/
+.yarn-cache/
+
+# Keep Yarn Berry metadata if used, but ignore caches
+!.yarn/releases
+!.yarn/plugins
+!.yarn/sdks
+!.yarn/versions
+.yarn/cache/
+.yarn/unplugged/
+.yarn/build-state.yml
+.yarn/install-state.gz
+
+frontend/dist/
+frontend/build/
+frontend/.vite/
+frontend/.turbo/
+frontend/coverage/
+
+dist/
+build/
+.vite/
+.turbo/
+coverage/
+
+*.tsbuildinfo
+
+# =========================
+# Tauri / Desktop
+# =========================
+
+desktop/src-tauri/target/
+desktop/src-tauri/gen/
+desktop/src-tauri/.cargo/
+desktop/src-tauri/Cargo.lock.bak
+
+# Usually Cargo.lock should be committed for applications.
+# Do NOT ignore desktop/src-tauri/Cargo.lock unless this becomes a library.
+
+# Tauri generated bundles/installers
+desktop/src-tauri/target/
+desktop/src-tauri/target/
+desktop/dist/
+desktop/build/
+
+# =========================
+# Rust
+# =========================
+
+target/
+**/target/
+
+# =========================
+# Android / Kotlin / Gradle
+# =========================
+
+android/.gradle/
+android/build/
+android/app/build/
+android/captures/
+android/.externalNativeBuild/
+android/.cxx/
+android/local.properties
+
+*.apk
+*.ap_
+*.aab
+*.dex
+*.class
+
+# Android Studio
+android/.idea/
+android/*.iml
+android/app/*.iml
+
+# Signing keys must never be committed
+android/*.jks
+android/*.keystore
+android/keystore.properties
+android/signing.properties
+
+# =========================
+# Java / Kotlin common
+# =========================
+
+.gradle/
+build/
+out/
+
+# =========================
+# Docker / Docker Compose
+# =========================
+
+# Local compose overrides may contain secrets/ports
+docker-compose.override.yml
+docker-compose.local.yml
+docker-compose.*.local.yml
+
+# Keep example override files
+!docker-compose.override.example.yml
+!docker-compose.local.example.yml
+
+# Docker volumes/data created locally
+.docker/
+docker-data/
+volumes/
+data/
+tmp/
+
+# =========================
+# Local services data
+# PostgreSQL / Redis / OpenSearch / MinIO / Mailhog
+# =========================
+
+postgres-data/
+pgdata/
+redis-data/
+opensearch-data/
+minio-data/
+mailhog-data/
+
+.local-data/
+.localstack/
+.storage/
+
+# =========================
+# Terraform
+# =========================
+
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.plan
+crash.log
+crash.*.log
+
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+
+.terraformrc
+terraform.rc
+
+# Terraform lock file SHOULD be committed for reproducibility.
+# Do not ignore .terraform.lock.hcl
+
+# Terraform variable files may contain secrets
+*.tfvars
+*.tfvars.json
+
+# Allow non-secret examples
+!*.tfvars.example
+!*.tfvars.json.example
+
+# =========================
+# Ansible
+# =========================
+
+*.retry
+ansible.log
+
+# Inventories may contain real IPs/users; keep examples instead
+infra/ansible/inventories/*/hosts.ini
+infra/ansible/inventories/*/hosts.yml
+infra/ansible/inventories/*/hosts.yaml
+
+!infra/ansible/inventories/*/hosts.example.ini
+!infra/ansible/inventories/*/hosts.example.yml
+!infra/ansible/inventories/*/hosts.example.yaml
+
+# Ansible Vault files: do not commit real encrypted secrets unless policy allows it
+*.vault
+vault.yml
+vault.yaml
+group_vars/*/vault.yml
+group_vars/*/vault.yaml
+host_vars/*/vault.yml
+host_vars/*/vault.yaml
+
+# =========================
+# Kubernetes / Helm
+# =========================
+
+# Local kube configs
+kubeconfig
+kubeconfig.*
+*.kubeconfig
+.kube/
+
+# Helm generated packages
+*.tgz
+charts/*.tgz
+infra/helm/**/*.tgz
+
+# Helm dependency build artifacts
+infra/helm/**/charts/
+infra/helm/**/Chart.lock
+
+# Keep chart source files, ignore only generated secret values
+values-secret.yaml
+values-secrets.yaml
+values.local.yaml
+values-*.local.yaml
+
+infra/helm/**/values-secret.yaml
+infra/helm/**/values-secrets.yaml
+infra/helm/**/values.local.yaml
+infra/helm/**/values-*.local.yaml
+
+# =========================
+# Kubernetes secrets / manifests generated locally
+# =========================
+
+*-secret.yaml
+*-secrets.yaml
+secret-*.yaml
+secrets-*.yaml
+
+# Keep templates/examples
+!*-secret.example.yaml
+!*-secrets.example.yaml
+!secret-*.example.yaml
+!secrets-*.example.yaml
+
+# =========================
+# GitHub Actions local tooling
+# =========================
+
+.act/
+act-secrets
+.actrc
+
+# =========================
+# Testing / Reports
+# =========================
+
+test-results/
+reports/
+junit.xml
+junit-*.xml
+
+playwright-report/
+playwright/.cache/
+cypress/videos/
+cypress/screenshots/
+
+# Load testing
+k6-results/
+load-test-results/
+
+# =========================
+# Observability local data
+# =========================
+
+prometheus-data/
+grafana-data/
+loki-data/
+tempo-data/
+jaeger-data/
+alertmanager-data/
+
+# =========================
+# Generated uploads / media
+# =========================
+
+uploads/
+media/
+staticfiles/
+thumbnails/
+avatars/
+recipe-photos/
+
+backend/uploads/
+backend/media/
+backend/staticfiles/
+
+# =========================
+# Backup / Dumps
+# =========================
+
+backups/
+backup/
+dumps/
+dump/
+
+*.dump
+*.sql
+*.sql.gz
+*.bak
+*.backup
+
+# Keep schema examples/docs if needed
+!docs/**/*.sql
+!database/**/*.sql
+
+# =========================
+# Certificates from local dev
+# =========================
+
+certs/
+certificates/
+.local-certs/
+letsencrypt/
+
+# =========================
+# Misc build artifacts
+# =========================
+
+.cache/
+tmp/
+temp/
+
+*.pid
+*.seed
+*.pid.lock
+
+# =========================
+# Package manager locks
+# =========================
+# Lock files are intentionally NOT ignored:
+# package-lock.json, yarn.lock, pnpm-lock.yaml, poetry.lock, uv.lock, Cargo.lock, gradle.lockfile
+# should be committed for reproducible builds.
