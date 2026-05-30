@@ -4,39 +4,24 @@
     "type": "split",
     "children": [
       {
-        "id": "c73483b64f392b06",
+        "id": "227904971ed5eae6",
         "type": "tabs",
         "children": [
           {
-            "id": "30aa50cf3663b3ca",
+            "id": "4ae602e3e6b644ef",
             "type": "leaf",
             "state": {
               "type": "markdown",
               "state": {
-                "file": "README.md",
+                "file": ".github/workflows/README.md",
                 "mode": "source",
                 "source": false
               },
               "icon": "lucide-file",
               "title": "README"
             }
-          },
-          {
-            "id": "a08b40334841b674",
-            "type": "leaf",
-            "state": {
-              "type": "markdown",
-              "state": {
-                "file": "PULL_REQUEST_TEMPLATE.md",
-                "mode": "source",
-                "source": false
-              },
-              "icon": "lucide-file",
-              "title": "PULL_REQUEST_TEMPLATE"
-            }
           }
-        ],
-        "currentTab": 1
+        ]
       }
     ],
     "direction": "vertical"
@@ -198,10 +183,24 @@
       "bases:Создать новую базу": false
     }
   },
-  "active": "a08b40334841b674",
+  "active": "4ae602e3e6b644ef",
   "lastOpenFiles": [
+    "scripts/README.md",
+    ".github/workflows/README.md",
+    "docs/README.md",
+    "infra/helm/README.md",
+    "infra/ansible/README.md",
+    "infra/terraform/README.md",
+    "desktop/README.md",
+    "android/README.md",
+    "frontend/README.md",
     "README.md",
+    "backend/README.md",
+    ".github/PULL_REQUEST_TEMPLATE.md",
     "CONTRIBUTING.md",
+    ".github/workflows",
+    ".github/ISSUE_TEMPLATE",
+    ".github",
     "PULL_REQUEST_TEMPLATE.md"
   ]
 }
