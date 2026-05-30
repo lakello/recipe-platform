@@ -1,0 +1,93 @@
+name: Feature request
+description: Suggest a new feature or improvement
+title: "feat: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо за предложение.
+        Опиши, какую проблему решает новая функциональность и почему она нужна проекту.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Проблема
+      description: Какую пользовательскую или техническую проблему нужно решить?
+      placeholder: Например, пользователю неудобно вручную составлять список покупок.
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Предлагаемое решение
+      description: Как должна работать новая функциональность?
+      placeholder: Автоматически формировать список покупок на основе недельного плана питания.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Компонент
+      multiple: true
+      options:
+        - Backend
+        - Frontend Web
+        - Android
+        - Desktop
+        - PostgreSQL
+        - Redis / Celery
+        - OpenSearch
+        - Docker
+        - Kubernetes
+        - Helm
+        - Terraform
+        - Ansible
+        - GitHub Actions
+        - Monitoring / Logging / Tracing
+        - Documentation
+    validations:
+      required: true
+
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Приоритет
+      options:
+        - Low
+        - Medium
+        - High
+        - Critical
+    validations:
+      required: true
+
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: По каким критериям задача считается выполненной?
+      placeholder: |
+        - Пользователь может добавить рецепт в план питания
+        - Система пересчитывает ингредиенты по порциям
+        - Список покупок группируется по категориям
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Альтернативы
+      description: Какие альтернативные варианты рассматривались?
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Чеклист
+      options:
+        - label: Я проверил существующие Issues и не нашёл дубликат
+          required: true
+        - label: Фича соответствует целям проекта и не добавляет технологию "для галочки"
+          required: true

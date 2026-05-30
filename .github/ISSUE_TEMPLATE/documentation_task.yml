@@ -1,0 +1,56 @@
+name: Documentation task
+description: Request documentation changes
+title: "docs: "
+labels:
+  - documentation
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Что нужно задокументировать?
+      placeholder: Например, локальный запуск проекта через Docker Compose.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: section
+    attributes:
+      label: Раздел документации
+      multiple: true
+      options:
+        - README
+        - CONTRIBUTING
+        - API documentation
+        - Backend
+        - Frontend
+        - Docker Compose
+        - Terraform
+        - Ansible
+        - Kubernetes / Helm
+        - CI/CD
+        - Security
+        - Observability
+        - Backup / Restore
+        - Architecture
+    validations:
+      required: true
+
+  - type: textarea
+    id: details
+    attributes:
+      label: Детали
+      description: Что именно нужно добавить, исправить или уточнить?
+      placeholder: |
+        - Добавить команды запуска
+        - Описать переменные окружения
+        - Добавить troubleshooting
+    validations:
+      required: true
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Чеклист
+      options:
+        - label: Я проверил существующие Issues и не нашёл дубликат
+          required: true
