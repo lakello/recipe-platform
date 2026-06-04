@@ -825,6 +825,15 @@ docker build -t recipe-backend:local .
 
 ## Что уже реализовано
 
+### Модель пользователей (feat/backend-user-model)
+
+- `app/models/user.py` — SQLAlchemy-модель `User`: UUID pk, уникальные `email` и `username`, `bcrypt`-хэш пароля, флаги `is_active` / `is_email_verified`, timezone-aware timestamps
+- `app/schemas/user.py` — `UserCreate` (валидация email, username 3–50 символов, пароль 8+), `UserRead` (без `password_hash`)
+- `app/repositories/user.py` — `create`, `get_by_id`, `get_by_email`, `get_by_username`
+- `app/services/user.py` — `create_user` (хэширование bcrypt, проверка уникальности → 409), `get_by_id`, `get_by_email`
+- `alembic/versions/72dfc48e97a3` — миграция создаёт таблицу `users` с уникальными индексами
+- `tests/test_user_service.py` — 7 unit-тестов сервиса с замоканным репозиторием
+
 ### Подключение PostgreSQL (feat/backend-postgresql)
 
 - `app/db/base.py` — `DeclarativeBase` для всех будущих SQLAlchemy-моделей
@@ -903,14 +912,14 @@ Backend находится в разработке.
 2. ~~Конфигурация приложения.~~ ✓
 3. ~~PostgreSQL и SQLAlchemy.~~ ✓
 4. ~~Alembic.~~ ✓
-5. 5.Auth.
-6. 6.Users и profiles.
-7. 7.Recipes CRUD.
-8. 8.Uploads.
-9. 9.Comments, likes, favorites.
-10. 10.Meal plans и shopping lists.
-11. 11.Search.
-12. 12.Moderation и admin.
-13. 13.Celery tasks.
-14. 14.Observability.
-15. 15.Security hardening.
+5. Auth.
+6. ~~Users и profiles (модель).~~ ✓
+7. Recipes CRUD.
+8. Uploads.
+9. Comments, likes, favorites.
+10. Meal plans и shopping lists.
+11. Search.
+12. Moderation и admin.
+13. Celery tasks.
+14. Observability.
+15. Security hardening.
