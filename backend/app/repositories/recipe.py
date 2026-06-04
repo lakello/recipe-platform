@@ -22,9 +22,7 @@ class RecipeRepository:
         )
         return result.scalar_one_or_none()
 
-    async def list_visible(
-        self, current_user_id: uuid.UUID | None
-    ) -> list[Recipe]:
+    async def list_visible(self, current_user_id: uuid.UUID | None) -> list[Recipe]:
         if current_user_id:
             stmt = select(Recipe).where(
                 or_(

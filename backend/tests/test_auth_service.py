@@ -32,9 +32,7 @@ def make_user(**kwargs) -> User:
     return user
 
 
-def make_refresh_token(
-    user_id: uuid.UUID, token: str = "valid-token"
-) -> RefreshToken:
+def make_refresh_token(user_id: uuid.UUID, token: str = "valid-token") -> RefreshToken:
     rt = MagicMock(spec=RefreshToken)
     rt.user_id = user_id
     rt.token = token
@@ -119,9 +117,7 @@ async def test_login_success(
     assert result.refresh_token
 
 
-async def test_login_wrong_password(
-    service: AuthService, user_repo: AsyncMock
-) -> None:
+async def test_login_wrong_password(service: AuthService, user_repo: AsyncMock) -> None:
     hashed = bcrypt.hashpw(b"correctpassword", bcrypt.gensalt()).decode()
     user_repo.get_by_email.return_value = make_user(password_hash=hashed)
 
@@ -132,9 +128,7 @@ async def test_login_wrong_password(
     assert exc.value.status_code == 401
 
 
-async def test_login_user_not_found(
-    service: AuthService, user_repo: AsyncMock
-) -> None:
+async def test_login_user_not_found(service: AuthService, user_repo: AsyncMock) -> None:
     user_repo.get_by_email.return_value = None
 
     data = LoginRequest(email="nobody@example.com", password="password123")
@@ -144,9 +138,7 @@ async def test_login_user_not_found(
     assert exc.value.status_code == 401
 
 
-async def test_refresh_success(
-    service: AuthService, token_repo: AsyncMock
-) -> None:
+async def test_refresh_success(service: AuthService, token_repo: AsyncMock) -> None:
     user_id = uuid.uuid4()
     token_repo.is_valid.return_value = True
     token_repo.get_by_token.return_value = make_refresh_token(user_id)
@@ -169,8 +161,6 @@ async def test_refresh_invalid_token(
     assert exc.value.status_code == 401
 
 
-async def test_logout_success(
-    service: AuthService, token_repo: AsyncMock
-) -> None:
+async def test_logout_success(service: AuthService, token_repo: AsyncMock) -> None:
     await service.logout("some-token")
     token_repo.revoke.assert_called_once_with("some-token")
