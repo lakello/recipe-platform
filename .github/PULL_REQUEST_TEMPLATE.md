@@ -56,6 +56,7 @@ Closes #
 - [ ] GitHub Actions
 - [ ] Monitoring / Logging / Tracing
 - [ ] Documentation
+
 ## Окружения
 
 Отметь окружения, на которые влияет изменение:
@@ -84,35 +85,35 @@ docker compose up --build
 
 Проверить:
 
--  приложение запускается локально
--  backend healthcheck отвечает
--  frontend открывается
--  тестируемый сценарий работает
+- приложение запускается локально
+- backend healthcheck отвечает
+- frontend открывается
+- тестируемый сценарий работает
 
 ## Тесты
 
 Отметь выполненные проверки:
 
--  Backend lint пройден
--  Backend unit tests пройдены
--  Frontend lint пройден
--  Frontend unit tests пройдены
--  Type checks пройдены
--  Docker build успешен
--  Docker Compose запускался локально
--  Helm template/lint успешен
--  Terraform fmt/validate успешен
--  Ansible lint/syntax-check успешен
--  Smoke tests пройдены
--  E2E tests пройдены
--  Не требуется
+- Backend lint пройден
+- Backend unit tests пройдены
+- Frontend lint пройден
+- Frontend unit tests пройдены
+- Type checks пройдены
+- Docker build успешен
+- Docker Compose запускался локально
+- Helm template/lint успешен
+- Terraform fmt/validate успешен
+- Ansible lint/syntax-check успешен
+- Smoke tests пройдены
+- E2E tests пройдены
+- Не требуется
 
 ## Миграции базы данных
 
 Есть ли миграции БД?
 
--  Нет
--  Да, добавлены Alembic migrations
+- Нет
+- Да, добавлены Alembic migrations
 
 Если да, опиши:
 
@@ -125,13 +126,13 @@ docker compose up --build
 
 Есть ли изменения инфраструктуры?
 
--  Нет
--  Да, Terraform
--  Да, Ansible
--  Да, Kubernetes
--  Да, Helm
--  Да, GitHub Actions
--  Да, Monitoring/Logging/Tracing
+- Нет
+- Да, Terraform
+- Да, Ansible
+- Да, Kubernetes
+- Да, Helm
+- Да, GitHub Actions
+- Да, Monitoring/Logging/Tracing
 
 Если да, опиши влияние:
 
@@ -144,25 +145,25 @@ docker compose up --build
 
 Проверь:
 
--  Секреты не добавлены в Git
--  `.env` файлы с реальными значениями не закоммичены
--  Логи не содержат пароли, токены или персональные данные
--  Docker image не содержит секреты
--  Kubernetes Secret не содержит реальные значения в plain YAML
--  Используются минимально необходимые права доступа
--  Валидация входных данных добавлена/не требуется
--  Rate limiting/CORS/Auth проверены, если изменение связано с API
+- Секреты не добавлены в Git
+- `.env` файлы с реальными значениями не закоммичены
+- Логи не содержат пароли, токены или персональные данные
+- Docker image не содержит секреты
+- Kubernetes Secret не содержит реальные значения в plain YAML
+- Используются минимально необходимые права доступа
+- Валидация входных данных добавлена/не требуется
+- Rate limiting/CORS/Auth проверены, если изменение связано с API
 
 ## Observability
 
 Если изменение влияет на runtime-поведение, проверь:
 
--  Добавлены/обновлены структурированные логи
--  Метрики добавлены/обновлены
--  Tracing не сломан
--  Alerting не требует изменений
--  Dashboard не требует изменений
--  Не применимо
+- Добавлены/обновлены структурированные логи
+- Метрики добавлены/обновлены
+- Tracing не сломан
+- Alerting не требует изменений
+- Dashboard не требует изменений
+- Не применимо
 
 ## Скриншоты
 
@@ -174,21 +175,21 @@ docker compose up --build
 
 ## Чеклист перед merge
 
--  Ветка актуальна относительно целевой ветки
--  Нет конфликтов
--  CI прошёл успешно
--  Code review пройден
--  Документация обновлена, если нужно
--  Breaking changes описаны
--  Rollback plan описан для risky changes
--  PR готов к merge
+- Ветка актуальна относительно целевой ветки
+- Нет конфликтов
+- CI прошёл успешно
+- Code review пройден
+- Документация обновлена, если нужно
+- Breaking changes описаны
+- Rollback plan описан для risky changes
+- PR готов к merge
 
 ## Breaking changes
 
 Есть ли несовместимые изменения?
 
--  Нет
--  Да
+- Нет
+- Да
 
 Если да, опиши:
 

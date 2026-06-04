@@ -309,6 +309,7 @@ OAuth через Google и Яндекс выполняется через browse
 
 1. 1.Пользователь нажимает кнопку входа через Google или Яндекс.
 2. 2.Приложение открывает backend endpoint в браузере или Custom Tabs:
+
 ```
 /api/auth/google/login
 /api/auth/yandex/login
@@ -412,7 +413,7 @@ buildConfigField("String", "API_BASE_URL", "\"http://10.0.2.2:8000/api/\"")
 
 }
 
-  
+
 
 create("dev") {
 
@@ -422,7 +423,7 @@ buildConfigField("String", "API_BASE_URL", "\"https://api.dev.example.com/api/\"
 
 }
 
-  
+
 
 create("staging") {
 
@@ -432,7 +433,7 @@ buildConfigField("String", "API_BASE_URL", "\"https://api.staging.example.com/ap
 
 }
 
-  
+
 
 create("prod") {
 

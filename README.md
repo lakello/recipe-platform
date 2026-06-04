@@ -231,7 +231,9 @@ Kubernetes Services
           +--> OpenSearch
           +--> Object Storage
 ```
+
 Структура репозитория
+
 ```
 recipe-platform/
   backend/

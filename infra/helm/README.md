@@ -83,7 +83,7 @@ templates/
 
 _helpers.tpl
 
-  
+
 
 backend-deployment.yaml
 
@@ -95,7 +95,7 @@ backend-hpa.yaml
 
 backend-pdb.yaml
 
-  
+
 
 frontend-deployment.yaml
 
@@ -107,7 +107,7 @@ frontend-hpa.yaml
 
 frontend-pdb.yaml
 
-  
+
 
 worker-deployment.yaml
 
@@ -115,17 +115,17 @@ worker-serviceaccount.yaml
 
 worker-hpa.yaml
 
-  
+
 
 scheduler-deployment.yaml
 
 scheduler-serviceaccount.yaml
 
-  
+
 
 migration-job.yaml
 
-  
+
 
 ingress.yaml
 
@@ -143,7 +143,7 @@ cronjob.yaml
 
 servicemonitor.yaml
 
-  
+
 
 README.md
 
@@ -328,7 +328,7 @@ environment: dev
 
 imagePullSecrets: []
 
-  
+
 
 ## backend:
 
@@ -362,7 +362,7 @@ cpu: 500m
 
 memory: 512Mi
 
-  
+
 
 ## frontend:
 
@@ -382,7 +382,7 @@ pullPolicy: IfNotPresent
 
 port: 80
 
-  
+
 
 ## worker:
 
@@ -398,7 +398,7 @@ tag: latest
 
 pullPolicy: IfNotPresent
 
-  
+
 
 ## ingress:
 
@@ -602,7 +602,7 @@ path: /ready
 
 port: 8000
 
-  
+
 
 ## livenessProbe:
 
@@ -625,7 +625,7 @@ path: /health
 
 port: 80
 
-  
+
 
 ## livenessProbe:
 
@@ -807,7 +807,6 @@ helm upgrade --install recipe-platform-prod . \
 
 -f values-prod.yaml
 ```
-
 
 Передача image tag
 

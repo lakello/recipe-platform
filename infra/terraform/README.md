@@ -400,7 +400,7 @@ key = "dev/terraform.tfstate"
 
 region = "ru-central1"
 
-  
+
 
 endpoint = "storage.yandexcloud.net"
 
@@ -502,7 +502,7 @@ description = "Yandex Cloud ID"
 
 }
 
-  
+
 
 variable "folder_id" {
 
@@ -512,7 +512,7 @@ description = "Yandex Cloud Folder ID"
 
 }
 
-  
+
 
 variable "environment" {
 
@@ -522,7 +522,7 @@ description = "Environment name: dev, staging, prod"
 
 }
 
-  
+
 
 variable "zone" {
 
@@ -534,7 +534,7 @@ default = "ru-central1-a"
 
 }
 
-  
+
 
 variable "domain_name" {
 
