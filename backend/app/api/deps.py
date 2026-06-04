@@ -8,6 +8,7 @@ from app.models.user import User
 from app.repositories.user import UserRepository
 
 _bearer = HTTPBearer()
+_optional_bearer = HTTPBearer(auto_error=False)
 
 
 async def get_current_user(
@@ -21,3 +22,16 @@ async def get_current_user(
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is disabled")
     return user
+
+
+async def get_optional_user(
+    credentials: HTTPAuthorizationCredentials | None = Depends(_optional_bearer),
+    session: AsyncSession = Depends(get_db),
+) -> User | None:
+    if not credentials:
+        return None
+    try:
+        user_id = decode_access_token(credentials.credentials)
+    except HTTPException:
+        return None
+    return await UserRepository(session).get_by_id(user_id)
