@@ -37,9 +37,7 @@ class RecipeService:
             raise HTTPException(status_code=404, detail="Recipe not found")
         return RecipeRead.model_validate(recipe)
 
-    async def list_recipes(
-        self, current_user_id: uuid.UUID | None
-    ) -> list[RecipeRead]:
+    async def list_recipes(self, current_user_id: uuid.UUID | None) -> list[RecipeRead]:
         recipes = await self.repository.list_visible(current_user_id)
         return [RecipeRead.model_validate(r) for r in recipes]
 
@@ -57,9 +55,7 @@ class RecipeService:
         recipe = await self._get_owned(recipe_id, current_user_id)
         await self.repository.delete(recipe)
 
-    def _can_view(
-        self, recipe: Recipe, current_user_id: uuid.UUID | None
-    ) -> bool:
+    def _can_view(self, recipe: Recipe, current_user_id: uuid.UUID | None) -> bool:
         if current_user_id and recipe.author_id == current_user_id:
             return True
         return (
