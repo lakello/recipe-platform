@@ -465,8 +465,8 @@ temp/
 # package-lock.json, yarn.lock, pnpm-lock.yaml, poetry.lock, uv.lock, Cargo.lock, gradle.lockfile
 # should be committed for reproducible builds.
 
-# Claude Code local settings (personal, not shared)
-.claude/settings.local.json
+# Claude Code (personal, not shared)
+.claude/
 
 # MCP конфиг (содержит строку подключения к БД)
 .mcp.json
