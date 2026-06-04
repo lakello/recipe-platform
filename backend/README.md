@@ -825,6 +825,26 @@ docker build -t recipe-backend:local .
 
 ## Что уже реализовано
 
+### Базовый CRUD рецептов (feat/backend-recipes)
+
+- `app/models/recipe.py` — модель `Recipe` с enum-полями: `RecipeStatus` (draft/published/deleted), `RecipeVisibility` (public/private), `Difficulty` (easy/medium/hard)
+- `alembic/versions/af66781aeaf9` — миграция создаёт таблицу `recipes` с FK на `users`
+- `app/repositories/recipe.py` — create, get_by_id, list_visible, update, soft delete
+- `app/services/recipe.py` — CRUD с проверкой прав автора и правилами видимости
+- `app/api/deps.py` — добавлен `get_optional_user` для публичных endpoints
+- `app/api/recipes.py` — роутер с prefix `/api/recipes`
+- `tests/test_recipe_service.py` — 11 unit-тестов
+
+Endpoints:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `POST` | `/api/recipes` | 🔒 | Создать рецепт |
+| `GET` | `/api/recipes` | опц. | Список публичных рецептов + своих |
+| `GET` | `/api/recipes/{id}` | опц. | Получить рецепт |
+| `PATCH` | `/api/recipes/{id}` | 🔒 автор | Редактировать рецепт |
+| `DELETE` | `/api/recipes/{id}` | 🔒 автор | Удалить рецепт (soft delete) |
+
 ### Регистрация и логин (feat/backend-auth)
 
 - `app/core/security.py` — создание/валидация JWT access token, генерация refresh token
@@ -936,7 +956,7 @@ Backend находится в разработке.
 4. ~~Alembic.~~ ✓
 5. ~~Auth (регистрация, логин, JWT, refresh).~~ ✓
 6. ~~Users и profiles (модель).~~ ✓
-7. Recipes CRUD.
+7. ~~Recipes CRUD.~~ ✓
 8. Uploads.
 9. Comments, likes, favorites.
 10. Meal plans и shopping lists.
