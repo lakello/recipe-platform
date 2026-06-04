@@ -825,6 +825,23 @@ docker build -t recipe-backend:local .
 
 ## Что уже реализовано
 
+### Подключение PostgreSQL (feat/backend-postgresql)
+
+- `app/db/base.py` — `DeclarativeBase` для всех будущих SQLAlchemy-моделей
+- `app/db/session.py` — async SQLAlchemy движок (`psycopg_async`), фабрика сессий, dependency `get_db`
+- `alembic/` — инициализирован и настроен на чтение `DATABASE_URL` из `Settings`
+- `alembic/versions/dea71c5c548c_initial.py` — первая миграция, создаёт таблицу `alembic_version`
+- `GET /ready` — теперь выполняет `SELECT 1` к БД, возвращает `503` если БД недоступна
+
+Команды Alembic:
+
+```bash
+alembic upgrade head          # применить все миграции
+alembic downgrade -1          # откатить последнюю миграцию
+alembic revision --autogenerate -m "описание"  # создать новую миграцию
+alembic current               # текущая ревизия
+```
+
 ### Конфигурация приложения (feat/backend-app-config)
 
 - `app/core/config.py` — класс `Settings` через pydantic-settings, все переменные читаются из `.env`
@@ -884,8 +901,8 @@ Backend находится в разработке.
 
 1. ~~Базовая структура FastAPI.~~ ✓
 2. ~~Конфигурация приложения.~~ ✓
-3. 3.PostgreSQL и SQLAlchemy.
-4. 4.Alembic.
+3. ~~PostgreSQL и SQLAlchemy.~~ ✓
+4. ~~Alembic.~~ ✓
 5. 5.Auth.
 6. 6.Users и profiles.
 7. 7.Recipes CRUD.
