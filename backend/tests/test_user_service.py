@@ -39,9 +39,7 @@ def service(mock_repo: AsyncMock) -> UserService:
     return UserService(mock_repo)
 
 
-async def test_create_user_success(
-    service: UserService, mock_repo: AsyncMock
-) -> None:
+async def test_create_user_success(service: UserService, mock_repo: AsyncMock) -> None:
     mock_repo.get_by_email.return_value = None
     mock_repo.get_by_username.return_value = None
     mock_repo.create.return_value = make_user()
@@ -97,9 +95,7 @@ async def test_get_by_id_found(service: UserService, mock_repo: AsyncMock) -> No
     assert result.id == user_id
 
 
-async def test_get_by_id_not_found(
-    service: UserService, mock_repo: AsyncMock
-) -> None:
+async def test_get_by_id_not_found(service: UserService, mock_repo: AsyncMock) -> None:
     mock_repo.get_by_id.return_value = None
 
     result = await service.get_by_id(uuid.uuid4())
@@ -107,9 +103,7 @@ async def test_get_by_id_not_found(
     assert result is None
 
 
-async def test_get_by_email_found(
-    service: UserService, mock_repo: AsyncMock
-) -> None:
+async def test_get_by_email_found(service: UserService, mock_repo: AsyncMock) -> None:
     mock_repo.get_by_email.return_value = make_user(email="found@example.com")
 
     result = await service.get_by_email("found@example.com")
