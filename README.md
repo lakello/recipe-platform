@@ -16,6 +16,7 @@
 | Backend: Alembic миграции | ✅ Готово |
 | Backend: модель пользователей | ✅ Готово |
 | Backend: Auth | ✅ Готово |
+| Backend: базовый CRUD рецептов | ✅ Готово |
 | Frontend | ⏳ Планируется |
 | Android | ⏳ Планируется |
 | Desktop | ⏳ Планируется |
