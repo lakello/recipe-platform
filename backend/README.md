@@ -866,6 +866,12 @@ Endpoints:
 | `POST` | `/api/auth/refresh` | Обновление токенов с ротацией |
 | `POST` | `/api/auth/logout` | Инвалидация refresh token |
 | `GET` | `/api/users/me` | Данные текущего пользователя 🔒 |
+| `PATCH` | `/api/users/me` | Обновление username 🔒 |
+
+**Обновлено в feat/frontend-auth:**
+- Токены устанавливаются в httpOnly cookies (`access_token`, `refresh_token`)
+- `get_current_user` читает токен из cookie ИЛИ `Authorization: Bearer`
+- CORS: `allow_credentials=True`
 
 ### Модель пользователей (feat/backend-user-model)
 
