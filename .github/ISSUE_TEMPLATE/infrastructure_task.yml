@@ -1,0 +1,103 @@
+name: Infrastructure task
+description: Terraform, Kubernetes, Helm, Ansible, CI/CD or cloud infrastructure task
+title: "infra: "
+labels:
+  - infrastructure
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Используй этот шаблон для задач по инфраструктуре, Kubernetes, Terraform, Ansible, CI/CD, Nginx, observability и cloud resources.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Описание задачи
+      description: Что нужно сделать?
+      placeholder: Например, добавить Terraform module для Yandex Managed Redis.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Область
+      multiple: true
+      options:
+        - Yandex Cloud
+        - Terraform
+        - Ansible
+        - Kubernetes
+        - Helm
+        - Nginx Ingress
+        - Docker
+        - GitHub Actions
+        - GHCR
+        - Networking
+        - Security
+        - Monitoring
+        - Logging
+        - Tracing
+        - Backup / Disaster Recovery
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Окружение
+      multiple: true
+      options:
+        - Local
+        - Dev
+        - Staging
+        - Production
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидаемый результат
+      description: Что должно появиться после выполнения задачи?
+      placeholder: |
+        - Создан Redis cluster в Yandex Cloud
+        - Доступ к Redis разрешён только из Kubernetes security group
+        - Redis credentials хранятся в Yandex Lockbox
+    validations:
+      required: true
+
+  - type: textarea
+    id: implementation
+    attributes:
+      label: Предлагаемая реализация
+      description: Если есть идея реализации, опиши её.
+      placeholder: |
+        - Добавить Terraform module infra/terraform/modules/redis
+        - Подключить module в envs/dev/staging/prod
+        - Добавить outputs для host/port
+        - Обновить Helm values
+
+  - type: textarea
+    id: risks
+    attributes:
+      label: Риски
+      description: Возможные риски, downtime, security impact, cost impact.
+      placeholder: |
+        - Возможен рост стоимости облака
+        - Неправильные security groups могут открыть Redis наружу
+        - Изменения production требуют manual approval
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Чеклист
+      options:
+        - label: Задача не дублирует существующую Issue
+          required: true
+        - label: Указаны затронутые окружения
+          required: true
+        - label: Описаны риски или явно указано, что рисков нет
+          required: true
+        - label: Секреты не указаны в описании задачи
+          required: true
