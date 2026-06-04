@@ -823,14 +823,46 @@ mypy app
 docker build -t recipe-backend:local .
 ```
 
+## Что уже реализовано
+
+### Инициализация проекта (feat/backend-fastapi-init)
+
+- Виртуальное окружение `.venv` (Python 3.12)
+- `requirements.txt` — зафиксированные зависимости приложения
+- `requirements-dev.txt` — инструменты разработки (ruff, mypy, pytest)
+- `pyproject.toml` — конфигурация ruff, mypy, pytest
+
+Структура пакета `app/`:
+
+```
+app/
+  __init__.py
+  main.py
+  api/
+  core/
+  db/
+  models/
+  schemas/
+  services/
+  repositories/
+tests/
+```
+
+Запущенные endpoints:
+
+- `GET /health` → `{"status": "ok"}`
+- `GET /ready` → `{"status": "ready"}`
+- `GET /api/docs` — Swagger UI (OpenAPI)
+- `GET /api/openapi.json` — OpenAPI schema
+
 ## Статус
 
 Backend находится в разработке.
 
 Приоритет реализации:
 
-1. 1.Базовая структура FastAPI.
-2. 2.Конфигурация приложения.
+1. ~~Базовая структура FastAPI.~~ ✓
+2. Конфигурация приложения.
 3. 3.PostgreSQL и SQLAlchemy.
 4. 4.Alembic.
 5. 5.Auth.
