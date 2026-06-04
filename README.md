@@ -18,7 +18,7 @@
 | Backend: Auth | ✅ Готово |
 | Backend: базовый CRUD рецептов | ✅ Готово |
 | Frontend: инициализация React | ✅ Готово |
-| Frontend: Auth страницы | ⏳ Планируется |
+| Frontend: Auth страницы | ✅ Готово |
 | Android | ⏳ Планируется |
 | Desktop | ⏳ Планируется |
 | Инфраструктура (Terraform, Ansible, Helm) | ⏳ Планируется |
