@@ -14,6 +14,7 @@
 | Backend: конфигурация приложения | ✅ Готово |
 | Backend: база данных (PostgreSQL + SQLAlchemy) | ✅ Готово |
 | Backend: Alembic миграции | ✅ Готово |
+| Backend: модель пользователей | ✅ Готово |
 | Backend: Auth | ⏳ Планируется |
 | Frontend | ⏳ Планируется |
 | Android | ⏳ Планируется |
