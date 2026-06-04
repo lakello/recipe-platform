@@ -12,8 +12,8 @@
 |---|---|
 | Backend: инициализация FastAPI | ✅ Готово |
 | Backend: конфигурация приложения | ✅ Готово |
-| Backend: база данных (PostgreSQL + SQLAlchemy) | ⏳ Планируется |
-| Backend: Alembic миграции | ⏳ Планируется |
+| Backend: база данных (PostgreSQL + SQLAlchemy) | ✅ Готово |
+| Backend: Alembic миграции | ✅ Готово |
 | Backend: Auth | ⏳ Планируется |
 | Frontend | ⏳ Планируется |
 | Android | ⏳ Планируется |
