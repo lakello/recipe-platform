@@ -103,9 +103,7 @@ async def test_get_recipe_deleted(service: RecipeService, repo: AsyncMock) -> No
     assert exc.value.status_code == 404
 
 
-async def test_update_recipe_by_author(
-    service: RecipeService, repo: AsyncMock
-) -> None:
+async def test_update_recipe_by_author(service: RecipeService, repo: AsyncMock) -> None:
     author_id = uuid.uuid4()
     recipe = make_recipe(author_id=author_id)
     updated = make_recipe(author_id=author_id, title="Updated")
@@ -131,9 +129,7 @@ async def test_update_recipe_by_other_user(
     assert exc.value.status_code == 403
 
 
-async def test_delete_recipe_by_author(
-    service: RecipeService, repo: AsyncMock
-) -> None:
+async def test_delete_recipe_by_author(service: RecipeService, repo: AsyncMock) -> None:
     author_id = uuid.uuid4()
     recipe = make_recipe(author_id=author_id)
     repo.get_by_id.return_value = recipe

@@ -22,13 +22,13 @@ class RefreshTokenRepository:
             select(RefreshToken).where(RefreshToken.token == token)
         )
         return result.scalar_one_or_none()
-    
+
     async def revoke(self, token: str) -> None:
         await self.session.execute(
             update(RefreshToken)
             .where(RefreshToken.token == token)
             .values(is_revoked=True)
-        )   
+        )
         await self.session.commit()
 
     async def revoke_all_for_user(self, user_id: uuid.UUID) -> None:
