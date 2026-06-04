@@ -37,7 +37,9 @@
 ```text
 v1.2.0
 ```
+
 ---
+
 ### `develop`
 
 Ветка `develop` используется для интеграции текущей разработки.
@@ -65,6 +67,7 @@ feature/<short-description>
 ```
 
 Примеры:
+
 ```
 feature/auth-email-login
 feature/oauth-yandex
@@ -81,12 +84,15 @@ feature/shopping-list-generation
 - перед созданием PR желательно обновить ветку от актуальной `develop`.
 
 Пример:
+
 ``` bash
 git checkout develop
 git pull origin develop
 git checkout -b feature/recipe-comments
 ```
+
 ---
+
 ### `release/*`
 
 Ветки `release/*` используются для подготовки релиза.
@@ -100,11 +106,13 @@ release/<version>
 ```
 
 Примеры:
+
 ```
 release/1.0.0
 release/1.1.0
 release/2.0.0
 ```
+
 Назначение:
 
 - финальное тестирование;
@@ -125,6 +133,7 @@ release/2.0.0
 - изменения из `release/*` также должны быть возвращены в `develop`.
 
 Пример процесса:
+
 ``` bash
 git checkout develop
 git pull origin develop
@@ -330,11 +339,11 @@ git checkout develop
 
 git pull origin develop
 
-  
+
 
 git checkout -b feature/my-task
 
-  
+
 
 # make changes
 
@@ -342,7 +351,7 @@ git add .
 
 git commit -m "feat(scope): describe change"
 
-  
+
 
 git push origin feature/my-task
 ```
@@ -352,9 +361,9 @@ git push origin feature/my-task
 ## Branch cleanup
 
 После merge Pull Request ветку нужно удалить:
+
 ``` bash
 git branch -d feature/my-task
 
 git push origin --delete feature/my-task
 ```
-

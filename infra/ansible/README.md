@@ -255,7 +255,7 @@ ansible_host: 203.0.113.10
 
 ansible_user: ubuntu
 
-  
+
 
 ## github_runners:
 
@@ -295,7 +295,7 @@ project_name: recipe-platform
 
 timezone: Europe/Moscow
 
-  
+
 
 ## admin_users:
 
@@ -305,7 +305,7 @@ timezone: Europe/Moscow
 
 - "ssh-ed25519 AAAA..."
 
-  
+
 
 ssh_port: 22
 
@@ -313,13 +313,13 @@ disable_password_auth: true
 
 disable_root_login: true
 
-  
+
 
 ## firewall_allowed_tcp_ports:
 
 - 22
 
-  
+
 
 install_node_exporter: true
 ```
@@ -678,7 +678,7 @@ stdout_callback = yaml
 
 interpreter_python = auto_silent
 
-  
+
 
 [ssh_connection]
 

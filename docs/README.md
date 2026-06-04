@@ -45,7 +45,7 @@ docs/
 
 README.md
 
-  
+
 
 product/
 
@@ -57,7 +57,7 @@ features.md
 
 user-flows.md
 
-  
+
 
 architecture/
 
@@ -79,7 +79,7 @@ adr-0002-cloud-provider.md
 
 adr-0003-kubernetes-deployment.md
 
-  
+
 
 api/
 
@@ -95,7 +95,7 @@ shopping-lists.md
 
 moderation.md
 
-  
+
 
 database/
 
@@ -107,7 +107,7 @@ migrations.md
 
 backup-restore.md
 
-  
+
 
 infrastructure/
 
@@ -121,7 +121,7 @@ dns-tls.md
 
 object-storage.md
 
-  
+
 
 kubernetes/
 
@@ -139,7 +139,7 @@ scaling.md
 
 rollback.md
 
-  
+
 
 ci-cd/
 
@@ -151,7 +151,7 @@ github-actions.md
 
 release-process.md
 
-  
+
 
 observability/
 
@@ -167,7 +167,7 @@ alerts.md
 
 dashboards.md
 
-  
+
 
 security/
 
@@ -183,7 +183,7 @@ kubernetes-security.md
 
 hardening.md
 
-  
+
 
 operations/
 
@@ -205,7 +205,7 @@ troubleshooting.md
 
 incident-response.md
 
-  
+
 
 development/
 
@@ -217,7 +217,7 @@ testing.md
 
 docker-compose.md
 
-  
+
 
 diagrams/
 
@@ -697,51 +697,51 @@ flowchart TD
 ```
 # Название документа
 
-  
+
 
 ## Назначение
 
-  
+
 
 Кратко описать, для чего нужен документ.
 
-  
+
 
 ## Контекст
 
-  
+
 
 Почему тема важна для проекта.
 
-  
+
 
 ## Детали
 
-  
+
 
 Основное содержание.
 
-  
+
 
 ## Команды
 
-  
+
 
 Если применимо, добавить команды.
 
-  
+
 
 ## Security notes
 
-  
+
 
 Если применимо, описать требования безопасности.
 
-  
+
 
 ## Related documents
 
-  
+
 
 Ссылки на связанные документы.
 ```
