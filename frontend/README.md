@@ -693,6 +693,23 @@ Backend API:
 
 ## Что уже реализовано
 
+### Авторизация (feat/frontend-auth)
+
+- **Зависимости:** react-hook-form, zod, @hookform/resolvers
+- `src/shared/api/client.ts` — `credentials: 'include'`, автоматический refresh при 401
+- `src/features/auth/` — API и хуки: `useLogin`, `useRegister`, `useLogout`
+- `src/features/profile/` — API и хуки: `useCurrentUser`, `useUpdateProfile`
+- `src/app/router/ProtectedRoute.tsx` — защищённые маршруты (редирект на `/login`)
+- `src/shared/ui/` — компоненты `Input`, `Button`
+
+Страницы:
+
+| Путь | Описание | Auth |
+|---|---|---|
+| `/login` | Форма входа | Публичная |
+| `/register` | Форма регистрации | Публичная |
+| `/profile` | Просмотр и редактирование username | 🔒 |
+
 ### Инициализация React (feat/frontend-init)
 
 - Vite 8 + React 19 + TypeScript
@@ -723,7 +740,7 @@ Frontend находится в разработке.
 1. ~~Базовая структура Vite + React + TypeScript.~~ ✓
 2. ~~Routing.~~ ✓
 3. ~~API client.~~ ✓
-4. Auth pages.
+4. ~~Auth pages.~~ ✓
 5. Layout.
 6. Recipes list.
 7. Recipe details.
