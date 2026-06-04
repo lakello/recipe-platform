@@ -1,0 +1,122 @@
+name: Bug report
+description: Report a reproducible bug
+title: "bug: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Спасибо за сообщение об ошибке.
+        Пожалуйста, заполни форму максимально подробно, чтобы проблему можно было воспроизвести.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Краткое описание
+      description: Что сломалось?
+      placeholder: Например, пользователь не может войти через Google OAuth.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Компонент
+      description: Где возникла проблема?
+      multiple: true
+      options:
+        - Backend
+        - Frontend Web
+        - Android
+        - Desktop
+        - PostgreSQL
+        - Redis / Celery
+        - OpenSearch
+        - Docker
+        - Docker Compose
+        - Kubernetes
+        - Helm
+        - Terraform
+        - Ansible
+        - GitHub Actions
+        - Nginx Ingress
+        - Monitoring / Logging / Tracing
+        - Documentation
+    validations:
+      required: true
+
+  - type: dropdown
+    id: environment
+    attributes:
+      label: Окружение
+      description: Где воспроизводится ошибка?
+      multiple: true
+      options:
+        - Local
+        - Dev
+        - Staging
+        - Production
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Шаги воспроизведения
+      description: Опиши точные шаги.
+      placeholder: |
+        1. Открыть страницу логина
+        2. Нажать "Войти через Google"
+        3. Завершить OAuth flow
+        4. Получить ошибку 500
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Ожидаемое поведение
+      description: Что должно было произойти?
+      placeholder: Пользователь успешно авторизуется и попадает на главную страницу.
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Фактическое поведение
+      description: Что произошло вместо ожидаемого?
+      placeholder: API возвращает 500 Internal Server Error.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Логи / ошибки
+      description: Вставь ошибки, stacktrace или ссылки на Grafana/Loki, если есть.
+      render: shell
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Скриншоты
+      description: Если проблема связана с UI, добавь скриншоты.
+
+  - type: textarea
+    id: version
+    attributes:
+      label: Версия / commit SHA
+      description: Укажи версию приложения, Docker image tag или commit SHA.
+      placeholder: v1.2.0 или 8f3a21c
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Чеклист
+      options:
+        - label: Я проверил существующие Issues и не нашёл дубликат
+          required: true
+        - label: Я не добавил секреты, токены, пароли или персональные данные в описание
+          required: true
