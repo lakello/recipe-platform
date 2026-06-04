@@ -5,7 +5,7 @@ from fastapi import HTTPException
 
 from app.models.user import User
 from app.repositories.user import UserRepository
-from app.schemas.user import UserCreate, UserRead
+from app.schemas.user import UserCreate, UserRead, UserUpdate
 
 
 def _hash_password(password: str) -> str:
@@ -43,4 +43,16 @@ class UserService:
         user = await self.repository.get_by_email(email)
         if not user:
             return None
+        return UserRead.model_validate(user)
+
+    async def update_user(self, user_id: uuid.UUID, data: UserUpdate) -> UserRead:
+        user = await self.repository.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        updates = data.model_dump(exclude_unset=True)
+        if "username" in updates:
+            existing = await self.repository.get_by_username(updates["username"])
+            if existing and existing.id != user_id:
+                raise HTTPException(status_code=409, detail="Username already taken")
+        user = await self.repository.update(user, updates)
         return UserRead.model_validate(user)

@@ -29,3 +29,10 @@ class UserRepository:
             select(User).where(User.username == username)
         )
         return result.scalar_one_or_none()
+
+    async def update(self, user: User, data: dict) -> User:
+        for key, value in data.items():
+            setattr(user, key, value)
+        await self.session.commit()
+        await self.session.refresh(user)
+        return user
