@@ -691,24 +691,47 @@ Backend API:
 | staging    | `https://api.staging.example.com/api` |
 | production | `https://api.example.com/api`         |
 
+## Что уже реализовано
+
+### Инициализация React (feat/frontend-init)
+
+- Vite 8 + React 19 + TypeScript
+- React Router v7, TanStack Query v5, Tailwind CSS v3
+- Path alias `@/` → `src/`
+- FSD-структура: `app/`, `pages/`, `widgets/`, `features/`, `entities/`, `shared/`
+- `src/app/App.tsx` — BrowserRouter + QueryProvider + маршруты
+- `src/pages/main-page/` — главная страница (`/`)
+- `src/shared/api/client.ts` — базовый fetch-клиент
+- `src/shared/config/env.ts` — `VITE_API_BASE_URL` из env
+- `.env.example` с примером переменных окружения
+
+Команды:
+
+```bash
+npm run dev        # dev-сервер → http://localhost:5173
+npm run build      # production-сборка
+npm run typecheck  # проверка типов
+npm run lint       # ESLint
+```
+
 ## Статус
 
 Frontend находится в разработке.
 
 Приоритет реализации:
 
-1. 1.Базовая структура Vite + React + TypeScript.
-2. 2.Routing.
-3. 3.API client.
-4. 4.Auth pages.
-5. 5.Layout.
-6. 6.Recipes list.
-7. 7.Recipe details.
-8. 8.Recipe create/edit.
-9. 9.Profile.
-10. 10.Comments, likes, favorites.
-11. 11.Meal plan.
-12. 12.Shopping list.
-13. 13.Moderation UI.
-14. 14.Admin UI.
-15. 15.UI polish, accessibility, performance.
+1. ~~Базовая структура Vite + React + TypeScript.~~ ✓
+2. ~~Routing.~~ ✓
+3. ~~API client.~~ ✓
+4. Auth pages.
+5. Layout.
+6. Recipes list.
+7. Recipe details.
+8. Recipe create/edit.
+9. Profile.
+10. Comments, likes, favorites.
+11. Meal plan.
+12. Shopping list.
+13. Moderation UI.
+14. Admin UI.
+15. UI polish, accessibility, performance.
