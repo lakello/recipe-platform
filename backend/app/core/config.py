@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     jwt_refresh_token_expire_days: int = 30
 
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
+    cookie_secure: bool = False
+    cookie_samesite: str = "lax"
 
     @field_validator("cors_origins", mode="before")
     @classmethod
