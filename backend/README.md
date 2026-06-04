@@ -483,7 +483,7 @@ pytest --cov=app --cov-report=term-missing
 
 ## Линтинг и форматирование
 
-Планируемые инструменты:
+Используемые инструменты:
 
 - Ruff;
 - Mypy;
@@ -825,6 +825,27 @@ docker build -t recipe-backend:local .
 
 ## Что уже реализовано
 
+### Конфигурация приложения (feat/backend-app-config)
+
+- `app/core/config.py` — класс `Settings` через pydantic-settings, все переменные читаются из `.env`
+- `app/core/logging.py` — JSON-логирование в stdout, request_id в каждой строке лога
+- `app/core/middleware.py` — Request ID middleware (asgi-correlation-id)
+- `app/core/exceptions.py` — единые обработчики: HTTP-ошибки, ошибки валидации (422), непойманные исключения (500)
+- `.env.example` — шаблон переменных окружения
+
+Переменные окружения:
+
+| Переменная | По умолчанию | Описание |
+|---|---|---|
+| `APP_ENV` | `local` | Окружение (local/dev/staging/production) |
+| `APP_NAME` | `recipe-platform-backend` | Имя приложения |
+| `DATABASE_URL` | postgresql+psycopg://... | Строка подключения к PostgreSQL |
+| `REDIS_URL` | redis://localhost:6379/0 | Строка подключения к Redis |
+| `JWT_SECRET` | — | Секрет для подписи JWT |
+| `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | `15` | Время жизни access token |
+| `JWT_REFRESH_TOKEN_EXPIRE_DAYS` | `30` | Время жизни refresh token |
+| `CORS_ORIGINS` | localhost:3000, localhost:5173 | Разрешённые CORS-источники (JSON-массив) |
+
 ### Инициализация проекта (feat/backend-fastapi-init)
 
 - Виртуальное окружение `.venv` (Python 3.12)
@@ -862,7 +883,7 @@ Backend находится в разработке.
 Приоритет реализации:
 
 1. ~~Базовая структура FastAPI.~~ ✓
-2. Конфигурация приложения.
+2. ~~Конфигурация приложения.~~ ✓
 3. 3.PostgreSQL и SQLAlchemy.
 4. 4.Alembic.
 5. 5.Auth.
