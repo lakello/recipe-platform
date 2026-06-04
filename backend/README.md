@@ -825,6 +825,28 @@ docker build -t recipe-backend:local .
 
 ## Что уже реализовано
 
+### Регистрация и логин (feat/backend-auth)
+
+- `app/core/security.py` — создание/валидация JWT access token, генерация refresh token
+- `app/models/refresh_token.py` — модель `RefreshToken` с FK на users, `expires_at`, `is_revoked`
+- `alembic/versions/be4c1adff2ba` — миграция создаёт таблицу `refresh_tokens`
+- `app/repositories/refresh_token.py` — create, get_by_token, revoke, is_valid
+- `app/services/auth.py` — register, login, refresh (ротация), logout
+- `app/api/deps.py` — dependency `get_current_user` для защищённых endpoints
+- `app/api/auth.py` — роутер с prefix `/api/auth`
+- `app/api/users.py` — роутер с prefix `/api/users`
+- `tests/test_auth_service.py` — 9 unit-тестов
+
+Endpoints:
+
+| Метод | Путь | Описание |
+|---|---|---|
+| `POST` | `/api/auth/register` | Регистрация, возвращает токены |
+| `POST` | `/api/auth/login` | Вход по email/паролю |
+| `POST` | `/api/auth/refresh` | Обновление токенов с ротацией |
+| `POST` | `/api/auth/logout` | Инвалидация refresh token |
+| `GET` | `/api/users/me` | Данные текущего пользователя 🔒 |
+
 ### Модель пользователей (feat/backend-user-model)
 
 - `app/models/user.py` — SQLAlchemy-модель `User`: UUID pk, уникальные `email` и `username`, `bcrypt`-хэш пароля, флаги `is_active` / `is_email_verified`, timezone-aware timestamps
@@ -912,7 +934,7 @@ Backend находится в разработке.
 2. ~~Конфигурация приложения.~~ ✓
 3. ~~PostgreSQL и SQLAlchemy.~~ ✓
 4. ~~Alembic.~~ ✓
-5. Auth.
+5. ~~Auth (регистрация, логин, JWT, refresh).~~ ✓
 6. ~~Users и profiles (модель).~~ ✓
 7. Recipes CRUD.
 8. Uploads.

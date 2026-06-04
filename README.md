@@ -15,7 +15,7 @@
 | Backend: база данных (PostgreSQL + SQLAlchemy) | ✅ Готово |
 | Backend: Alembic миграции | ✅ Готово |
 | Backend: модель пользователей | ✅ Готово |
-| Backend: Auth | ⏳ Планируется |
+| Backend: Auth | ✅ Готово |
 | Frontend | ⏳ Планируется |
 | Android | ⏳ Планируется |
 | Desktop | ⏳ Планируется |
