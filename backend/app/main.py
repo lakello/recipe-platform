@@ -1,12 +1,14 @@
 import logging
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import text
 
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import setup_logging
 from app.core.middleware import CorrelationIdMiddleware
+from app.db.session import engine
 
 setup_logging()
 logger = logging.getLogger(__name__)
@@ -36,5 +38,10 @@ def health() -> dict:
 
 
 @app.get("/ready")
-def ready() -> dict:
+async def ready() -> dict:
+    try:
+        async with engine.connect() as conn:
+            await conn.execute(text("SELECT 1"))
+    except Exception:
+        raise HTTPException(status_code=503, detail="Database unavailable")
     return {"status": "ready"}
