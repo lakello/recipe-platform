@@ -734,12 +734,24 @@ Backend API:
 - `nginx.conf` — SPA fallback (`try_files`), cache headers для статических ассетов
 - `.dockerignore` — исключены `node_modules`, `dist`, `.env`, `.git`
 
+### Загрузка фото (feat/uploads)
+
+- `src/features/uploads/api/uploadsApi.ts` — методы: `presign`, `uploadToS3`, `attachRecipePhoto`, `deleteRecipePhoto`, `setAvatar`, `getViewUrl`
+- `src/features/uploads/hooks/useUpload.ts` — хук `useRecipePhotoUpload` (presign → PUT в MinIO → attach)
+- `src/features/uploads/ui/PhotoUpload.tsx` — компонент выбора и предпросмотра фото с кнопками «Добавить» / «Удалить»
+- `RecipePage` — интегрирован `PhotoUpload` с отображением текущего фото рецепта
+
+Сценарий загрузки (3 шага):
+1. `POST /api/uploads/presign` — получить presigned PUT URL
+2. `PUT <presigned_url>` — загрузить файл напрямую в MinIO (без прокси через бэкенд)
+3. `POST /api/uploads/recipes/{id}/photo` — сообщить бэкенду ключ загруженного файла
+
 ### Ингредиенты и шаги (feat/ingredients-steps)
 
 - `src/features/ingredients/api/ingredientsApi.ts` — типы и API-методы, `UNIT_LABELS` для отображения единиц
 - `src/features/ingredients/hooks/useIngredients.ts` — хуки: `useIngredientSearch`, `useSetRecipeIngredients`, `useSetRecipeSteps`
 - `src/features/ingredients/ui/IngredientsForm.tsx` — динамическая форма с автодополнением из глобального справочника
-- `src/features/ingredients/ui/StepsForm.tsx` — DnD-сортируемая форма шагов (`@dnd-kit/core` + `@dnd-kit/sortable`)
+- `src/features/ingredients/ui/StepsForm.tsx` — DnD-сортируемая форма шагов (`@dnd-kit/core` + `@dnd-kit/sortable`); заголовок — обязательное поле, описание — опционально; при попытке сохранить шаг без заголовка показывается inline-ошибка
 - `src/pages/recipe-page/ui/RecipePage.tsx` — отображение ингредиентов и шагов; автор редактирует прямо на странице
 
 ### Базовые рецепты (feat/frontend-recipes)
