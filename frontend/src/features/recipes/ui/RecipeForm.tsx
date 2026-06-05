@@ -9,18 +9,9 @@ const schema = z.object({
   title: z.string().min(1, 'Введите название').max(255, 'Максимум 255 символов'),
   description: z.string().optional(),
   visibility: z.enum(['public', 'private']),
-  cooking_time_minutes: z.preprocess(
-    (v) => (v === '' || v == null ? undefined : Number(v)),
-    z.number().int().min(1, 'Минимум 1 минута').optional(),
-  ),
-  servings: z.preprocess(
-    (v) => (v === '' || v == null ? undefined : Number(v)),
-    z.number().int().min(1, 'Минимум 1 порция').optional(),
-  ),
-  difficulty: z.preprocess(
-    (v) => (v === '' ? undefined : v),
-    z.enum(['easy', 'medium', 'hard']).optional(),
-  ),
+  cooking_time_minutes: z.number().int().min(1, 'Минимум 1 минута').optional(),
+  servings: z.number().int().min(1, 'Минимум 1 порция').optional(),
+  difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
 })
 
 export type RecipeFormData = z.infer<typeof schema>
@@ -84,7 +75,9 @@ export function RecipeForm({ defaultValues, onSubmit, isPending, error, submitLa
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-gray-700">Сложность</label>
           <select
-            {...register('difficulty')}
+            {...register('difficulty', {
+              setValueAs: (v: string) => (v === '' ? undefined : v),
+            })}
             className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             <option value="">Не указана</option>
@@ -103,14 +96,18 @@ export function RecipeForm({ defaultValues, onSubmit, isPending, error, submitLa
           type="number"
           min={1}
           error={errors.cooking_time_minutes?.message}
-          {...register('cooking_time_minutes')}
+          {...register('cooking_time_minutes', {
+            setValueAs: (v: string) => (v === '' ? undefined : parseInt(v, 10)),
+          })}
         />
         <Input
           label="Порций"
           type="number"
           min={1}
           error={errors.servings?.message}
-          {...register('servings')}
+          {...register('servings', {
+            setValueAs: (v: string) => (v === '' ? undefined : parseInt(v, 10)),
+          })}
         />
       </div>
 
