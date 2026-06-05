@@ -46,9 +46,14 @@ export function RecipesListPage() {
         <h1 className="text-2xl font-bold text-gray-900">Рецепты</h1>
         <div className="flex gap-2">
           {user && (
-            <Link to="/recipes/new">
-              <Button>Создать рецепт</Button>
-            </Link>
+            <>
+              <Link to="/recipes/drafts">
+                <Button variant="secondary">Черновики</Button>
+              </Link>
+              <Link to="/recipes/new">
+                <Button>Создать рецепт</Button>
+              </Link>
+            </>
           )}
           <Link to="/profile">
             <Button variant="secondary">Профиль</Button>

@@ -9,6 +9,7 @@ import { RecipesListPage } from '@/pages/recipes-list-page'
 import { RecipePage } from '@/pages/recipe-page'
 import { RecipeCreatePage } from '@/pages/recipe-create-page'
 import { RecipeEditPage } from '@/pages/recipe-edit-page'
+import { DraftsPage } from '@/pages/drafts-page'
 
 export function App() {
   return (
@@ -48,6 +49,14 @@ export function App() {
             element={
               <ProtectedRoute>
                 <RecipeEditPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/recipes/drafts"
+            element={
+              <ProtectedRoute>
+                <DraftsPage />
               </ProtectedRoute>
             }
           />
