@@ -116,6 +116,50 @@ services:
     networks:
       - app_network
 
+  minio:
+    image: quay.io/minio/minio:latest
+    container_name: minio
+    restart: always
+    ports:
+      - "9000:9000"
+      - "9090:9090"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    command: server /data --console-address ":9090"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: local_minio_init
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: >
+      /bin/sh -c "
+      mc alias set local_minio http://minio:9000 ${MINIO_ROOT_USER} ${MINIO_ROOT_PASSWORD};
+
+      if ! mc ls local_minio/my-bucket > /dev/null 2>&1; then
+        mc mb local_minio/my-bucket;
+        echo 'Бакет my-bucket успешно создан.';
+      else
+        echo 'Бакет my-bucket уже существует.';
+      fi;
+
+      mc anonymous set download local_minio/my-bucket;
+
+      mc anonymous set private local_minio/my-bucket;
+
+      echo 'Инициализация MinIO завершена.';
+      exit 0;
+      "
+
 volumes:
   pg_data:
     driver: local

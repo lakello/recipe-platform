@@ -13,7 +13,7 @@
             "state": {
               "type": "markdown",
               "state": {
-                "file": ".github/workflows/README.md",
+                "file": "backend/README.md",
                 "mode": "source",
                 "source": false
               },
@@ -185,8 +185,30 @@
   },
   "active": "4ae602e3e6b644ef",
   "lastOpenFiles": [
-    "scripts/README.md",
+    "frontend/src/pages/profile-page/ui/ProfilePage.tsx.tmp.6506.9818fc5c3863",
+    "frontend/src/pages/profile-page/ui/ProfilePage.tsx.tmp.6506.9ce75d2c78f9",
+    "frontend/src/pages/profile-page/ui/ProfilePage.tsx.tmp.6506.41650b28201a",
+    "frontend/src/pages/recipe-page/ui/RecipePage.tsx.tmp.6506.d346eca9c8c7",
+    "frontend/src/pages/recipe-page/ui/RecipePage.tsx.tmp.6506.dfd9b6e2b616",
+    "frontend/src/pages/recipe-page/ui/RecipePage.tsx.tmp.6506.59e57d91953a",
+    "frontend/src/features/profile/api/profileApi.ts.tmp.6506.4e56509c8630",
+    "frontend/src/features/recipes/api/recipesApi.ts.tmp.6506.12ba368e1a09",
+    "frontend/src/features/uploads/ui/PhotoUpload.tsx",
+    "frontend/src/features/uploads/ui/PhotoUpload.tsx.tmp.6506.c0c04bd6b14f",
+    "frontend/src/features/uploads/hooks/useUpload.ts",
+    "frontend/node_modules/@dnd-kit/core/README.md",
+    "frontend/node_modules/@dnd-kit/core/CHANGELOG.md",
+    "frontend/node_modules/@dnd-kit/sortable/README.md",
+    "frontend/node_modules/@dnd-kit/sortable/CHANGELOG.md",
+    "frontend/node_modules/@dnd-kit/utilities/README.md",
+    "frontend/node_modules/@dnd-kit/utilities/CHANGELOG.md",
+    "frontend/node_modules/@dnd-kit/accessibility/README.md",
+    "frontend/node_modules/@dnd-kit/accessibility/CHANGELOG.md",
+    "frontend/node_modules/tslib/SECURITY.md",
+    "frontend/node_modules/tslib/README.md",
     ".github/workflows/README.md",
+    ".github/PULL_REQUEST_TEMPLATE.md",
+    "scripts/README.md",
     "docs/README.md",
     "infra/helm/README.md",
     "infra/ansible/README.md",
@@ -196,11 +218,7 @@
     "frontend/README.md",
     "README.md",
     "backend/README.md",
-    ".github/PULL_REQUEST_TEMPLATE.md",
     "CONTRIBUTING.md",
-    ".github/workflows",
-    ".github/ISSUE_TEMPLATE",
-    ".github",
     "PULL_REQUEST_TEMPLATE.md"
   ]
 }
