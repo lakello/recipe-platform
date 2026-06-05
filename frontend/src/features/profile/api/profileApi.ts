@@ -9,6 +9,7 @@ export interface UserProfile {
   is_email_verified: boolean
   is_active: boolean
   role: UserRole
+  avatar_url: string | null
   created_at: string
   updated_at: string
 }

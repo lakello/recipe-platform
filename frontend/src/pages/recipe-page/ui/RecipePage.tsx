@@ -9,6 +9,9 @@ import {
 import { UNIT_LABELS } from '@/features/ingredients/api/ingredientsApi'
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser'
 import { useDeleteRecipe, useRecipe, useUpdateRecipe } from '@/features/recipes/hooks/useRecipes'
+import { PhotoUpload } from '@/features/uploads/ui/PhotoUpload'
+import { uploadsApi } from '@/features/uploads/api/uploadsApi'
+import { useRecipePhotoUpload } from '@/features/uploads/hooks/useUpload'
 import { Button } from '@/shared/ui/Button'
 
 const DIFFICULTY_LABELS: Record<string, string> = {
@@ -31,6 +34,8 @@ export function RecipePage() {
 
   const [editingIngredients, setEditingIngredients] = useState(false)
   const [editingSteps, setEditingSteps] = useState(false)
+  const { upload: uploadPhoto, remove: removePhoto, isPending: isPhotoLoading, error: photoError } =
+    useRecipePhotoUpload(recipeId!)
 
   const isAuthor = !!user && !!recipe && user.id === recipe.author_id
 
@@ -75,6 +80,29 @@ export function RecipePage() {
             )}
           </div>
         </div>
+
+        {recipe.photo && (
+          <div className="mb-6 rounded-xl overflow-hidden bg-gray-100 max-h-80">
+            <img
+              src={uploadsApi.getViewUrl(recipe.photo.key)}
+              alt={recipe.title}
+              className="w-full h-full object-cover"
+            />
+          </div>
+        )}
+
+        {isAuthor && (
+          <div className="mb-6">
+            <PhotoUpload
+              currentUrl={recipe.photo ? uploadsApi.getViewUrl(recipe.photo.key) : undefined}
+              onUpload={uploadPhoto}
+              onRemove={recipe.photo ? removePhoto : undefined}
+              isPending={isPhotoLoading}
+              error={photoError}
+              label="Добавить фото"
+            />
+          </div>
+        )}
 
         {recipe.description && (
           <p className="text-gray-700 mb-6 whitespace-pre-line">{recipe.description}</p>
