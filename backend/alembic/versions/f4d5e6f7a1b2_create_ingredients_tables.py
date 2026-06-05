@@ -53,7 +53,7 @@ def upgrade() -> None:
         sa.Column("amount", sa.Numeric(10, 2), nullable=True),
         sa.Column(
             "unit",
-            sa.Enum(*UNIT_ENUM, name="ingredientunit"),
+            sa.Enum(*UNIT_ENUM, name="ingredientunit", create_type=False),
             nullable=True,
         ),
         sa.Column("order", sa.Integer(), nullable=False),
