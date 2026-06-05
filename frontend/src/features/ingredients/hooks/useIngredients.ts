@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { RECIPES_KEY } from '@/features/recipes/hooks/useRecipes'
+import type { Recipe } from '@/features/recipes/api/recipesApi'
 import {
   ingredientsApi,
   type RecipeIngredientItem,
@@ -18,9 +19,9 @@ export function useSetRecipeIngredients(recipeId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (items: RecipeIngredientItem[]) =>
-      ingredientsApi.setRecipeIngredients(recipeId, items),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: [...RECIPES_KEY, recipeId] }),
+      ingredientsApi.setRecipeIngredients(recipeId, items) as Promise<Recipe>,
+    onSuccess: (recipe) =>
+      queryClient.setQueryData([...RECIPES_KEY, recipeId], recipe),
   })
 }
 
@@ -28,8 +29,8 @@ export function useSetRecipeSteps(recipeId: string) {
   const queryClient = useQueryClient()
   return useMutation({
     mutationFn: (items: RecipeStepItem[]) =>
-      ingredientsApi.setRecipeSteps(recipeId, items),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: [...RECIPES_KEY, recipeId] }),
+      ingredientsApi.setRecipeSteps(recipeId, items) as Promise<Recipe>,
+    onSuccess: (recipe) =>
+      queryClient.setQueryData([...RECIPES_KEY, recipeId], recipe),
   })
 }
