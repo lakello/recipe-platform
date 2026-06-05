@@ -15,6 +15,7 @@ class Settings(BaseSettings):
 
     database_url: str = "postgresql+psycopg://recipe:recipe@localhost:5432/recipe"
     redis_url: str = "redis://localhost:6379/0"
+    celery_broker_url: str = "redis://localhost:6379/1"
 
     jwt_secret: str = "change-me-in-production"
     jwt_access_token_expire_minutes: int = 15
