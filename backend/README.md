@@ -825,10 +825,44 @@ docker build -t recipe-backend:local .
 
 ## Что уже реализовано
 
+### Загрузка фото (feat/uploads)
+
+- `app/models/photo.py` — модель `RecipePhoto`: `key` (путь в Object Storage), `content_type`, FK на `recipes`
+- `app/repositories/photo.py` — `upsert` (одно фото на рецепт), `get_by_recipe`, `delete`
+- `app/services/upload.py` — `presign_upload`, `attach_recipe_photo`, `delete_recipe_photo`, `set_avatar`
+- `app/core/storage.py` — boto3-клиент для MinIO/S3; presigned URL подписываются с `s3_public_url` (иначе подпись не совпадёт с хостом браузера)
+- `app/schemas/upload.py` — `PresignRequest`, `PresignResponse`, `AttachPhotoRequest`
+- `app/tasks/thumbnails.py` — заглушка Celery-задачи `generate_thumbnail` (будет реализована позже)
+
+Endpoints:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `POST` | `/api/uploads/presign` | 🔒 | Получить presigned PUT URL для загрузки файла |
+| `POST` | `/api/uploads/recipes/{id}/photo` | 🔒 автор | Привязать загруженное фото к рецепту |
+| `DELETE` | `/api/uploads/recipes/{id}/photo` | 🔒 автор | Удалить фото рецепта |
+| `POST` | `/api/uploads/avatar` | 🔒 | Установить аватар пользователя |
+| `GET` | `/api/uploads/view?key=` | — | Редирект на presigned GET URL фото |
+
+Сценарий загрузки:
+1. Клиент запрашивает presigned URL (`POST /api/uploads/presign`)
+2. Клиент загружает файл напрямую в MinIO (`PUT <presigned_url>`)
+3. Клиент сообщает бэкенду ключ файла (`POST /api/uploads/recipes/{id}/photo`)
+4. Бэкенд сохраняет metadata и ставит задачу на генерацию thumbnail
+
+Переменные окружения:
+
+| Переменная | Описание |
+|---|---|
+| `S3_ENDPOINT_URL` | Внутренний URL MinIO (для API-операций) |
+| `S3_PUBLIC_URL` | Публичный URL MinIO (для presigned URL браузера) |
+| `S3_ACCESS_KEY` / `S3_SECRET_KEY` | Credentials |
+| `S3_BUCKET_PHOTOS` / `S3_BUCKET_AVATARS` | Имена бакетов |
+
 ### Ингредиенты и шаги (feat/ingredients-steps)
 
 - `app/models/ingredient.py` — модели `Ingredient` (глобальный справочник), `RecipeIngredient` (связь с amount, unit enum, order), `RecipeStep` (order, title, description)
-- `IngredientUnit` enum: `g`, `kg`, `ml`, `liter(l)`, `tsp`, `tbsp`, `pcs`, `cup`, `pinch`, `to_taste`
+- `IngredientUnit` enum: значения в БД — `g`, `kg`, `ml`, `l`, `tsp`, `tbsp`, `pcs`, `cup`, `pinch`, `to_taste`; колонка использует `values_callable` чтобы SQLAlchemy биндил значения, а не имена членов enum
 - `app/repositories/ingredient.py` — `get_or_create`, `search`, `replace_recipe_ingredients`, `replace_recipe_steps`
 - `app/services/ingredient.py` — `search_ingredients`, `set_ingredients`, `set_steps` с проверкой авторства
 - `app/api/ingredients.py` — роутеры для поиска ингредиентов и сохранения ингредиентов/шагов
@@ -1028,8 +1062,8 @@ Backend находится в разработке.
 7. ~~Recipes CRUD.~~ ✓
 8. ~~Категории + роли пользователей.~~ ✓
 9. ~~Ингредиенты и шаги приготовления.~~ ✓
-10. Uploads.
-9. Comments, likes, favorites.
+10. ~~Uploads (presigned URL, привязка фото, аватары).~~ ✓
+11. Comments, likes, favorites.
 10. Meal plans и shopping lists.
 11. Search.
 12. Moderation и admin.
