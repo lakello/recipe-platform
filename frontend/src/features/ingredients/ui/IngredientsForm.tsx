@@ -15,9 +15,12 @@ interface FormData {
   ingredients: IngredientRowData[]
 }
 
+type IngredientItem = { ingredient_name: string; amount?: number; unit?: IngredientUnit }
+
 interface IngredientsFormProps {
   defaultValues?: RecipeIngredientRead[]
-  onSubmit: (items: { ingredient_name: string; amount?: number; unit?: IngredientUnit }[]) => void
+  onSubmit: (items: IngredientItem[]) => void
+  onRemove?: (items: IngredientItem[]) => void
   isPending: boolean
   error: Error | null
 }
@@ -112,8 +115,17 @@ function IngredientRow({
   )
 }
 
-export function IngredientsForm({ defaultValues, onSubmit, isPending, error }: IngredientsFormProps) {
-  const { control, register, handleSubmit, reset } = useForm<FormData>({
+const toItems = (rows: IngredientRowData[]): IngredientItem[] =>
+  rows
+    .filter((i) => i.ingredient_name.trim())
+    .map((i) => ({
+      ingredient_name: i.ingredient_name.trim(),
+      amount: i.amount ? parseFloat(i.amount) : undefined,
+      unit: (i.unit || undefined) as IngredientUnit | undefined,
+    }))
+
+export function IngredientsForm({ defaultValues, onSubmit, onRemove, isPending, error }: IngredientsFormProps) {
+  const { control, register, handleSubmit, reset, getValues } = useForm<FormData>({
     defaultValues: { ingredients: [] },
   })
   const { fields, append, remove } = useFieldArray({ control, name: 'ingredients' })
@@ -130,15 +142,14 @@ export function IngredientsForm({ defaultValues, onSubmit, isPending, error }: I
     }
   }, [defaultValues, reset])
 
+  const handleRemove = (index: number) => {
+    const remaining = getValues('ingredients').filter((_, i) => i !== index)
+    remove(index)
+    onRemove?.(toItems(remaining))
+  }
+
   const handleFormSubmit = (data: FormData) => {
-    const items = data.ingredients
-      .filter((i) => i.ingredient_name.trim())
-      .map((i) => ({
-        ingredient_name: i.ingredient_name.trim(),
-        amount: i.amount ? parseFloat(i.amount) : undefined,
-        unit: (i.unit || undefined) as IngredientUnit | undefined,
-      }))
-    onSubmit(items)
+    onSubmit(toItems(data.ingredients))
   }
 
   return (
@@ -148,7 +159,7 @@ export function IngredientsForm({ defaultValues, onSubmit, isPending, error }: I
           key={field.id}
           index={index}
           register={register}
-          remove={() => remove(index)}
+          remove={() => handleRemove(index)}
         />
       ))}
       <button
