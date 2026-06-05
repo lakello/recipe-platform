@@ -710,6 +710,24 @@ Backend API:
 | `/register` | Форма регистрации | Публичная |
 | `/profile` | Просмотр и редактирование username | 🔒 |
 
+### Категории (feat/categories)
+
+- `src/features/categories/api/categoriesApi.ts` — типы и API-методы: list, get, create, update, delete
+- `src/features/categories/hooks/useCategories.ts` — хуки: `useCategoriesList`, `useCreateCategory`, `useUpdateCategory`, `useDeleteCategory`
+- `src/features/profile/api/profileApi.ts` — добавлен `role: UserRole` в `UserProfile`
+- `RecipeForm` — выпадающий список выбора категории
+- `RecipesListPage` — фильтр-теги по категориям, название категории на карточке рецепта
+
+Страницы:
+
+| Путь | Описание | Auth |
+|---|---|---|
+| `/admin/categories` | Управление категориями | 🔒 admin/superadmin |
+
+Поведение:
+- Кнопка "Категории" в шапке страницы рецептов видна только пользователям с ролью `admin` или `superadmin`
+- Фильтр по категории — через кнопки-теги над списком рецептов; фильтрация выполняется на бэкенде
+
 ### Docker (feat/docker-compose-local)
 
 - `Dockerfile` — multi-stage: Node 22 сборка → Nginx 1.25 раздача статики
@@ -773,8 +791,9 @@ Frontend находится в разработке.
 5. ~~Recipes list.~~ ✓
 6. ~~Recipe details.~~ ✓
 7. ~~Recipe create/edit.~~ ✓
-8. Layout.
-9. Profile.
+8. ~~Категории + фильтрация + admin UI.~~ ✓
+9. Layout.
+10. Profile.
 10. Comments, likes, favorites.
 11. Meal plan.
 12. Shopping list.
