@@ -20,7 +20,7 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.execute("CREATE TYPE userrole AS ENUM ('user', 'admin', 'superadmin')")
+    op.execute("CREATE TYPE IF NOT EXISTS userrole AS ENUM ('user', 'admin', 'superadmin')")
     op.add_column(
         "users",
         sa.Column(
