@@ -1,0 +1,61 @@
+import { apiJson, apiFetch } from '@/shared/api/client'
+
+export type RecipeStatus = 'draft' | 'published' | 'deleted'
+export type RecipeVisibility = 'public' | 'private'
+export type Difficulty = 'easy' | 'medium' | 'hard'
+
+export interface Recipe {
+  id: string
+  author_id: string
+  title: string
+  description: string | null
+  status: RecipeStatus
+  visibility: RecipeVisibility
+  cooking_time_minutes: number | null
+  servings: number | null
+  difficulty: Difficulty | null
+  created_at: string
+  updated_at: string
+}
+
+export interface RecipeCreate {
+  title: string
+  description?: string
+  visibility: RecipeVisibility
+  cooking_time_minutes?: number
+  servings?: number
+  difficulty?: Difficulty
+}
+
+export interface RecipeUpdate {
+  title?: string
+  description?: string
+  status?: RecipeStatus
+  visibility?: RecipeVisibility
+  cooking_time_minutes?: number
+  servings?: number
+  difficulty?: Difficulty
+}
+
+export const recipesApi = {
+  list: () => apiJson<Recipe[]>('/api/recipes'),
+
+  get: (id: string) => apiJson<Recipe>(`/api/recipes/${id}`),
+
+  create: (data: RecipeCreate) =>
+    apiJson<Recipe>('/api/recipes', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  update: (id: string, data: RecipeUpdate) =>
+    apiJson<Recipe>(`/api/recipes/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(data),
+    }),
+
+  remove: async (id: string) => {
+    const res = await apiFetch(`/api/recipes/${id}`, { method: 'DELETE' })
+    if (!res.ok) throw new Error('Не удалось удалить рецепт')
+  },
+}
