@@ -21,7 +21,7 @@ export function useLogin() {
   return useMutation({
     mutationFn: (data: LoginData) => authApi.login(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEY })
+      await queryClient.refetchQueries({ queryKey: CURRENT_USER_KEY })
       navigate('/')
     },
   })
