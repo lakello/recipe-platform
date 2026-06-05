@@ -10,22 +10,6 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   hard: 'Сложный',
 }
 
-function StatusBadge({ status }: { status: Recipe['status'] }) {
-  if (status === 'published')
-    return (
-      <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-        Опубликован
-      </span>
-    )
-  if (status === 'draft')
-    return (
-      <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
-        Черновик
-      </span>
-    )
-  return null
-}
-
 function VisibilityBadge({ visibility }: { visibility: Recipe['visibility'] }) {
   if (visibility === 'private')
     return (
@@ -69,7 +53,7 @@ export function RecipesListPage() {
       )}
 
       <ul className="flex flex-col gap-4">
-        {recipes?.map((recipe) => (
+        {recipes?.filter((r) => r.status === 'published').map((recipe) => (
           <li key={recipe.id}>
             <Link
               to={`/recipes/${recipe.id}`}
@@ -92,7 +76,6 @@ export function RecipesListPage() {
                   </div>
                 </div>
                 <div className="flex flex-col gap-1 items-end shrink-0">
-                  <StatusBadge status={recipe.status} />
                   <VisibilityBadge visibility={recipe.visibility} />
                 </div>
               </div>
