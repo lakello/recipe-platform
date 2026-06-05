@@ -9,7 +9,7 @@ export function useRegister() {
   return useMutation({
     mutationFn: (data: RegisterData) => authApi.register(data),
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: CURRENT_USER_KEY })
+      await queryClient.refetchQueries({ queryKey: CURRENT_USER_KEY })
       navigate('/')
     },
   })
