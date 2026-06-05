@@ -1,3 +1,5 @@
+from typing import Any
+
 import boto3
 from botocore.config import Config
 
@@ -11,7 +13,7 @@ CONTENT_TYPE_EXTENSIONS = {
 }
 
 
-def get_s3_client():
+def get_s3_client() -> Any:
     return boto3.client(
         "s3",
         endpoint_url=settings.s3_endpoint_url,
@@ -22,30 +24,37 @@ def get_s3_client():
     )
 
 
-def _to_public_url(url: str) -> str:
-    if settings.s3_public_url != settings.s3_endpoint_url:
-        url = url.replace(settings.s3_endpoint_url, settings.s3_public_url, 1)
-    return url
+def _get_presign_client() -> Any:
+    # Presigned URLs must be signed with the public endpoint so that the
+    # hostname in the signature matches the host the browser actually calls.
+    return boto3.client(
+        "s3",
+        endpoint_url=settings.s3_public_url,
+        aws_access_key_id=settings.s3_access_key,
+        aws_secret_access_key=settings.s3_secret_key,
+        region_name="us-east-1",
+        config=Config(signature_version="s3v4"),
+    )
 
 
 def presign_put(bucket: str, key: str, content_type: str, expires_in: int = 600) -> str:
-    client = get_s3_client()
-    url = client.generate_presigned_url(
-        "put_object",
-        Params={"Bucket": bucket, "Key": key, "ContentType": content_type},
-        ExpiresIn=expires_in,
+    return str(
+        _get_presign_client().generate_presigned_url(
+            "put_object",
+            Params={"Bucket": bucket, "Key": key, "ContentType": content_type},
+            ExpiresIn=expires_in,
+        )
     )
-    return _to_public_url(url)
 
 
 def presign_get(bucket: str, key: str, expires_in: int = 3600) -> str:
-    client = get_s3_client()
-    url = client.generate_presigned_url(
-        "get_object",
-        Params={"Bucket": bucket, "Key": key},
-        ExpiresIn=expires_in,
+    return str(
+        _get_presign_client().generate_presigned_url(
+            "get_object",
+            Params={"Bucket": bucket, "Key": key},
+            ExpiresIn=expires_in,
+        )
     )
-    return _to_public_url(url)
 
 
 def public_url(bucket: str, key: str) -> str:
