@@ -20,6 +20,7 @@
 | Frontend: инициализация React | ✅ Готово |
 | Frontend: Auth страницы | ✅ Готово |
 | Frontend: базовые рецепты (список, детали, создание, редактирование) | ✅ Готово |
+| Docker Compose для локального запуска | ✅ Готово |
 | Android | ⏳ Планируется |
 | Desktop | ⏳ Планируется |
 | Инфраструктура (Terraform, Ansible, Helm) | ⏳ Планируется |
@@ -318,7 +319,12 @@ docker compose down
 docker compose logs -f
 ```
 
-> Точные команды запуска будут дополняться по мере реализации `docker-compose.yml`.
+> Перед первым запуском скопируй `.env.example` в `.env` и заполни переменные.
+>
+> ```bash
+> cp .env.example .env
+> docker compose up --build
+> ```
 
 ## API
 
