@@ -53,6 +53,18 @@ class Recipe(Base):
         index=True,
     )
     category: Mapped["Category | None"] = relationship("Category", lazy="selectin")  # noqa: F821
+    ingredients: Mapped[list["RecipeIngredient"]] = relationship(  # noqa: F821
+        "RecipeIngredient",
+        lazy="selectin",
+        order_by="RecipeIngredient.order",
+        cascade="all, delete-orphan",
+    )
+    steps: Mapped[list["RecipeStep"]] = relationship(  # noqa: F821
+        "RecipeStep",
+        lazy="selectin",
+        order_by="RecipeStep.order",
+        cascade="all, delete-orphan",
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
