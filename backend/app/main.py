@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 from app.api.auth import router as auth_router
 from app.api.categories import router as categories_router
+from app.api.ingredients import router as ingredients_router
 from app.api.recipes import router as recipes_router
 from app.api.users import router as users_router
 from app.core.config import settings
@@ -40,6 +41,7 @@ app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(recipes_router)
 app.include_router(categories_router)
+app.include_router(ingredients_router)
 
 
 @app.get("/health")

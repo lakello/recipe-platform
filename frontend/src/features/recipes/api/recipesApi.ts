@@ -1,5 +1,6 @@
 import { apiJson, apiFetch } from '@/shared/api/client'
 import type { Category } from '@/features/categories/api/categoriesApi'
+import type { RecipeIngredientRead, RecipeStepRead } from '@/features/ingredients/api/ingredientsApi'
 
 export type RecipeStatus = 'draft' | 'published' | 'deleted'
 export type RecipeVisibility = 'public' | 'private'
@@ -17,6 +18,8 @@ export interface Recipe {
   difficulty: Difficulty | null
   category_id: string | null
   category: Category | null
+  ingredients: RecipeIngredientRead[]
+  steps: RecipeStepRead[]
   created_at: string
   updated_at: string
 }
