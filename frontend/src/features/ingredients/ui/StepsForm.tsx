@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useFieldArray, useForm } from 'react-hook-form'
 import {
   DndContext,
@@ -32,7 +32,7 @@ interface FormData {
 
 interface StepsFormProps {
   defaultValues?: RecipeStepRead[]
-  onSubmit: (items: { title?: string; description: string }[]) => void
+  onSubmit: (items: { title: string; description: string }[]) => void
   isPending: boolean
   error: Error | null
 }
@@ -42,11 +42,13 @@ function SortableStep({
   index,
   register,
   remove,
+  titleMissing,
 }: {
   field: { id: string }
   index: number
   register: ReturnType<typeof useForm<FormData>>['register']
   remove: () => void
+  titleMissing?: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: field.id })
@@ -75,11 +77,12 @@ function SortableStep({
       <div className="flex-1 flex flex-col gap-2">
         <span className="text-xs font-medium text-gray-400">Шаг {index + 1}</span>
         <Input
-          placeholder="Заголовок (необязательно)"
+          placeholder="Заголовок шага *"
           {...register(`steps.${index}.title`)}
+          error={titleMissing ? 'Заполните заголовок или удалите этот шаг' : undefined}
         />
         <textarea
-          placeholder="Описание шага *"
+          placeholder="Описание (необязательно)"
           rows={3}
           {...register(`steps.${index}.description`)}
           className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
@@ -101,6 +104,7 @@ export function StepsForm({ defaultValues, onSubmit, isPending, error }: StepsFo
     defaultValues: { steps: [] },
   })
   const { fields, append, remove, move } = useFieldArray({ control, name: 'steps' })
+  const [titleMissingIndices, setTitleMissingIndices] = useState<Set<number>>(new Set())
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -129,12 +133,19 @@ export function StepsForm({ defaultValues, onSubmit, isPending, error }: StepsFo
   }
 
   const handleFormSubmit = (data: FormData) => {
-    const items = data.steps
-      .filter((s) => s.description.trim())
-      .map((s) => ({
-        title: s.title.trim() || undefined,
-        description: s.description.trim(),
-      }))
+    const missing = new Set(
+      data.steps.reduce<number[]>((acc, s, i) => {
+        if (!s.title.trim()) acc.push(i)
+        return acc
+      }, []),
+    )
+    setTitleMissingIndices(missing)
+    if (missing.size > 0) return
+
+    const items = data.steps.map((s) => ({
+      title: s.title.trim(),
+      description: s.description.trim(),
+    }))
     onSubmit(items)
   }
 
@@ -155,7 +166,11 @@ export function StepsForm({ defaultValues, onSubmit, isPending, error }: StepsFo
               field={field}
               index={index}
               register={register}
-              remove={() => remove(index)}
+              titleMissing={titleMissingIndices.has(index)}
+              remove={() => {
+                remove(index)
+                setTitleMissingIndices(new Set())
+              }}
             />
           ))}
         </SortableContext>
