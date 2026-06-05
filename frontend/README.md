@@ -734,6 +734,14 @@ Backend API:
 - `nginx.conf` — SPA fallback (`try_files`), cache headers для статических ассетов
 - `.dockerignore` — исключены `node_modules`, `dist`, `.env`, `.git`
 
+### Ингредиенты и шаги (feat/ingredients-steps)
+
+- `src/features/ingredients/api/ingredientsApi.ts` — типы и API-методы, `UNIT_LABELS` для отображения единиц
+- `src/features/ingredients/hooks/useIngredients.ts` — хуки: `useIngredientSearch`, `useSetRecipeIngredients`, `useSetRecipeSteps`
+- `src/features/ingredients/ui/IngredientsForm.tsx` — динамическая форма с автодополнением из глобального справочника
+- `src/features/ingredients/ui/StepsForm.tsx` — DnD-сортируемая форма шагов (`@dnd-kit/core` + `@dnd-kit/sortable`)
+- `src/pages/recipe-page/ui/RecipePage.tsx` — отображение ингредиентов и шагов; автор редактирует прямо на странице
+
 ### Базовые рецепты (feat/frontend-recipes)
 
 - `src/features/recipes/api/recipesApi.ts` — типы и API-методы: list, get, create, update, delete
@@ -792,7 +800,8 @@ Frontend находится в разработке.
 6. ~~Recipe details.~~ ✓
 7. ~~Recipe create/edit.~~ ✓
 8. ~~Категории + фильтрация + admin UI.~~ ✓
-9. Layout.
+9. ~~Ингредиенты и шаги приготовления.~~ ✓
+10. Layout.
 10. Profile.
 10. Comments, likes, favorites.
 11. Meal plan.
