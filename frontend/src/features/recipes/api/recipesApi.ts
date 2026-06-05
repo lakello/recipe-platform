@@ -1,4 +1,5 @@
 import { apiJson, apiFetch } from '@/shared/api/client'
+import type { Category } from '@/features/categories/api/categoriesApi'
 
 export type RecipeStatus = 'draft' | 'published' | 'deleted'
 export type RecipeVisibility = 'public' | 'private'
@@ -14,6 +15,8 @@ export interface Recipe {
   cooking_time_minutes: number | null
   servings: number | null
   difficulty: Difficulty | null
+  category_id: string | null
+  category: Category | null
   created_at: string
   updated_at: string
 }
@@ -25,6 +28,7 @@ export interface RecipeCreate {
   cooking_time_minutes?: number
   servings?: number
   difficulty?: Difficulty
+  category_id?: string
 }
 
 export interface RecipeUpdate {
@@ -35,10 +39,14 @@ export interface RecipeUpdate {
   cooking_time_minutes?: number
   servings?: number
   difficulty?: Difficulty
+  category_id?: string | null
 }
 
 export const recipesApi = {
-  list: () => apiJson<Recipe[]>('/api/recipes'),
+  list: (categoryId?: string) =>
+    apiJson<Recipe[]>(
+      categoryId ? `/api/recipes?category_id=${categoryId}` : '/api/recipes',
+    ),
 
   get: (id: string) => apiJson<Recipe>(`/api/recipes/${id}`),
 

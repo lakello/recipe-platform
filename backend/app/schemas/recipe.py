@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.recipe import Difficulty, RecipeStatus, RecipeVisibility
+from app.schemas.category import CategoryRead
 
 
 class RecipeCreate(BaseModel):
@@ -13,6 +14,7 @@ class RecipeCreate(BaseModel):
     cooking_time_minutes: int | None = Field(None, gt=0)
     servings: int | None = Field(None, gt=0)
     difficulty: Difficulty | None = None
+    category_id: uuid.UUID | None = None
 
 
 class RecipeUpdate(BaseModel):
@@ -23,6 +25,7 @@ class RecipeUpdate(BaseModel):
     cooking_time_minutes: int | None = Field(None, gt=0)
     servings: int | None = Field(None, gt=0)
     difficulty: Difficulty | None = None
+    category_id: uuid.UUID | None = None
 
 
 class RecipeRead(BaseModel):
@@ -37,5 +40,7 @@ class RecipeRead(BaseModel):
     cooking_time_minutes: int | None
     servings: int | None
     difficulty: Difficulty | None
+    category_id: uuid.UUID | None
+    category: CategoryRead | None
     created_at: datetime
     updated_at: datetime
