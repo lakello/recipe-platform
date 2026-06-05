@@ -75,6 +75,8 @@ services:
     container_name: project_frontend
     ports:
       - "${FRONTEND_PORT}:80"
+    environment:
+      - BACKEND_URL=${BACKEND_URL}
     depends_on:
       backend:
         condition: service_healthy
