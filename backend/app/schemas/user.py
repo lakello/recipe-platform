@@ -22,5 +22,6 @@ class UserRead(BaseModel):
     username: str
     is_email_verified: bool
     is_active: bool
+    role: str
     created_at: datetime
     updated_at: datetime

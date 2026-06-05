@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_optional_user
@@ -28,11 +28,12 @@ async def create_recipe(
 
 @router.get("", response_model=list[RecipeRead])
 async def list_recipes(
+    category_id: uuid.UUID | None = Query(None),
     service: RecipeService = Depends(_recipe_service),
     current_user: User | None = Depends(get_optional_user),
 ) -> list[RecipeRead]:
     user_id = current_user.id if current_user else None
-    return await service.list_recipes(user_id)
+    return await service.list_recipes(user_id, category_id)
 
 
 @router.get("/{recipe_id}", response_model=RecipeRead)
