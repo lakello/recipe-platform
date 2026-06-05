@@ -54,7 +54,6 @@ GitHub Actions workflows для Recipe Platform.
   security.yml
 ```
 
-
 На начальном этапе workflows можно укрупнить, но по мере роста проекта лучше разделять их по ответственности.
 
 ## Основные окружения
