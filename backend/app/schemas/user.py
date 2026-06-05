@@ -23,5 +23,6 @@ class UserRead(BaseModel):
     is_email_verified: bool
     is_active: bool
     role: str
+    avatar_url: str | None
     created_at: datetime
     updated_at: datetime

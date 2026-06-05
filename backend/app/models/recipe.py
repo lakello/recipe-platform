@@ -53,6 +53,9 @@ class Recipe(Base):
         index=True,
     )
     category: Mapped["Category | None"] = relationship("Category", lazy="selectin")  # noqa: F821
+    photo: Mapped["RecipePhoto | None"] = relationship(  # noqa: F821
+        "RecipePhoto", lazy="selectin", uselist=False, cascade="all, delete-orphan"
+    )
     ingredients: Mapped[list["RecipeIngredient"]] = relationship(  # noqa: F821
         "RecipeIngredient",
         lazy="selectin",

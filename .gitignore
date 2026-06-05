@@ -407,7 +407,6 @@ alertmanager-data/
 # Generated uploads / media
 # =========================
 
-uploads/
 media/
 staticfiles/
 thumbnails/
