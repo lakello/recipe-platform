@@ -35,17 +35,24 @@ function IngredientRow({
   const { data: suggestions } = useIngredientSearch(query)
   const [showSuggestions, setShowSuggestions] = useState(false)
 
+  const { onChange: registerOnChange, onBlur: registerOnBlur, ...nameFieldProps } =
+    register(`ingredients.${index}.ingredient_name`)
+
   return (
     <div className="flex gap-2 items-start">
       <div className="flex-1 relative">
         <Input
           placeholder="Ингредиент"
-          {...register(`ingredients.${index}.ingredient_name`)}
+          {...nameFieldProps}
           onChange={(e) => {
+            registerOnChange(e)
             setQuery(e.target.value)
             setShowSuggestions(true)
           }}
-          onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+          onBlur={(e) => {
+            registerOnBlur(e)
+            setTimeout(() => setShowSuggestions(false), 150)
+          }}
           autoComplete="off"
         />
         {showSuggestions && suggestions && suggestions.length > 0 && (
