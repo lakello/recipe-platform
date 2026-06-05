@@ -32,8 +32,8 @@ class RecipeIngredientRead(BaseModel):
 
 
 class RecipeStepItem(BaseModel):
-    title: str | None = Field(None, max_length=255)
-    description: str = Field(min_length=1)
+    title: str = Field(min_length=1, max_length=255)
+    description: str = Field(default="")
 
 
 class RecipeStepRead(BaseModel):
