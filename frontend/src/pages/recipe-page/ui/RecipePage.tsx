@@ -172,6 +172,7 @@ export function RecipePage() {
             onSubmit={(items) =>
               setIngredients(items, { onSuccess: () => setEditingIngredients(false) })
             }
+            onRemove={(items) => setIngredients(items)}
             isPending={isSavingIngredients}
             error={ingredientsError}
           />
