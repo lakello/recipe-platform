@@ -31,12 +31,14 @@ class IngredientService:
         current_user_id: uuid.UUID,
         items: list[RecipeIngredientItem],
     ) -> RecipeRead:
-        recipe = await self._get_owned(recipe_id, current_user_id)
+        await self._get_owned(recipe_id, current_user_id)
         await self.ingredient_repo.replace_recipe_ingredients(
             recipe_id,
             [i.model_dump() for i in items],
         )
-        await self.recipe_repo.session.refresh(recipe)
+        # session.refresh() does not re-trigger selectin loading after commit;
+        # re-query instead to get fresh relationships from the database.
+        recipe = await self.recipe_repo.get_by_id(recipe_id)
         return RecipeRead.model_validate(recipe)
 
     async def set_steps(
@@ -45,12 +47,12 @@ class IngredientService:
         current_user_id: uuid.UUID,
         items: list[RecipeStepItem],
     ) -> RecipeRead:
-        recipe = await self._get_owned(recipe_id, current_user_id)
+        await self._get_owned(recipe_id, current_user_id)
         await self.ingredient_repo.replace_recipe_steps(
             recipe_id,
             [i.model_dump() for i in items],
         )
-        await self.recipe_repo.session.refresh(recipe)
+        recipe = await self.recipe_repo.get_by_id(recipe_id)
         return RecipeRead.model_validate(recipe)
 
     async def _get_owned(self, recipe_id: uuid.UUID, current_user_id: uuid.UUID):  # type: ignore[return]
