@@ -17,6 +17,13 @@ class Settings(BaseSettings):
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str = "redis://localhost:6379/1"
 
+    s3_endpoint_url: str = "http://localhost:9000"
+    s3_public_url: str = "http://localhost:9000"
+    s3_access_key: str = "minioadmin"
+    s3_secret_key: str = "minioadmin"
+    s3_bucket_photos: str = "recipe-photos"
+    s3_bucket_avatars: str = "avatars"
+
     jwt_secret: str = "change-me-in-production"
     jwt_access_token_expire_minutes: int = 15
     jwt_refresh_token_expire_days: int = 30

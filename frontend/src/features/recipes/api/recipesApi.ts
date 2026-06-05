@@ -18,6 +18,7 @@ export interface Recipe {
   difficulty: Difficulty | null
   category_id: string | null
   category: Category | null
+  photo: { id: string; key: string; content_type: string; created_at: string } | null
   ingredients: RecipeIngredientRead[]
   steps: RecipeStepRead[]
   created_at: string

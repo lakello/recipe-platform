@@ -6,6 +6,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from app.models.recipe import Difficulty, RecipeStatus, RecipeVisibility
 from app.schemas.category import CategoryRead
 from app.schemas.ingredient import RecipeIngredientRead, RecipeStepRead
+from app.schemas.upload import RecipePhotoRead
 
 
 class RecipeCreate(BaseModel):
@@ -43,6 +44,7 @@ class RecipeRead(BaseModel):
     difficulty: Difficulty | None
     category_id: uuid.UUID | None
     category: CategoryRead | None
+    photo: RecipePhotoRead | None
     ingredients: list[RecipeIngredientRead]
     steps: list[RecipeStepRead]
     created_at: datetime
