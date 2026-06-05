@@ -9,6 +9,7 @@ Create Date: 2026-06-05 13:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 
 from alembic import op
 
@@ -38,12 +39,12 @@ def upgrade() -> None:
     op.create_index(op.f("ix_ingredients_name"), "ingredients", ["name"], unique=True)
 
     values = ", ".join(f"'{v}'" for v in UNIT_ENUM)
-    op.execute(f"""
+    op.execute(sa.text(f"""
         DO $$ BEGIN
             CREATE TYPE ingredientunit AS ENUM ({values});
         EXCEPTION WHEN duplicate_object THEN NULL;
         END $$;
-    """)
+    """))
 
     op.create_table(
         "recipe_ingredients",
@@ -53,7 +54,7 @@ def upgrade() -> None:
         sa.Column("amount", sa.Numeric(10, 2), nullable=True),
         sa.Column(
             "unit",
-            sa.Enum(*UNIT_ENUM, name="ingredientunit", create_type=False),
+            PgEnum(*UNIT_ENUM, name="ingredientunit", create_type=False),
             nullable=True,
         ),
         sa.Column("order", sa.Integer(), nullable=False),
