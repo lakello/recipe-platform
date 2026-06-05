@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
+import { Link } from 'react-router-dom'
 import { z } from 'zod'
 import { useLogout } from '@/features/auth/hooks/useAuth'
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser'
@@ -38,7 +39,12 @@ export function ProfilePage() {
   return (
     <div className="mx-auto max-w-lg px-4 py-12">
       <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Профиль</h1>
+        <div className="flex items-center gap-3">
+          <Link to="/">
+            <Button variant="secondary">← Главная</Button>
+          </Link>
+          <h1 className="text-2xl font-bold text-gray-900">Профиль</h1>
+        </div>
         <Button variant="secondary" loading={isLoggingOut} onClick={() => logout()}>
           Выйти
         </Button>
