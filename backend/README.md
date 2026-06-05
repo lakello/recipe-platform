@@ -825,6 +825,18 @@ docker build -t recipe-backend:local .
 
 ## Что уже реализовано
 
+### Docker (feat/docker-compose-local)
+
+- `Dockerfile` — `python:3.12-slim`, кэш зависимостей (requirements.txt отдельным слоем), применение миграций и запуск uvicorn в одной CMD через `sh -c`
+- `.dockerignore` — исключены `__pycache__`, `*.pyc`, `.pytest_cache`, `*.egg-info`, `.env`, `.git`
+
+Сборка и запуск через Docker Compose из корня проекта:
+
+```bash
+cp .env.example .env   # заполнить переменные
+docker compose up --build
+```
+
 ### Базовый CRUD рецептов (feat/backend-recipes)
 
 - `app/models/recipe.py` — модель `Recipe` с enum-полями: `RecipeStatus` (draft/published/deleted), `RecipeVisibility` (public/private), `Difficulty` (easy/medium/hard)
