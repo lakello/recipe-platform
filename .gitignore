@@ -464,3 +464,10 @@ temp/
 # Lock files are intentionally NOT ignored:
 # package-lock.json, yarn.lock, pnpm-lock.yaml, poetry.lock, uv.lock, Cargo.lock, gradle.lockfile
 # should be committed for reproducible builds.
+
+# Claude Code (personal, not shared)
+.claude/
+
+# MCP конфиг (содержит строку подключения к БД)
+.mcp.json
+.obsidian/

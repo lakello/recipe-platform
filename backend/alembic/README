@@ -1,0 +1,10 @@
+Alembic migrations for Recipe Platform backend.
+
+DATABASE_URL is read from Settings (app/core/config.py) — set it via .env file.
+
+Common commands:
+  alembic upgrade head                          # apply all migrations
+  alembic downgrade -1                          # roll back last migration
+  alembic revision --autogenerate -m "message"  # generate new migration
+  alembic current                               # show current revision
+  alembic history                               # show migration history
