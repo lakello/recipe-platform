@@ -825,6 +825,38 @@ docker build -t recipe-backend:local .
 
 ## Что уже реализовано
 
+### Категории (feat/categories)
+
+- `app/models/user.py` — добавлен `UserRole` enum (`user`, `admin`, `superadmin`) и поле `role`
+- `app/models/category.py` — модель `Category`: `name`, `slug` (auto-генерация), `description`
+- `app/repositories/category.py` — create, get_by_id, get_by_slug, list_all, update, delete
+- `app/services/category.py` — CRUD с проверкой уникальности slug; функция `_slugify`
+- `app/api/deps.py` — зависимости `get_current_admin`, `get_current_superadmin`
+- `app/api/categories.py` — роутер `/api/categories`
+- `app/schemas/recipe.py` — добавлен `category_id` и вложенный `CategoryRead`
+- `tests/test_category_service.py` — 8 unit-тестов
+
+Миграции:
+- `c1a2b3d4e5f6` — добавляет `role` в таблицу `users`
+- `d2b3c4e5f6a1` — создаёт таблицу `categories`
+- `e3c4d5f6a1b2` — добавляет `category_id` FK в `recipes`
+
+Endpoints:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `GET` | `/api/categories` | — | Список категорий |
+| `GET` | `/api/categories/{id}` | — | Получить категорию |
+| `POST` | `/api/categories` | 🔒 admin | Создать категорию |
+| `PATCH` | `/api/categories/{id}` | 🔒 admin | Редактировать категорию |
+| `DELETE` | `/api/categories/{id}` | 🔒 admin | Удалить категорию |
+| `GET` | `/api/recipes?category_id=` | опц. | Фильтр рецептов по категории |
+
+Назначение ролей (через SQL):
+```sql
+UPDATE users SET role = 'superadmin' WHERE email = 'your@email.com';
+```
+
 ### Docker (feat/docker-compose-local)
 
 - `Dockerfile` — `python:3.12-slim`, кэш зависимостей (requirements.txt отдельным слоем), применение миграций и запуск uvicorn в одной CMD через `sh -c`
@@ -975,7 +1007,8 @@ Backend находится в разработке.
 5. ~~Auth (регистрация, логин, JWT, refresh).~~ ✓
 6. ~~Users и profiles (модель).~~ ✓
 7. ~~Recipes CRUD.~~ ✓
-8. Uploads.
+8. ~~Категории + роли пользователей.~~ ✓
+9. Uploads.
 9. Comments, likes, favorites.
 10. Meal plans и shopping lists.
 11. Search.
