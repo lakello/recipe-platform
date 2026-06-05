@@ -32,7 +32,7 @@ export function useLogout() {
   const navigate = useNavigate()
   return useMutation({
     mutationFn: authApi.logout,
-    onSuccess: () => {
+    onSettled: () => {
       queryClient.setQueryData(CURRENT_USER_KEY, null)
       navigate('/login')
     },
