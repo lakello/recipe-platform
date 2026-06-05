@@ -825,6 +825,25 @@ docker build -t recipe-backend:local .
 
 ## Что уже реализовано
 
+### Ингредиенты и шаги (feat/ingredients-steps)
+
+- `app/models/ingredient.py` — модели `Ingredient` (глобальный справочник), `RecipeIngredient` (связь с amount, unit enum, order), `RecipeStep` (order, title, description)
+- `IngredientUnit` enum: `g`, `kg`, `ml`, `liter(l)`, `tsp`, `tbsp`, `pcs`, `cup`, `pinch`, `to_taste`
+- `app/repositories/ingredient.py` — `get_or_create`, `search`, `replace_recipe_ingredients`, `replace_recipe_steps`
+- `app/services/ingredient.py` — `search_ingredients`, `set_ingredients`, `set_steps` с проверкой авторства
+- `app/api/ingredients.py` — роутеры для поиска ингредиентов и сохранения ингредиентов/шагов
+- `app/schemas/recipe.py` — `RecipeRead` дополнен `ingredients` и `steps`
+- `tests/test_ingredient_service.py` — 6 unit-тестов
+- `alembic/versions/f4d5e6f7a1b2` — создаёт `ingredients`, `recipe_ingredients`, `recipe_steps`
+
+Endpoints:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `GET` | `/api/ingredients?search=` | — | Поиск ингредиентов в справочнике |
+| `PUT` | `/api/recipes/{id}/ingredients` | 🔒 автор | Заменить все ингредиенты рецепта |
+| `PUT` | `/api/recipes/{id}/steps` | 🔒 автор | Заменить все шаги рецепта |
+
 ### Категории (feat/categories)
 
 - `app/models/user.py` — добавлен `UserRole` enum (`user`, `admin`, `superadmin`) и поле `role`
@@ -1008,7 +1027,8 @@ Backend находится в разработке.
 6. ~~Users и profiles (модель).~~ ✓
 7. ~~Recipes CRUD.~~ ✓
 8. ~~Категории + роли пользователей.~~ ✓
-9. Uploads.
+9. ~~Ингредиенты и шаги приготовления.~~ ✓
+10. Uploads.
 9. Comments, likes, favorites.
 10. Meal plans и shopping lists.
 11. Search.
