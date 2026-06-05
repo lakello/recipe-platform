@@ -23,6 +23,7 @@ class RecipeService:
                 cooking_time_minutes=data.cooking_time_minutes,
                 servings=data.servings,
                 difficulty=data.difficulty,
+                category_id=data.category_id,
             )
         )
         return RecipeRead.model_validate(recipe)
@@ -37,8 +38,12 @@ class RecipeService:
             raise HTTPException(status_code=404, detail="Recipe not found")
         return RecipeRead.model_validate(recipe)
 
-    async def list_recipes(self, current_user_id: uuid.UUID | None) -> list[RecipeRead]:
-        recipes = await self.repository.list_visible(current_user_id)
+    async def list_recipes(
+        self,
+        current_user_id: uuid.UUID | None,
+        category_id: uuid.UUID | None = None,
+    ) -> list[RecipeRead]:
+        recipes = await self.repository.list_visible(current_user_id, category_id)
         return [RecipeRead.model_validate(r) for r in recipes]
 
     async def update_recipe(

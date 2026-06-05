@@ -22,7 +22,11 @@ class RecipeRepository:
         )
         return result.scalar_one_or_none()
 
-    async def list_visible(self, current_user_id: uuid.UUID | None) -> list[Recipe]:
+    async def list_visible(
+        self,
+        current_user_id: uuid.UUID | None,
+        category_id: uuid.UUID | None = None,
+    ) -> list[Recipe]:
         if current_user_id:
             stmt = select(Recipe).where(
                 or_(
@@ -41,6 +45,8 @@ class RecipeRepository:
                 Recipe.status == RecipeStatus.published,
                 Recipe.visibility == RecipeVisibility.public,
             )
+        if category_id is not None:
+            stmt = stmt.where(Recipe.category_id == category_id)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
