@@ -30,7 +30,7 @@ def upgrade() -> None:
         "users",
         sa.Column(
             "role",
-            sa.Enum("user", "admin", "superadmin", name="userrole"),
+            sa.Enum("user", "admin", "superadmin", name="userrole", create_type=False),
             nullable=False,
             server_default="user",
         ),
