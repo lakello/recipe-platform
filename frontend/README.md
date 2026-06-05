@@ -710,6 +710,26 @@ Backend API:
 | `/register` | Форма регистрации | Публичная |
 | `/profile` | Просмотр и редактирование username | 🔒 |
 
+### Базовые рецепты (feat/frontend-recipes)
+
+- `src/features/recipes/api/recipesApi.ts` — типы и API-методы: list, get, create, update, delete
+- `src/features/recipes/hooks/useRecipes.ts` — хуки: `useRecipesList`, `useRecipe`, `useCreateRecipe`, `useUpdateRecipe`, `useDeleteRecipe`
+- `src/features/recipes/ui/RecipeForm.tsx` — переиспользуемая форма (создание и редактирование)
+
+Страницы:
+
+| Путь | Описание | Auth |
+|---|---|---|
+| `/recipes` | Список рецептов | Публичная |
+| `/recipes/:recipeId` | Детали рецепта | Публичная |
+| `/recipes/new` | Создание рецепта | 🔒 |
+| `/recipes/:recipeId/edit` | Редактирование рецепта | 🔒 |
+
+Поведение:
+- Рецепт создаётся со статусом `draft`; автор публикует его кнопкой "Опубликовать" на странице рецепта
+- Кнопки редактирования, удаления и публикации видны только автору
+- Бейджи показывают статус (`draft` / `published`) и видимость (`private`)
+
 ### Инициализация React (feat/frontend-init)
 
 - Vite 8 + React 19 + TypeScript
@@ -741,10 +761,10 @@ Frontend находится в разработке.
 2. ~~Routing.~~ ✓
 3. ~~API client.~~ ✓
 4. ~~Auth pages.~~ ✓
-5. Layout.
-6. Recipes list.
-7. Recipe details.
-8. Recipe create/edit.
+5. ~~Recipes list.~~ ✓
+6. ~~Recipe details.~~ ✓
+7. ~~Recipe create/edit.~~ ✓
+8. Layout.
 9. Profile.
 10. Comments, likes, favorites.
 11. Meal plan.
