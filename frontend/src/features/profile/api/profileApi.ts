@@ -1,11 +1,14 @@
 import { apiJson } from '@/shared/api/client'
 
+export type UserRole = 'user' | 'admin' | 'superadmin'
+
 export interface UserProfile {
   id: string
   email: string
   username: string
   is_email_verified: boolean
   is_active: boolean
+  role: UserRole
   created_at: string
   updated_at: string
 }

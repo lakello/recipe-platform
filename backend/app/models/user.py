@@ -1,11 +1,18 @@
+import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import Boolean, DateTime, String, func
+from sqlalchemy import Boolean, DateTime, Enum, String, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.db.base import Base
+
+
+class UserRole(enum.StrEnum):
+    user = "user"
+    admin = "admin"
+    superadmin = "superadmin"
 
 
 class User(Base):
@@ -19,6 +26,9 @@ class User(Base):
     password_hash: Mapped[str] = mapped_column(String(255))
     is_email_verified: Mapped[bool] = mapped_column(Boolean, default=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    role: Mapped[UserRole] = mapped_column(
+        Enum(UserRole), default=UserRole.user, server_default=UserRole.user
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

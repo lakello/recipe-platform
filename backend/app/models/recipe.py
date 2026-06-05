@@ -4,7 +4,7 @@ from datetime import datetime
 
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
@@ -46,6 +46,13 @@ class Recipe(Base):
     cooking_time_minutes: Mapped[int | None] = mapped_column(Integer)
     servings: Mapped[int | None] = mapped_column(Integer)
     difficulty: Mapped[Difficulty | None] = mapped_column(Enum(Difficulty))
+    category_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("categories.id", ondelete="SET NULL"),
+        nullable=True,
+        index=True,
+    )
+    category: Mapped["Category | None"] = relationship("Category", lazy="selectin")  # noqa: F821
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

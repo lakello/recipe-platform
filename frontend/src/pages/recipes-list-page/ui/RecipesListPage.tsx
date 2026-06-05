@@ -1,6 +1,8 @@
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { useRecipesList } from '@/features/recipes/hooks/useRecipes'
+import { useCategoriesList } from '@/features/categories/hooks/useCategories'
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser'
+import { useRecipesList } from '@/features/recipes/hooks/useRecipes'
 import { Button } from '@/shared/ui/Button'
 import type { Recipe } from '@/features/recipes/api/recipesApi'
 
@@ -21,16 +23,23 @@ function VisibilityBadge({ visibility }: { visibility: Recipe['visibility'] }) {
 }
 
 export function RecipesListPage() {
-  const { data: recipes, isPending, error } = useRecipesList()
+  const [selectedCategory, setSelectedCategory] = useState<string | undefined>()
+  const { data: recipes, isPending, error } = useRecipesList(selectedCategory)
   const { data: user } = useCurrentUser()
+  const { data: categories } = useCategoriesList()
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12">
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-900">Рецепты</h1>
         <div className="flex gap-2">
           {user && (
             <>
+              {user.role === 'admin' || user.role === 'superadmin' ? (
+                <Link to="/admin/categories">
+                  <Button variant="secondary">Категории</Button>
+                </Link>
+              ) : null}
               <Link to="/recipes/drafts">
                 <Button variant="secondary">Черновики</Button>
               </Link>
@@ -45,10 +54,38 @@ export function RecipesListPage() {
         </div>
       </div>
 
+      {categories && categories.length > 0 && (
+        <div className="flex flex-wrap gap-2 mb-6">
+          <button
+            onClick={() => setSelectedCategory(undefined)}
+            className={`px-3 py-1 rounded-full text-sm transition-colors ${
+              !selectedCategory
+                ? 'bg-blue-600 text-white'
+                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+            }`}
+          >
+            Все
+          </button>
+          {categories.map((c) => (
+            <button
+              key={c.id}
+              onClick={() => setSelectedCategory(c.id === selectedCategory ? undefined : c.id)}
+              className={`px-3 py-1 rounded-full text-sm transition-colors ${
+                selectedCategory === c.id
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+              }`}
+            >
+              {c.name}
+            </button>
+          ))}
+        </div>
+      )}
+
       {isPending && <p className="text-gray-500">Загрузка...</p>}
       {error && <p className="text-red-500">{error.message}</p>}
 
-      {recipes && recipes.length === 0 && (
+      {recipes && recipes.filter((r) => r.status === 'published').length === 0 && (
         <p className="text-gray-500">Рецептов пока нет. Будьте первым!</p>
       )}
 
@@ -62,6 +99,9 @@ export function RecipesListPage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <h2 className="font-semibold text-gray-900 truncate">{recipe.title}</h2>
+                  {recipe.category && (
+                    <span className="text-xs text-blue-600 font-medium">{recipe.category.name}</span>
+                  )}
                   {recipe.description && (
                     <p className="mt-1 text-sm text-gray-500 line-clamp-2">{recipe.description}</p>
                   )}
