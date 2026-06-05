@@ -37,9 +37,8 @@ def upgrade() -> None:
     )
     op.create_index(op.f("ix_ingredients_name"), "ingredients", ["name"], unique=True)
 
-    op.execute(
-        f"CREATE TYPE ingredientunit AS ENUM {tuple(UNIT_ENUM)!r}".replace("'", "'")
-    )
+    values = ", ".join(f"'{v}'" for v in UNIT_ENUM)
+    op.execute(f"CREATE TYPE IF NOT EXISTS ingredientunit AS ENUM ({values})")
 
     op.create_table(
         "recipe_ingredients",
