@@ -52,7 +52,8 @@ class RecipeIngredient(Base):
     )
     amount: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     unit: Mapped[IngredientUnit | None] = mapped_column(
-        SAEnum(IngredientUnit), nullable=True
+        SAEnum(IngredientUnit, values_callable=lambda x: [e.value for e in x]),
+        nullable=True,
     )
     order: Mapped[int] = mapped_column(Integer, default=0)
     ingredient: Mapped["Ingredient"] = relationship("Ingredient", lazy="selectin")
