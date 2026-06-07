@@ -17,7 +17,7 @@ export function CommentList({ recipeId, currentUser }: CommentListProps) {
   }
 
   return (
-    <div className="rounded-xl bg-white p-6 shadow-sm flex flex-col gap-4">
+    <div id="comments" className="rounded-xl bg-white p-6 shadow-sm flex flex-col gap-4">
       <h2 className="text-lg font-semibold text-gray-900">Комментарии</h2>
 
       {currentUser ? (

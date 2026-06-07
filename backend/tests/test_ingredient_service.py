@@ -20,9 +20,14 @@ from app.services.ingredient import IngredientService
 
 def make_recipe(author_id: uuid.UUID | None = None, **kwargs) -> Recipe:
     author_id = author_id or uuid.uuid4()
+    author = MagicMock()
+    author.id = author_id
+    author.username = "tester"
+    author.avatar_url = None
     recipe = MagicMock(spec=Recipe)
     recipe.id = uuid.uuid4()
     recipe.author_id = author_id
+    recipe.author = author
     recipe.status = RecipeStatus.draft
     recipe.visibility = RecipeVisibility.public
     recipe.title = "Test"

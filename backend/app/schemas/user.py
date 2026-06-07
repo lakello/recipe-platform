@@ -14,6 +14,15 @@ class UserUpdate(BaseModel):
     username: str | None = Field(None, min_length=3, max_length=50)
 
 
+class UserPublicRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    username: str
+    avatar_url: str | None
+    created_at: datetime
+
+
 class UserRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 

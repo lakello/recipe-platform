@@ -14,9 +14,14 @@ from app.services.like import FavoriteService, LikeService
 
 def make_recipe(**kwargs) -> Recipe:
     author_id = kwargs.pop("author_id", uuid.uuid4())
+    author = MagicMock()
+    author.id = author_id
+    author.username = "tester"
+    author.avatar_url = None
     defaults = {
         "id": uuid.uuid4(),
         "author_id": author_id,
+        "author": author,
         "title": "Test Recipe",
         "description": None,
         "status": RecipeStatus.published,
