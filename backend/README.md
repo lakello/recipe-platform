@@ -825,6 +825,38 @@ docker build -t recipe-backend:local .
 
 ## Что уже реализовано
 
+### Подписки на авторов (feat/follows)
+
+- `app/models/follow.py` — модель `Follow`: `follower_id`, `following_id`, уникальный составной индекс `uq_follow`, CASCADE-удаление
+- `app/repositories/follow.py` — `FollowRepository`: get, create, delete, count_followers, count_following, list_followers, list_following, get_following_ids, is_following_batch; батч-методы исключают N+1 при листинге
+- `app/services/follow.py` — `FollowService`: follow (400 самоподписка, 404 пользователь не найден, 409 уже подписан), unfollow, list_followers, list_following
+- `app/schemas/follow.py` — `FollowUserRead` (id, username, avatar_url, is_following), `FollowUserPage`
+- `app/api/follows.py` — роутер подписок
+- `app/repositories/recipe.py` — добавлен `list_feed(author_ids, page, size)` для формирования ленты
+- `tests/test_follow_service.py` — 8 unit-тестов
+- `alembic/versions/i7a8b9c0d1e2` — создаёт таблицу `follows` с уникальным индексом
+
+Endpoints:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `POST` | `/api/users/{id}/follow` | 🔒 | Подписаться на пользователя |
+| `DELETE` | `/api/users/{id}/follow` | 🔒 | Отписаться |
+| `GET` | `/api/users/{id}/followers` | — | Список подписчиков (пагинация) |
+| `GET` | `/api/users/{id}/following` | — | Список подписок (пагинация) |
+| `GET` | `/api/feed` | 🔒 | Лента рецептов от авторов из подписок |
+
+### Публичные профили пользователей (feat/public-user-profiles)
+
+- `app/schemas/user.py` — `UserPublicRead`: публичная схема (id, username, avatar_url, created_at); без email и приватных полей; дополнена `followers_count`, `following_count`, `is_following`
+- `app/api/users.py` — `GET /api/users/{user_id}`: публичный endpoint с опциональной аутентификацией (`get_optional_user`); возвращает `UserPublicRead`, обогащённый follow-данными через `FollowRepository`
+
+Endpoints:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `GET` | `/api/users/{user_id}` | опц. | Публичный профиль пользователя с подписками |
+
 ### Лайки и избранное (feat/likes-and-favorites)
 
 - `app/models/like.py` — модели `Like` и `Favorite` с UniqueConstraint `(user_id, recipe_id)` и CASCADE-удалением
@@ -1112,7 +1144,9 @@ Backend находится в разработке.
 10. ~~Uploads (presigned URL, привязка фото, аватары).~~ ✓
 11. ~~Likes, favorites.~~ ✓
 12. ~~Comments.~~ ✓
-10. Meal plans и shopping lists.
+13. ~~Public user profiles.~~ ✓
+14. ~~Follows и feed.~~ ✓
+15. Meal plans и shopping lists.
 11. Search.
 12. Moderation и admin.
 13. Celery tasks.

@@ -816,6 +816,34 @@ Backend API:
 - Профиль показывает все рецепты пользователя (включая черновики и приватные)
 - После регистрации и входа — автоматический редирект на главную
 
+### Подписки на авторов (feat/follows)
+
+- `src/features/follows/api/followsApi.ts` — методы: follow, unfollow, listFollowers, listFollowing
+- `src/features/follows/hooks/useFollows.ts` — хуки: `useFollowers(userId, page)`, `useFollowing(userId, page)`, `useFollow(userId)`; инвалидация `publicUser` + followers + following после мутаций
+- `src/features/follows/ui/FollowButton.tsx` — кнопка «Подписаться» / «Отписаться»
+- `src/pages/followers-page/` — страница подписчиков `/users/:userId/followers` с пагинацией и кнопками подписки
+- `src/pages/following-page/` — страница подписок `/users/:userId/following`
+- `src/pages/feed-page/` — лента рецептов `/feed` (только для авторизованных); пустое состояние со ссылкой на все рецепты
+- `src/pages/user-profile-page/` — публичный профиль дополнен: кнопка подписки (скрыта на своём профиле), счётчики подписчиков/подписок/рецептов со ссылками
+- `src/pages/profile-page/` — личный профиль: добавлены счётчики рецептов, подписчиков и подписок со ссылками на страницы списков
+- `src/pages/recipes-list-page/` — кнопка «Лента» в шапке (только для авторизованных)
+- `src/features/recipes/api/recipesApi.ts` — добавлен метод `getFeed(page, size)`
+- `src/features/recipes/hooks/useRecipes.ts` — добавлен хук `useFeed()`
+
+Страницы:
+
+| Путь | Описание | Auth |
+|---|---|---|
+| `/users/:userId/followers` | Список подписчиков пользователя | Публичная |
+| `/users/:userId/following` | Список подписок пользователя | Публичная |
+| `/feed` | Лента рецептов от авторов из подписок | 🔒 |
+
+Поведение:
+- На чужом профиле отображается кнопка «Подписаться» / «Отписаться»; на своём — не отображается
+- Счётчики подписчиков и подписок кликабельны и ведут на страницы списков
+- В списках подписчиков/подписок у каждого пользователя есть кнопка подписки (скрыта для своего аккаунта)
+- Лента пустая, если нет подписок — показывается ссылка на все рецепты
+
 ### Карточки рецептов, отображение автора и публичные профили (feat/public-user-profiles)
 
 **Бэкенд:**
@@ -888,7 +916,8 @@ Frontend находится в разработке.
 10. ~~Likes, favorites.~~ ✓
 11. ~~Comments.~~ ✓
 11. ~~Public user profiles, recipe card redesign, author display.~~ ✓
-11. Meal plan.
+12. ~~Follows, feed, followers/following pages.~~ ✓
+13. Meal plan.
 12. Shopping list.
 13. Moderation UI.
 14. Admin UI.
