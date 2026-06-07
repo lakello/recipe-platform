@@ -12,6 +12,9 @@ import { DraftsPage } from '@/pages/drafts-page'
 import { FavoritesPage } from '@/pages/favorites-page'
 import { AdminCategoriesPage } from '@/pages/admin-categories-page'
 import { PublicProfilePage } from '@/pages/user-profile-page'
+import { FollowersPage } from '@/pages/followers-page'
+import { FollowingPage } from '@/pages/following-page'
+import { FeedPage } from '@/pages/feed-page'
 
 export function App() {
   return (
@@ -72,6 +75,16 @@ export function App() {
             }
           />
           <Route path="/users/:userId" element={<PublicProfilePage />} />
+          <Route path="/users/:userId/followers" element={<FollowersPage />} />
+          <Route path="/users/:userId/following" element={<FollowingPage />} />
+          <Route
+            path="/feed"
+            element={
+              <ProtectedRoute>
+                <FeedPage />
+              </ProtectedRoute>
+            }
+          />
         </Routes>
       </BrowserRouter>
     </QueryProvider>

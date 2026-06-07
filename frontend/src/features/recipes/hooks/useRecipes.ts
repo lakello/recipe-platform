@@ -18,6 +18,15 @@ export function useUserRecipes(authorId: string) {
   })
 }
 
+export const FEED_KEY = ['feed']
+
+export function useFeed() {
+  return useQuery({
+    queryKey: FEED_KEY,
+    queryFn: () => recipesApi.getFeed(),
+  })
+}
+
 export function useRecipe(id: string) {
   return useQuery({
     queryKey: [...RECIPES_KEY, id],
