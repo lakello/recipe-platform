@@ -10,6 +10,7 @@ import { RecipePage } from '@/pages/recipe-page'
 import { RecipeCreatePage } from '@/pages/recipe-create-page'
 import { RecipeEditPage } from '@/pages/recipe-edit-page'
 import { DraftsPage } from '@/pages/drafts-page'
+import { FavoritesPage } from '@/pages/favorites-page'
 import { AdminCategoriesPage } from '@/pages/admin-categories-page'
 
 export function App() {
@@ -58,6 +59,14 @@ export function App() {
             element={
               <ProtectedRoute>
                 <DraftsPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/favorites"
+            element={
+              <ProtectedRoute>
+                <FavoritesPage />
               </ProtectedRoute>
             }
           />

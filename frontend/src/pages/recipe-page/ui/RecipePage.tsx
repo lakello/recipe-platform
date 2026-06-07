@@ -9,6 +9,8 @@ import {
 import { UNIT_LABELS } from '@/features/ingredients/api/ingredientsApi'
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser'
 import { useDeleteRecipe, useRecipe, useUpdateRecipe } from '@/features/recipes/hooks/useRecipes'
+import { LikeButton } from '@/features/likes/ui/LikeButton'
+import { FavoriteButton } from '@/features/likes/ui/FavoriteButton'
 import { PhotoUpload } from '@/features/uploads/ui/PhotoUpload'
 import { uploadsApi } from '@/features/uploads/api/uploadsApi'
 import { useRecipePhotoUpload } from '@/features/uploads/hooks/useUpload'
@@ -63,21 +65,36 @@ export function RecipePage() {
               <span className="text-sm text-blue-600 font-medium">{recipe.category.name}</span>
             )}
           </div>
-          <div className="flex flex-col gap-1 items-end shrink-0">
-            {recipe.status === 'draft' ? (
-              <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
-                Черновик
-              </span>
-            ) : (
-              <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
-                Опубликован
-              </span>
-            )}
-            {recipe.visibility === 'private' && (
-              <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                Приватный
-              </span>
-            )}
+          <div className="flex flex-col gap-2 items-end shrink-0">
+            <div className="flex flex-col gap-1 items-end">
+              {recipe.status === 'draft' ? (
+                <span className="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">
+                  Черновик
+                </span>
+              ) : (
+                <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                  Опубликован
+                </span>
+              )}
+              {recipe.visibility === 'private' && (
+                <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+                  Приватный
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-1">
+              <LikeButton
+                recipeId={recipe.id}
+                likesCount={recipe.likes_count}
+                isLiked={recipe.is_liked}
+                isAuthenticated={!!user}
+              />
+              <FavoriteButton
+                recipeId={recipe.id}
+                isFavorited={recipe.is_favorited}
+                isAuthenticated={!!user}
+              />
+            </div>
           </div>
         </div>
 
