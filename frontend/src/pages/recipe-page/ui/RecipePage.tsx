@@ -15,6 +15,7 @@ import { PhotoUpload } from '@/features/uploads/ui/PhotoUpload'
 import { uploadsApi } from '@/features/uploads/api/uploadsApi'
 import { useRecipePhotoUpload } from '@/features/uploads/hooks/useUpload'
 import { Button } from '@/shared/ui/Button'
+import { UserLink } from '@/shared/ui/UserLink'
 import { CommentList } from '@/features/comments/ui/CommentList'
 
 const DIFFICULTY_LABELS: Record<string, string> = {
@@ -65,6 +66,14 @@ export function RecipePage() {
             {recipe.category && (
               <span className="text-sm text-blue-600 font-medium">{recipe.category.name}</span>
             )}
+            <div className="mt-2">
+              <UserLink
+                userId={recipe.author.id}
+                username={recipe.author.username}
+                avatarUrl={recipe.author.avatar_url}
+                size="md"
+              />
+            </div>
           </div>
           <div className="flex flex-col gap-2 items-end shrink-0">
             <div className="flex flex-col gap-1 items-end">

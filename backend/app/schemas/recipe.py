@@ -9,6 +9,14 @@ from app.schemas.ingredient import RecipeIngredientRead, RecipeStepRead
 from app.schemas.upload import RecipePhotoRead
 
 
+class RecipeAuthorRead(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    username: str
+    avatar_url: str | None
+
+
 class RecipeCreate(BaseModel):
     title: str = Field(min_length=1, max_length=255)
     description: str | None = None
@@ -35,6 +43,7 @@ class RecipeRead(BaseModel):
 
     id: uuid.UUID
     author_id: uuid.UUID
+    author: RecipeAuthorRead
     title: str
     description: str | None
     status: RecipeStatus
@@ -50,5 +59,6 @@ class RecipeRead(BaseModel):
     likes_count: int = 0
     is_liked: bool = False
     is_favorited: bool = False
+    comment_count: int = 0
     created_at: datetime
     updated_at: datetime

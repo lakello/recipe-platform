@@ -6,9 +6,16 @@ export type RecipeStatus = 'draft' | 'published' | 'deleted'
 export type RecipeVisibility = 'public' | 'private'
 export type Difficulty = 'easy' | 'medium' | 'hard'
 
+export interface RecipeAuthor {
+  id: string
+  username: string
+  avatar_url: string | null
+}
+
 export interface Recipe {
   id: string
   author_id: string
+  author: RecipeAuthor
   title: string
   description: string | null
   status: RecipeStatus
@@ -24,6 +31,7 @@ export interface Recipe {
   likes_count: number
   is_liked: boolean
   is_favorited: boolean
+  comment_count: number
   created_at: string
   updated_at: string
 }
@@ -54,6 +62,9 @@ export const recipesApi = {
     apiJson<Recipe[]>(
       categoryId ? `/api/recipes?category_id=${categoryId}` : '/api/recipes',
     ),
+
+  listByAuthor: (authorId: string) =>
+    apiJson<Recipe[]>(`/api/recipes?author_id=${authorId}`),
 
   get: (id: string) => apiJson<Recipe>(`/api/recipes/${id}`),
 
