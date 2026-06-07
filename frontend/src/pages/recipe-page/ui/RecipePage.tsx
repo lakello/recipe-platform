@@ -154,7 +154,7 @@ export function RecipePage() {
                 Опубликовать
               </Button>
             )}
-            <Link to={`/recipes/${recipe.id}/edit`}>
+            <Link to={`/recipes/${recipe.id}/edit`} replace>
               <Button variant="secondary">Редактировать</Button>
             </Link>
             <Button
