@@ -14,6 +14,13 @@ export interface UserProfile {
   updated_at: string
 }
 
+export interface UserPublicRead {
+  id: string
+  username: string
+  avatar_url: string | null
+  created_at: string
+}
+
 export interface UpdateProfileData {
   username?: string
 }
@@ -26,4 +33,6 @@ export const profileApi = {
       method: 'PATCH',
       body: JSON.stringify(data),
     }),
+
+  getPublicUser: (userId: string) => apiJson<UserPublicRead>(`/api/users/${userId}`),
 }

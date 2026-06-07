@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_optional_user
 from app.db.session import get_db
 from app.models.user import User
+from app.repositories.comment import CommentRepository
 from app.repositories.like import FavoriteRepository, LikeRepository
 from app.repositories.recipe import RecipeRepository
 from app.schemas.recipe import RecipeCreate, RecipeRead, RecipeUpdate
@@ -19,6 +20,7 @@ def _recipe_service(session: AsyncSession = Depends(get_db)) -> RecipeService:
         RecipeRepository(session),
         LikeRepository(session),
         FavoriteRepository(session),
+        CommentRepository(session),
     )
 
 
@@ -34,11 +36,12 @@ async def create_recipe(
 @router.get("", response_model=list[RecipeRead])
 async def list_recipes(
     category_id: uuid.UUID | None = Query(None),
+    author_id: uuid.UUID | None = Query(None),
     service: RecipeService = Depends(_recipe_service),
     current_user: User | None = Depends(get_optional_user),
 ) -> list[RecipeRead]:
     user_id = current_user.id if current_user else None
-    return await service.list_recipes(user_id, category_id)
+    return await service.list_recipes(user_id, category_id, author_id)
 
 
 @router.get("/{recipe_id}", response_model=RecipeRead)

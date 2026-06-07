@@ -58,6 +58,21 @@ class CommentRepository:
         await self.session.refresh(comment)
         return comment
 
+    async def count_by_recipe_batch(
+        self, recipe_ids: list[uuid.UUID]
+    ) -> dict[uuid.UUID, int]:
+        if not recipe_ids:
+            return {}
+        result = await self.session.execute(
+            select(Comment.recipe_id, func.count().label("cnt"))
+            .where(
+                Comment.recipe_id.in_(recipe_ids),
+                Comment.is_deleted.is_(False),
+            )
+            .group_by(Comment.recipe_id)
+        )
+        return {row.recipe_id: row.cnt for row in result}
+
     async def reply_count_batch(
         self, comment_ids: list[uuid.UUID]
     ) -> dict[uuid.UUID, int]:
