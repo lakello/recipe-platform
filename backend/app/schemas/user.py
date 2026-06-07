@@ -21,6 +21,9 @@ class UserPublicRead(BaseModel):
     username: str
     avatar_url: str | None
     created_at: datetime
+    followers_count: int = 0
+    following_count: int = 0
+    is_following: bool = False
 
 
 class UserRead(BaseModel):

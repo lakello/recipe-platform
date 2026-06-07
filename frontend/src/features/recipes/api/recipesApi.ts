@@ -66,6 +66,9 @@ export const recipesApi = {
   listByAuthor: (authorId: string) =>
     apiJson<Recipe[]>(`/api/recipes?author_id=${authorId}`),
 
+  getFeed: (page = 1, size = 20) =>
+    apiJson<Recipe[]>(`/api/feed?page=${page}&size=${size}`),
+
   get: (id: string) => apiJson<Recipe>(`/api/recipes/${id}`),
 
   create: (data: RecipeCreate) =>

@@ -53,6 +53,32 @@ class RecipeRepository:
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
+    async def list_feed(
+        self,
+        author_ids: list[uuid.UUID],
+        page: int,
+        size: int,
+    ) -> tuple[list[Recipe], int]:
+        if not author_ids:
+            return [], 0
+        base = (
+            select(Recipe)
+            .where(
+                Recipe.author_id.in_(author_ids),
+                Recipe.status == RecipeStatus.published,
+                Recipe.visibility == RecipeVisibility.public,
+            )
+            .order_by(Recipe.created_at.desc())
+        )
+        from sqlalchemy import func
+
+        total_result = await self.session.execute(
+            select(func.count()).select_from(base.subquery())
+        )
+        total = total_result.scalar_one()
+        result = await self.session.execute(base.offset((page - 1) * size).limit(size))
+        return list(result.scalars().all()), total
+
     async def update(self, recipe: Recipe, data: dict) -> Recipe:
         for key, value in data.items():
             setattr(recipe, key, value)
