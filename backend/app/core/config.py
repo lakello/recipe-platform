@@ -28,6 +28,8 @@ class Settings(BaseSettings):
     jwt_access_token_expire_minutes: int = 15
     jwt_refresh_token_expire_days: int = 30
 
+    opensearch_url: str = "http://localhost:9200"
+
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
     cookie_secure: bool = False
     cookie_samesite: str = "lax"

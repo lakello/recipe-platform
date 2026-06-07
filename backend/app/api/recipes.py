@@ -1,6 +1,6 @@
 import uuid
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user, get_optional_user
@@ -11,6 +11,7 @@ from app.repositories.like import FavoriteRepository, LikeRepository
 from app.repositories.recipe import RecipeRepository
 from app.schemas.recipe import RecipeCreate, RecipeRead, RecipeUpdate
 from app.services.recipe import RecipeService
+from app.services.search import SearchService
 
 router = APIRouter(prefix="/api/recipes", tags=["recipes"])
 
@@ -26,11 +27,15 @@ def _recipe_service(session: AsyncSession = Depends(get_db)) -> RecipeService:
 
 @router.post("", response_model=RecipeRead, status_code=201)
 async def create_recipe(
+    request: Request,
     data: RecipeCreate,
     service: RecipeService = Depends(_recipe_service),
     current_user: User = Depends(get_current_user),
 ) -> RecipeRead:
-    return await service.create_recipe(data, current_user.id)
+    result = await service.create_recipe(data, current_user.id)
+    search = SearchService(request.app.state.os_client)
+    await search.index_recipe(result)
+    return result
 
 
 @router.get("", response_model=list[RecipeRead])
@@ -57,17 +62,24 @@ async def get_recipe(
 @router.patch("/{recipe_id}", response_model=RecipeRead)
 async def update_recipe(
     recipe_id: uuid.UUID,
+    request: Request,
     data: RecipeUpdate,
     service: RecipeService = Depends(_recipe_service),
     current_user: User = Depends(get_current_user),
 ) -> RecipeRead:
-    return await service.update_recipe(recipe_id, data, current_user.id)
+    result = await service.update_recipe(recipe_id, data, current_user.id)
+    search = SearchService(request.app.state.os_client)
+    await search.index_recipe(result)
+    return result
 
 
 @router.delete("/{recipe_id}", status_code=204)
 async def delete_recipe(
     recipe_id: uuid.UUID,
+    request: Request,
     service: RecipeService = Depends(_recipe_service),
     current_user: User = Depends(get_current_user),
 ) -> None:
     await service.delete_recipe(recipe_id, current_user.id)
+    search = SearchService(request.app.state.os_client)
+    await search.remove_recipe(recipe_id)
