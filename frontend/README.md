@@ -713,6 +713,24 @@ Backend API:
 - Неавторизованный пользователь видит счётчик лайков, кнопки визуально заблокированы
 - Кнопка «Избранное» в шапке страницы рецептов видна только авторизованным
 
+### Комментарии (feat/comments)
+
+- `src/features/comments/api/commentsApi.ts` — типы (`Comment`, `CommentPage`) и API-методы: list, listReplies, create, update, delete, hide, unhide
+- `src/features/comments/hooks/useComments.ts` — хуки: `useComments`, `useReplies`, `useAddComment`, `useEditComment`, `useDeleteComment`, `useHideComment`, `useUnhideComment`; инвалидация кэша после мутаций
+- `src/features/comments/ui/CommentForm.tsx` — переиспользуемая форма для добавления/редактирования/ответа
+- `src/features/comments/ui/CommentItem.tsx` — один комментарий: инлайн-редактирование, удаление, кнопка «Ответить», раскрываемые ответы, кнопки скрытия/показа для модераторов
+- `src/features/comments/ui/CommentList.tsx` — список комментариев с формой добавления; для неавторизованных — сообщение о необходимости войти
+- `RecipePage` — добавлен блок комментариев внизу страницы рецепта
+
+Поведение:
+- Авторизованный пользователь может оставить комментарий и ответить на любой топ-уровневый комментарий
+- Автор комментария видит кнопки «Изменить» и «Удалить» (soft delete)
+- Модератор (admin/superadmin) видит кнопки «Скрыть» / «Показать»; тело скрытого комментария заменяется на плейсхолдер
+- Удалённые комментарии сохраняют структуру треда (тело заменяется на «Комментарий удалён»)
+- Ответы загружаются по клику «Показать ответы (N)»
+
+**Fix (feat/comments):** кнопка «Редактировать» на странице рецепта использует `replace`-навигацию, чтобы edit-страница не накапливалась в истории браузера и не мешала кнопке «Назад».
+
 ### Авторизация (feat/frontend-auth)
 
 - **Зависимости:** react-hook-form, zod, @hookform/resolvers
@@ -835,7 +853,8 @@ Frontend находится в разработке.
 9. ~~Ингредиенты и шаги приготовления.~~ ✓
 10. Layout.
 10. Profile.
-10. ~~Likes, favorites.~~ ✓ Comments.
+10. ~~Likes, favorites.~~ ✓
+11. ~~Comments.~~ ✓
 11. Meal plan.
 12. Shopping list.
 13. Moderation UI.
