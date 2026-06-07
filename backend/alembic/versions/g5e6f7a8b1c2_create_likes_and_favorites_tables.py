@@ -14,7 +14,7 @@ from sqlalchemy.dialects.postgresql import UUID
 from alembic import op
 
 revision: str = "g5e6f7a8b1c2"  # pragma: allowlist secret
-down_revision: str | Sequence[str] | None = "f4d5e6f7a1b2"  # pragma: allowlist secret
+down_revision: str | Sequence[str] | None = "a1b2c3d4e5f7"  # pragma: allowlist secret
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
