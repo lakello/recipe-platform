@@ -1,4 +1,5 @@
-import { apiJson } from '@/shared/api/client'
+import { apiJson, ApiError } from '@/shared/api/client'
+import { API_BASE_URL } from '@/shared/config/env'
 
 export type UserRole = 'user' | 'admin' | 'superadmin'
 
@@ -26,7 +27,20 @@ export interface UpdateProfileData {
 }
 
 export const profileApi = {
-  getMe: () => apiJson<UserProfile>('/api/users/me'),
+  getMe: async (): Promise<UserProfile> => {
+    // Use plain fetch to avoid the auto-redirect-to-login on 401.
+    // This endpoint is called on every page to check auth state;
+    // unauthenticated is a normal case, not an error worth redirecting for.
+    const res = await fetch(`${API_BASE_URL}/api/users/me`, {
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json' },
+    })
+    if (!res.ok) {
+      const body = await res.json().catch(() => ({ detail: 'Unknown error' }))
+      throw new ApiError(res.status, body.detail ?? body.message ?? 'Request failed')
+    }
+    return res.json()
+  },
 
   updateMe: (data: UpdateProfileData) =>
     apiJson<UserProfile>('/api/users/me', {
