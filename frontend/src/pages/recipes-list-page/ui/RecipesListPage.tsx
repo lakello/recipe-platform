@@ -27,6 +27,9 @@ export function RecipesListPage() {
                   <Button variant="secondary">Категории</Button>
                 </Link>
               )}
+              <Link to="/search">
+                <Button variant="secondary">Поиск</Button>
+              </Link>
               <Link to="/feed">
                 <Button variant="secondary">Лента</Button>
               </Link>
