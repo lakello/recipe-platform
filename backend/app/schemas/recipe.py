@@ -47,5 +47,8 @@ class RecipeRead(BaseModel):
     photo: RecipePhotoRead | None
     ingredients: list[RecipeIngredientRead]
     steps: list[RecipeStepRead]
+    likes_count: int = 0
+    is_liked: bool = False
+    is_favorited: bool = False
     created_at: datetime
     updated_at: datetime

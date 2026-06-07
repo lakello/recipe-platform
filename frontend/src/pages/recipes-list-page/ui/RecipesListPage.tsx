@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { useCategoriesList } from '@/features/categories/hooks/useCategories'
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser'
 import { useRecipesList } from '@/features/recipes/hooks/useRecipes'
+import { LikeButton } from '@/features/likes/ui/LikeButton'
+import { FavoriteButton } from '@/features/likes/ui/FavoriteButton'
 import { Button } from '@/shared/ui/Button'
 import type { Recipe } from '@/features/recipes/api/recipesApi'
 
@@ -40,6 +42,9 @@ export function RecipesListPage() {
                   <Button variant="secondary">Категории</Button>
                 </Link>
               ) : null}
+              <Link to="/favorites">
+                <Button variant="secondary">Избранное</Button>
+              </Link>
               <Link to="/recipes/drafts">
                 <Button variant="secondary">Черновики</Button>
               </Link>
@@ -117,6 +122,19 @@ export function RecipesListPage() {
                 </div>
                 <div className="flex flex-col gap-1 items-end shrink-0">
                   <VisibilityBadge visibility={recipe.visibility} />
+                  <div className="flex items-center gap-1">
+                    <LikeButton
+                      recipeId={recipe.id}
+                      likesCount={recipe.likes_count}
+                      isLiked={recipe.is_liked}
+                      isAuthenticated={!!user}
+                    />
+                    <FavoriteButton
+                      recipeId={recipe.id}
+                      isFavorited={recipe.is_favorited}
+                      isAuthenticated={!!user}
+                    />
+                  </div>
                 </div>
               </div>
             </Link>

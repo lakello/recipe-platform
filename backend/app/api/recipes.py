@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_optional_user
 from app.db.session import get_db
 from app.models.user import User
+from app.repositories.like import FavoriteRepository, LikeRepository
 from app.repositories.recipe import RecipeRepository
 from app.schemas.recipe import RecipeCreate, RecipeRead, RecipeUpdate
 from app.services.recipe import RecipeService
@@ -14,7 +15,11 @@ router = APIRouter(prefix="/api/recipes", tags=["recipes"])
 
 
 def _recipe_service(session: AsyncSession = Depends(get_db)) -> RecipeService:
-    return RecipeService(RecipeRepository(session))
+    return RecipeService(
+        RecipeRepository(session),
+        LikeRepository(session),
+        FavoriteRepository(session),
+    )
 
 
 @router.post("", response_model=RecipeRead, status_code=201)

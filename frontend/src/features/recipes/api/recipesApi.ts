@@ -21,6 +21,9 @@ export interface Recipe {
   photo: { id: string; key: string; content_type: string; created_at: string } | null
   ingredients: RecipeIngredientRead[]
   steps: RecipeStepRead[]
+  likes_count: number
+  is_liked: boolean
+  is_favorited: boolean
   created_at: string
   updated_at: string
 }
