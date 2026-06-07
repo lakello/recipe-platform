@@ -15,6 +15,7 @@ import { PhotoUpload } from '@/features/uploads/ui/PhotoUpload'
 import { uploadsApi } from '@/features/uploads/api/uploadsApi'
 import { useRecipePhotoUpload } from '@/features/uploads/hooks/useUpload'
 import { Button } from '@/shared/ui/Button'
+import { CommentList } from '@/features/comments/ui/CommentList'
 
 const DIFFICULTY_LABELS: Record<string, string> = {
   easy: 'Лёгкий',
@@ -253,6 +254,8 @@ export function RecipePage() {
           </ol>
         )}
       </div>
+      {/* Комментарии */}
+      <CommentList recipeId={recipe.id} currentUser={user} />
     </div>
   )
 }
