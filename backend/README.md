@@ -825,6 +825,30 @@ docker build -t recipe-backend:local .
 
 ## Что уже реализовано
 
+### Лайки и избранное (feat/likes-and-favorites)
+
+- `app/models/like.py` — модели `Like` и `Favorite` с UniqueConstraint `(user_id, recipe_id)` и CASCADE-удалением
+- `app/repositories/like.py` — `LikeRepository` (get, add, remove, count, count_batch, user_liked_batch) и `FavoriteRepository` (get, add, remove, list_by_user, user_favorited_batch); батч-методы исключают N+1 при листинге рецептов
+- `app/services/like.py` — `LikeService` (like, unlike, get_status), `FavoriteService` (add_favorite, remove_favorite, list_favorites)
+- `app/api/likes.py` — роутер эндпоинтов лайков и избранного
+- `app/schemas/like.py` — `LikeStatus` (likes_count, is_liked), `FavoriteStatus` (is_favorited)
+- `app/schemas/recipe.py` — `RecipeRead` дополнен `likes_count`, `is_liked`, `is_favorited`
+- `app/services/recipe.py` — `_enrich_single` / `_enrich_batch` добавляют данные вовлечённости к рецептам
+- `tests/test_like_service.py` — 13 unit-тестов
+- `alembic/versions/g5e6f7a8b1c2` — создаёт таблицы `likes` и `favorites` с индексами
+- `backend/scripts/check_alembic_heads.py` — скрипт для pre-commit хука, проверяет единственность Alembic head (без подключения к БД)
+
+Endpoints:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `POST` | `/api/recipes/{id}/like` | 🔒 | Поставить лайк (409 при повторе) |
+| `DELETE` | `/api/recipes/{id}/like` | 🔒 | Убрать лайк |
+| `GET` | `/api/recipes/{id}/like` | опц. | Счётчик лайков и статус текущего пользователя |
+| `POST` | `/api/recipes/{id}/favorite` | 🔒 | Добавить в избранное (409 при повторе) |
+| `DELETE` | `/api/recipes/{id}/favorite` | 🔒 | Удалить из избранного |
+| `GET` | `/api/users/me/favorites` | 🔒 | Список избранных рецептов |
+
 ### Загрузка фото (feat/uploads)
 
 - `app/models/photo.py` — модель `RecipePhoto`: `key` (путь в Object Storage), `content_type`, FK на `recipes`
@@ -1063,7 +1087,7 @@ Backend находится в разработке.
 8. ~~Категории + роли пользователей.~~ ✓
 9. ~~Ингредиенты и шаги приготовления.~~ ✓
 10. ~~Uploads (presigned URL, привязка фото, аватары).~~ ✓
-11. Comments, likes, favorites.
+11. ~~Likes, favorites.~~ ✓ Comments.
 10. Meal plans и shopping lists.
 11. Search.
 12. Moderation и admin.

@@ -693,6 +693,26 @@ Backend API:
 
 ## Что уже реализовано
 
+### Лайки и избранное (feat/likes-and-favorites)
+
+- `src/features/likes/api/likesApi.ts` — методы: like, unlike, addFavorite, removeFavorite, listFavorites
+- `src/features/likes/hooks/useLikes.ts` — хуки: `useLike`, `useFavorite`, `useFavorites`; инвалидация кэша рецептов и избранного после каждой мутации
+- `src/features/likes/ui/LikeButton.tsx` — кнопка лайка (❤️/🤍) с счётчиком; заблокирована для неавторизованных
+- `src/features/likes/ui/FavoriteButton.tsx` — кнопка избранного (★/☆); заблокирована для неавторизованных
+- `src/pages/favorites-page/` — страница `/favorites` с карточками избранных рецептов и кнопками лайка/избранного
+- `Recipe` тип дополнен `likes_count`, `is_liked`, `is_favorited`
+
+Страницы:
+
+| Путь | Описание | Auth |
+|---|---|---|
+| `/favorites` | Список избранных рецептов | 🔒 |
+
+Поведение:
+- Кнопки лайка и избранного отображаются на карточках рецептов (`/recipes`) и на странице рецепта (`/recipes/:id`)
+- Неавторизованный пользователь видит счётчик лайков, кнопки визуально заблокированы
+- Кнопка «Избранное» в шапке страницы рецептов видна только авторизованным
+
 ### Авторизация (feat/frontend-auth)
 
 - **Зависимости:** react-hook-form, zod, @hookform/resolvers
@@ -815,7 +835,7 @@ Frontend находится в разработке.
 9. ~~Ингредиенты и шаги приготовления.~~ ✓
 10. Layout.
 10. Profile.
-10. Comments, likes, favorites.
+10. ~~Likes, favorites.~~ ✓ Comments.
 11. Meal plan.
 12. Shopping list.
 13. Moderation UI.
