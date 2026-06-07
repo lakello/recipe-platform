@@ -34,6 +34,16 @@ repos:
         files: ^backend/
         exclude: ^backend/alembic/versions/
 
+  # Alembic — no multiple heads
+  - repo: local
+    hooks:
+      - id: alembic-single-head
+        name: Alembic single head check
+        language: python
+        entry: python backend/scripts/check_alembic_heads.py
+        pass_filenames: false
+        files: ^backend/alembic/versions/
+
   # TypeScript — ESLint
   - repo: local
     hooks:
