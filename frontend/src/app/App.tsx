@@ -1,8 +1,7 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './router/ProtectedRoute'
 import { QueryProvider } from './providers/QueryProvider'
 import { LoginPage } from '@/pages/login-page'
-import { MainPage } from '@/pages/main-page'
 import { ProfilePage } from '@/pages/profile-page'
 import { RegisterPage } from '@/pages/register-page'
 import { RecipesListPage } from '@/pages/recipes-list-page'
@@ -12,24 +11,18 @@ import { RecipeEditPage } from '@/pages/recipe-edit-page'
 import { DraftsPage } from '@/pages/drafts-page'
 import { FavoritesPage } from '@/pages/favorites-page'
 import { AdminCategoriesPage } from '@/pages/admin-categories-page'
+import { PublicProfilePage } from '@/pages/user-profile-page'
 
 export function App() {
   return (
     <QueryProvider>
       <BrowserRouter>
         <Routes>
+          <Route path="/" element={<Navigate to="/recipes" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/recipes" element={<RecipesListPage />} />
           <Route path="/recipes/:recipeId" element={<RecipePage />} />
-          <Route
-            path="/"
-            element={
-              <ProtectedRoute>
-                <MainPage />
-              </ProtectedRoute>
-            }
-          />
           <Route
             path="/profile"
             element={
@@ -78,6 +71,7 @@ export function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/users/:userId" element={<PublicProfilePage />} />
         </Routes>
       </BrowserRouter>
     </QueryProvider>

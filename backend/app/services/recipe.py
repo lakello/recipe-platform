@@ -3,6 +3,7 @@ import uuid
 from fastapi import HTTPException
 
 from app.models.recipe import Recipe, RecipeStatus, RecipeVisibility
+from app.repositories.comment import CommentRepository
 from app.repositories.like import FavoriteRepository, LikeRepository
 from app.repositories.recipe import RecipeRepository
 from app.schemas.recipe import RecipeCreate, RecipeRead, RecipeUpdate
@@ -14,10 +15,12 @@ class RecipeService:
         repository: RecipeRepository,
         like_repo: LikeRepository | None = None,
         favorite_repo: FavoriteRepository | None = None,
+        comment_repo: CommentRepository | None = None,
     ) -> None:
         self.repository = repository
         self.like_repo = like_repo
         self.favorite_repo = favorite_repo
+        self.comment_repo = comment_repo
 
     async def create_recipe(
         self, data: RecipeCreate, author_id: uuid.UUID
@@ -51,8 +54,11 @@ class RecipeService:
         self,
         current_user_id: uuid.UUID | None,
         category_id: uuid.UUID | None = None,
+        author_id: uuid.UUID | None = None,
     ) -> list[RecipeRead]:
-        recipes = await self.repository.list_visible(current_user_id, category_id)
+        recipes = await self.repository.list_visible(
+            current_user_id, category_id, author_id
+        )
         recipe_reads = [RecipeRead.model_validate(r) for r in recipes]
         return await self._enrich_batch(recipe_reads, current_user_id)
 
@@ -92,8 +98,6 @@ class RecipeService:
     async def _enrich_single(
         self, recipe_read: RecipeRead, user_id: uuid.UUID | None
     ) -> RecipeRead:
-        if not self.like_repo and not self.favorite_repo:
-            return recipe_read
         updates: dict[str, object] = {}
         if self.like_repo:
             updates["likes_count"] = await self.like_repo.count(recipe_read.id)
@@ -105,29 +109,36 @@ class RecipeService:
             updates["is_favorited"] = (
                 await self.favorite_repo.get(user_id, recipe_read.id) is not None
             )
-        return recipe_read.model_copy(update=updates)
+        if self.comment_repo:
+            counts = await self.comment_repo.count_by_recipe_batch([recipe_read.id])
+            updates["comment_count"] = counts.get(recipe_read.id, 0)
+        return recipe_read.model_copy(update=updates) if updates else recipe_read
 
     async def _enrich_batch(
         self, recipe_reads: list[RecipeRead], user_id: uuid.UUID | None
     ) -> list[RecipeRead]:
-        if (not self.like_repo and not self.favorite_repo) or not recipe_reads:
+        if not recipe_reads:
             return recipe_reads
         ids = [r.id for r in recipe_reads]
         count_map: dict[uuid.UUID, int] = {}
         liked_set: set[uuid.UUID] = set()
         favorited_set: set[uuid.UUID] = set()
+        comment_count_map: dict[uuid.UUID, int] = {}
         if self.like_repo:
             count_map = await self.like_repo.count_batch(ids)
             if user_id:
                 liked_set = await self.like_repo.user_liked_batch(user_id, ids)
         if self.favorite_repo and user_id:
             favorited_set = await self.favorite_repo.user_favorited_batch(user_id, ids)
+        if self.comment_repo:
+            comment_count_map = await self.comment_repo.count_by_recipe_batch(ids)
         return [
             r.model_copy(
                 update={
                     "likes_count": count_map.get(r.id, 0),
                     "is_liked": r.id in liked_set,
                     "is_favorited": r.id in favorited_set,
+                    "comment_count": comment_count_map.get(r.id, 0),
                 }
             )
             for r in recipe_reads

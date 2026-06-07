@@ -26,6 +26,7 @@ class RecipeRepository:
         self,
         current_user_id: uuid.UUID | None,
         category_id: uuid.UUID | None = None,
+        author_id: uuid.UUID | None = None,
     ) -> list[Recipe]:
         if current_user_id:
             stmt = select(Recipe).where(
@@ -47,6 +48,8 @@ class RecipeRepository:
             )
         if category_id is not None:
             stmt = stmt.where(Recipe.category_id == category_id)
+        if author_id is not None:
+            stmt = stmt.where(Recipe.author_id == author_id)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 

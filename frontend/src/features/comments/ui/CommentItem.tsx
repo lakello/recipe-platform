@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import type { Comment } from '../api/commentsApi'
 import type { UserProfile } from '@/features/profile/api/profileApi'
+import { UserLink } from '@/shared/ui/UserLink'
 import { CommentForm } from './CommentForm'
 import { useAddComment, useEditComment, useDeleteComment, useHideComment, useUnhideComment, useReplies } from '../hooks/useComments'
 
@@ -59,7 +60,11 @@ export function CommentItem({ comment, recipeId, currentUser, isReply = false }:
     <div className={`flex flex-col gap-1 ${isReply ? 'ml-8 pl-4 border-l-2 border-gray-100' : ''}`}>
       <div className="rounded-lg bg-white border border-gray-100 p-3">
         <div className="flex items-center justify-between mb-1">
-          <span className="text-sm font-medium text-gray-800">{comment.author.username}</span>
+          <UserLink
+            userId={comment.author.id}
+            username={comment.author.username}
+            avatarUrl={comment.author.avatar_url}
+          />
           <span className="text-xs text-gray-400">{formatDate(comment.created_at)}</span>
         </div>
 

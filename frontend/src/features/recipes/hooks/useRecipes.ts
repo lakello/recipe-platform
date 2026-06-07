@@ -11,6 +11,13 @@ export function useRecipesList(categoryId?: string) {
   })
 }
 
+export function useUserRecipes(authorId: string) {
+  return useQuery({
+    queryKey: [...RECIPES_KEY, { authorId }],
+    queryFn: () => recipesApi.listByAuthor(authorId),
+  })
+}
+
 export function useRecipe(id: string) {
   return useQuery({
     queryKey: [...RECIPES_KEY, id],
