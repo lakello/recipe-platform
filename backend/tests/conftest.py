@@ -1,0 +1,7 @@
+import app.models.category  # noqa: F401
+import app.models.ingredient  # noqa: F401
+import app.models.like  # noqa: F401
+import app.models.photo  # noqa: F401
+import app.models.recipe  # noqa: F401
+import app.models.refresh_token  # noqa: F401
+import app.models.user  # noqa: F401

@@ -32,6 +32,7 @@ def make_recipe(author_id: uuid.UUID | None = None, **kwargs) -> Recipe:
     recipe.difficulty = None
     recipe.category_id = None
     recipe.category = None
+    recipe.photo = None
     recipe.ingredients = []
     recipe.steps = []
     recipe.created_at = datetime.now(UTC)
@@ -150,8 +151,8 @@ async def test_set_steps_success(
     recipe_repo.session = AsyncMock()
 
     items = [
-        RecipeStepItem(description="Нагреть масло"),
-        RecipeStepItem(description="Добавить лук"),
+        RecipeStepItem(title="Шаг 1", description="Нагреть масло"),
+        RecipeStepItem(title="Шаг 2", description="Добавить лук"),
     ]
     await service.set_steps(recipe.id, author_id, items)
 

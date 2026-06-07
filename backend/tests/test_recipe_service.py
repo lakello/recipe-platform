@@ -23,6 +23,11 @@ def make_recipe(**kwargs) -> Recipe:
         "cooking_time_minutes": None,
         "servings": None,
         "difficulty": None,
+        "category_id": None,
+        "category": None,
+        "photo": None,
+        "ingredients": [],
+        "steps": [],
         "created_at": datetime.now(UTC),
         "updated_at": datetime.now(UTC),
     }
@@ -158,7 +163,7 @@ async def test_list_recipes_unauthenticated(
     result = await service.list_recipes(current_user_id=None)
 
     assert len(result) == 1
-    repo.list_visible.assert_called_once_with(None)
+    repo.list_visible.assert_called_once_with(None, None)
 
 
 async def test_create_recipe_with_all_fields(

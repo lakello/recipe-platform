@@ -19,6 +19,8 @@ def make_user(**kwargs) -> User:
         "password_hash": "hashed",
         "is_email_verified": False,
         "is_active": True,
+        "role": "user",
+        "avatar_url": None,
         "created_at": datetime.now(UTC),
         "updated_at": datetime.now(UTC),
     }
