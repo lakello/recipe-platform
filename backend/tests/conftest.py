@@ -1,4 +1,5 @@
 import app.models.category  # noqa: F401
+import app.models.comment  # noqa: F401
 import app.models.ingredient  # noqa: F401
 import app.models.like  # noqa: F401
 import app.models.photo  # noqa: F401

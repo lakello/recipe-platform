@@ -6,6 +6,7 @@ from sqlalchemy import text
 
 from app.api.auth import router as auth_router
 from app.api.categories import router as categories_router
+from app.api.comments import router as comments_router
 from app.api.ingredients import router as ingredients_router
 from app.api.likes import router as likes_router
 from app.api.recipes import router as recipes_router
@@ -43,6 +44,7 @@ app.include_router(auth_router)
 app.include_router(users_router)
 app.include_router(recipes_router)
 app.include_router(likes_router)
+app.include_router(comments_router)
 app.include_router(categories_router)
 app.include_router(ingredients_router)
 app.include_router(uploads_router)
