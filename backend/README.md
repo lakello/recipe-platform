@@ -849,6 +849,29 @@ Endpoints:
 | `DELETE` | `/api/recipes/{id}/favorite` | 🔒 | Удалить из избранного |
 | `GET` | `/api/users/me/favorites` | 🔒 | Список избранных рецептов |
 
+### Комментарии (feat/comments)
+
+- `app/models/comment.py` — модель `Comment`: `body`, `parent_id` (одноуровневые ответы), `is_hidden`, `is_deleted` (soft delete), FK на `recipes` и `users` с CASCADE
+- `app/repositories/comment.py` — `CommentRepository`: create, get_by_id, list_top_level (с пагинацией и счётчиком), list_replies, update, reply_count_batch (батч-подсчёт ответов без N+1)
+- `app/services/comment.py` — `CommentService`: add_comment (с валидацией parent), edit_comment, delete_comment (soft), hide_comment, unhide_comment, list_comments, list_replies; ответ на ответ запрещён (400)
+- `app/api/comments.py` — роутер комментариев
+- `app/api/deps.py` — добавлена зависимость `get_current_moderator` (admin или superadmin)
+- `app/schemas/comment.py` — `CommentRead` с `model_validator`: тело скрытого комментария заменяется на placeholder; `CommentPage` для пагинации
+- `tests/test_comment_service.py` — 14 unit-тестов
+- `alembic/versions/h6f7a8b9c1d2` — создаёт таблицу `comments` с индексами
+
+Endpoints:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `POST` | `/api/recipes/{id}/comments` | 🔒 | Оставить комментарий или ответ |
+| `GET` | `/api/recipes/{id}/comments` | — | Список комментариев (пагинация) |
+| `GET` | `/api/comments/{id}/replies` | — | Список ответов на комментарий |
+| `PATCH` | `/api/comments/{id}` | 🔒 автор | Редактировать свой комментарий |
+| `DELETE` | `/api/comments/{id}` | 🔒 автор | Удалить свой комментарий (soft delete, 204) |
+| `POST` | `/api/comments/{id}/hide` | 🔒 модератор | Скрыть комментарий |
+| `POST` | `/api/comments/{id}/unhide` | 🔒 модератор | Показать скрытый комментарий |
+
 ### Загрузка фото (feat/uploads)
 
 - `app/models/photo.py` — модель `RecipePhoto`: `key` (путь в Object Storage), `content_type`, FK на `recipes`
@@ -1087,7 +1110,8 @@ Backend находится в разработке.
 8. ~~Категории + роли пользователей.~~ ✓
 9. ~~Ингредиенты и шаги приготовления.~~ ✓
 10. ~~Uploads (presigned URL, привязка фото, аватары).~~ ✓
-11. ~~Likes, favorites.~~ ✓ Comments.
+11. ~~Likes, favorites.~~ ✓
+12. ~~Comments.~~ ✓
 10. Meal plans и shopping lists.
 11. Search.
 12. Moderation и admin.
