@@ -46,6 +46,14 @@ async def get_current_superadmin(
     return user
 
 
+async def get_current_moderator(
+    user: User = Depends(get_current_user),
+) -> User:
+    if user.role not in (UserRole.admin, UserRole.superadmin):
+        raise HTTPException(status_code=403, detail="Moderator access required")
+    return user
+
+
 async def get_optional_user(
     request: Request,
     credentials: HTTPAuthorizationCredentials | None = Depends(_optional_bearer),
