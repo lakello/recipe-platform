@@ -802,11 +802,12 @@ Backend API:
 
 | Путь | Описание | Auth |
 |---|---|---|
-| `/recipes` | Список опубликованных рецептов | Публичная |
+| `/recipes` | Список опубликованных рецептов (grid) | Публичная |
 | `/recipes/:recipeId` | Детали рецепта | Публичная |
 | `/recipes/new` | Создание рецепта | 🔒 |
 | `/recipes/:recipeId/edit` | Редактирование рецепта | 🔒 |
 | `/recipes/drafts` | Мои черновики | 🔒 |
+| `/users/:userId` | Публичный профиль пользователя | Публичная |
 
 Поведение:
 - Рецепт создаётся со статусом `draft`; автор публикует его кнопкой "Опубликовать" на странице рецепта
@@ -814,6 +815,37 @@ Backend API:
 - Кнопки редактирования, удаления и публикации видны только автору
 - Профиль показывает все рецепты пользователя (включая черновики и приватные)
 - После регистрации и входа — автоматический редирект на главную
+
+### Карточки рецептов, отображение автора и публичные профили (feat/public-user-profiles)
+
+**Бэкенд:**
+- `GET /api/users/{user_id}` — публичный профиль пользователя (id, username, avatar_url, created_at); без email и приватных полей
+- `GET /api/recipes?author_id=<uuid>` — фильтр рецептов по автору
+- Схема `UserPublicRead` в `schemas/user.py`
+
+**Фронтенд:**
+- `src/shared/ui/UserLink.tsx` — переиспользуемый компонент: аватар (с инициалом-заглушкой) + никнейм → ссылка на `/users/:userId`; вызывает `e.stopPropagation()` для корректной работы внутри кликабельных карточек
+- `src/features/recipes/ui/RecipeCard.tsx` — карточка рецепта: фото 16:9 (или gradient-заглушка), чипы категории/сложности/порций/времени, заголовок, кликабельный автор, кнопка лайка и счётчик комментариев; вся карточка кликабельна
+- `src/features/profile/api/profileApi.ts` — `getPublicUser(userId)`, тип `UserPublicRead`; `getMe` переведён на нативный `fetch` без редиректа на 401 (чтобы неавторизованные гости могли просматривать публичные страницы)
+- `src/features/profile/hooks/usePublicProfile.ts` — хук для загрузки публичного профиля
+- `src/features/recipes/api/recipesApi.ts` — метод `listByAuthor(authorId)`
+- `src/features/recipes/hooks/useRecipes.ts` — хук `useUserRecipes(authorId)`
+- `src/pages/user-profile-page/` — страница публичного профиля: большой аватар, никнейм, дата регистрации, список опубликованных рецептов; режим только чтение
+
+**Изменения существующих компонентов:**
+- `RecipesListPage` — сетка 1/2/3 колонки, доступна без авторизации, auth-aware шапка
+- `RecipePage` — блок автора (UserLink) под заголовком рецепта
+- `CommentItem` — аватар и никнейм автора комментария кликабельны (UserLink)
+- `App.tsx` — маршрут `/users/:userId` (публичный, без ProtectedRoute); `/` редиректит на `/recipes`
+
+Страницы:
+
+| Путь | Описание | Auth |
+|---|---|---|
+| `/recipes` | Список опубликованных рецептов (сетка) | Публичная |
+| `/users/:userId` | Публичный профиль пользователя | Публичная |
+
+**Fix (feat/public-user-profiles):** `getMe` использует нативный `fetch` вместо `apiJson`, чтобы 401 не вызывал `window.location.href = '/login'` на публичных страницах.
 
 ### Инициализация React (feat/frontend-init)
 
@@ -855,6 +887,7 @@ Frontend находится в разработке.
 10. Profile.
 10. ~~Likes, favorites.~~ ✓
 11. ~~Comments.~~ ✓
+11. ~~Public user profiles, recipe card redesign, author display.~~ ✓
 11. Meal plan.
 12. Shopping list.
 13. Moderation UI.
