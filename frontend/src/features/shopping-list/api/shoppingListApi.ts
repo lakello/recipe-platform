@@ -26,6 +26,17 @@ export interface GeneratePayload {
   dates?: string[]
 }
 
+export interface GenerateTaskResponse {
+  task_id: string
+}
+
+export type TaskStatus = 'pending' | 'started' | 'success' | 'failure'
+
+export interface TaskStatusResponse {
+  status: TaskStatus
+  error?: string | null
+}
+
 export interface AddItemPayload {
   ingredient_id?: string
   name: string
@@ -36,11 +47,14 @@ export interface AddItemPayload {
 export const shoppingListApi = {
   getList: (): Promise<ShoppingList> => apiJson<ShoppingList>('/api/shopping-list'),
 
-  generate: (payload: GeneratePayload): Promise<ShoppingList> =>
-    apiJson<ShoppingList>('/api/shopping-list/generate', {
+  generate: (payload: GeneratePayload): Promise<GenerateTaskResponse> =>
+    apiJson<GenerateTaskResponse>('/api/shopping-list/generate', {
       method: 'POST',
       body: JSON.stringify(payload),
     }),
+
+  getGenerateStatus: (taskId: string): Promise<TaskStatusResponse> =>
+    apiJson<TaskStatusResponse>(`/api/shopping-list/generate/status/${taskId}`),
 
   addItem: (payload: AddItemPayload): Promise<ShoppingListItem> =>
     apiJson<ShoppingListItem>('/api/shopping-list/items', {
