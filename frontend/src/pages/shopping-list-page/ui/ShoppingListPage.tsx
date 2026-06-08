@@ -471,12 +471,13 @@ function ItemRow({ item }: { item: ShoppingListItem }) {
 
 export function ShoppingListPage() {
   const { data: list, isLoading, error } = useShoppingList()
-  const generate = useGenerateShoppingList()
+  const { mutate: generateMutate, isPending: generatePending, isPolling, pollError, mutationError } =
+    useGenerateShoppingList()
   const [generateOpen, setGenerateOpen] = useState(false)
   const [addOpen, setAddOpen] = useState(false)
 
   const handleGenerate = (mode: GenerationMode, dates?: string[]) => {
-    generate.mutate({ mode, dates }, { onSuccess: () => setGenerateOpen(false) })
+    generateMutate({ mode, dates }, { onSuccess: () => setGenerateOpen(false) })
   }
 
   // Group items by ingredient category
@@ -517,15 +518,24 @@ export function ShoppingListPage() {
         <Button onClick={() => setGenerateOpen(true)}>Сгенерировать</Button>
       </div>
 
-      {/* Generation status */}
-      {generate.isPending && (
-        <div className="mb-4 px-4 py-3 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium">
+      {/* Polling status */}
+      {isPolling && (
+        <div className="mb-4 px-4 py-3 rounded-lg bg-blue-50 text-blue-700 text-sm font-medium flex items-center gap-2">
+          <svg className="animate-spin w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
+          </svg>
           Генерирую список покупок...
+        </div>
+      )}
+      {pollError && (
+        <div className="mb-4 px-4 py-3 rounded-lg bg-red-50 text-red-600 text-sm font-medium">
+          Ошибка генерации: {pollError}
         </div>
       )}
 
       {/* Last generated info */}
-      {list?.last_generated_at && !generate.isPending && (
+      {list?.last_generated_at && !isPolling && (
         <p className="text-xs text-gray-400 mb-4">
           Последняя генерация:{' '}
           {new Date(list.last_generated_at).toLocaleString('ru-RU', {
@@ -602,8 +612,8 @@ export function ShoppingListPage() {
         <GenerateModal
           onClose={() => setGenerateOpen(false)}
           onGenerate={handleGenerate}
-          isPending={generate.isPending}
-          error={generate.error}
+          isPending={generatePending}
+          error={mutationError}
         />
       )}
     </div>

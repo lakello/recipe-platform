@@ -45,3 +45,12 @@ class ShoppingListRead(BaseModel):
 class GenerateRequest(BaseModel):
     mode: Literal["today", "week", "custom"]
     dates: list[date] | None = None
+
+
+class GenerateTaskResponse(BaseModel):
+    task_id: str
+
+
+class TaskStatusResponse(BaseModel):
+    status: Literal["pending", "started", "success", "failure"]
+    error: str | None = None

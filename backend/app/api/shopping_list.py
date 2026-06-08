@@ -1,20 +1,25 @@
 import uuid
 
+from celery.result import AsyncResult
 from fastapi import APIRouter, Depends
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
+from app.celery_app import celery_app
 from app.db.session import get_db
 from app.models.user import User
 from app.repositories.shopping_list import ShoppingListRepository
 from app.schemas.shopping_list import (
     GenerateRequest,
+    GenerateTaskResponse,
     ShoppingListItemCreate,
     ShoppingListItemRead,
     ShoppingListItemUpdate,
     ShoppingListRead,
+    TaskStatusResponse,
 )
 from app.services.shopping_list import ShoppingListService
+from app.tasks.shopping_list import generate_shopping_list_task
 
 router = APIRouter(prefix="/api/shopping-list", tags=["shopping-list"])
 
@@ -31,13 +36,29 @@ async def get_shopping_list(
     return await service.get_list(current_user.id)
 
 
-@router.post("/generate", response_model=ShoppingListRead)
+@router.post("/generate", response_model=GenerateTaskResponse, status_code=202)
 async def generate_shopping_list(
     data: GenerateRequest,
-    service: ShoppingListService = Depends(_service),
     current_user: User = Depends(get_current_user),
-) -> ShoppingListRead:
-    return await service.generate(current_user.id, data)
+) -> GenerateTaskResponse:
+    dates = [str(d) for d in data.dates] if data.dates else None
+    task = generate_shopping_list_task.delay(str(current_user.id), data.mode, dates)
+    return GenerateTaskResponse(task_id=task.id)
+
+
+@router.get("/generate/status/{task_id}", response_model=TaskStatusResponse)
+async def get_generate_status(
+    task_id: str,
+    current_user: User = Depends(get_current_user),
+) -> TaskStatusResponse:
+    result = AsyncResult(task_id, app=celery_app)
+    if result.state == "SUCCESS":
+        return TaskStatusResponse(status="success")
+    if result.state == "FAILURE":
+        return TaskStatusResponse(status="failure", error=str(result.result))
+    if result.state == "STARTED":
+        return TaskStatusResponse(status="started")
+    return TaskStatusResponse(status="pending")
 
 
 @router.post("/items", response_model=ShoppingListItemRead, status_code=201)

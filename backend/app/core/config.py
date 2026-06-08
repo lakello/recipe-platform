@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     database_url: str = "postgresql+psycopg://recipe:recipe@localhost:5432/recipe"
     redis_url: str = "redis://localhost:6379/0"
     celery_broker_url: str = "redis://localhost:6379/1"
+    celery_result_backend_url: str = "redis://localhost:6379/2"
 
     s3_endpoint_url: str = "http://localhost:9000"
     s3_public_url: str = "http://localhost:9000"
