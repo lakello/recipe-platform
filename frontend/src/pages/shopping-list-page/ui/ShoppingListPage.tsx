@@ -411,8 +411,8 @@ function EditItemModal({
         {error && <p className="text-red-500 text-sm">{(error as Error).message}</p>}
 
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={onClose} className="flex-1">Отмена</Button>
-          <Button onClick={handleSave} loading={isPending} className="flex-1">Сохранить</Button>
+          <div className="flex-1"><Button variant="secondary" onClick={onClose}>Отмена</Button></div>
+          <div className="flex-1"><Button onClick={handleSave} loading={isPending}>Сохранить</Button></div>
         </div>
       </div>
     </div>
@@ -440,35 +440,27 @@ function ItemRow({ item }: { item: ShoppingListItem }) {
           className="w-4 h-4 rounded accent-blue-600 cursor-pointer shrink-0"
         />
         <div className="flex-1 min-w-0">
-          <span
-            className={`text-sm font-medium ${
+          <button
+            onClick={() => setEditOpen(true)}
+            className={`text-sm font-medium text-left hover:underline decoration-dotted underline-offset-2 ${
               item.is_bought ? 'line-through text-gray-400' : 'text-gray-900'
             }`}
           >
             {item.name}
-          </span>
+          </button>
           {item.amount != null && (
             <span className="text-xs text-gray-400 ml-2">
               {formatAmount(item.amount, item.unit)}
             </span>
           )}
         </div>
-        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity shrink-0">
-          <button
-            onClick={() => setEditOpen(true)}
-            className="text-gray-300 hover:text-blue-400 text-sm leading-none px-1"
-            title="Изменить"
-          >
-            ✎
-          </button>
-          <button
-            onClick={() => remove.mutate(item.id)}
-            className="text-gray-300 hover:text-red-400 text-lg leading-none"
-            title="Удалить"
-          >
-            ×
-          </button>
-        </div>
+        <button
+          onClick={() => remove.mutate(item.id)}
+          className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-opacity text-lg leading-none shrink-0"
+          title="Удалить"
+        >
+          ×
+        </button>
       </div>
       {editOpen && <EditItemModal item={item} onClose={() => setEditOpen(false)} />}
     </>
