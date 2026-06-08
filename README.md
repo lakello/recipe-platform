@@ -30,6 +30,7 @@
 | Backend + Frontend: подписки на авторов и лента | ✅ Готово |
 | Backend + Frontend: поиск рецептов (OpenSearch) | ✅ Готово |
 | Backend + Frontend: план питания на неделю | ✅ Готово |
+| Backend + Frontend: список покупок (async Celery + polling) | ✅ Готово |
 | Android | ⏳ Планируется |
 | Desktop | ⏳ Планируется |
 | Инфраструктура (Terraform, Ansible, Helm) | ⏳ Планируется |
