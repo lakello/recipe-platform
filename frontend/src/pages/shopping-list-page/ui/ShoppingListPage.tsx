@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, type KeyboardEvent } from 'react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { UNIT_LABELS, type IngredientUnit, ingredientsApi } from '@/features/ingredients/api/ingredientsApi'
 import type { Ingredient } from '@/features/ingredients/api/ingredientsApi'
@@ -337,45 +338,139 @@ function AddItemForm({ onDone }: { onDone: () => void }) {
   )
 }
 
+// --- Edit item modal ---
+
+function EditItemModal({
+  item,
+  onClose,
+}: {
+  item: ShoppingListItem
+  onClose: () => void
+}) {
+  const [amount, setAmount] = useState(item.amount != null ? String(item.amount) : '')
+  const [unit, setUnit] = useState(item.unit ?? '')
+  const qc = useQueryClient()
+
+  const { mutate: save, isPending, error } = useMutation({
+    mutationFn: (data: { amount?: number; unit?: string }) =>
+      shoppingListApi.updateItem(item.id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['shopping-list'] })
+      onClose()
+    },
+  })
+
+  const handleSave = () => {
+    const payload: { amount?: number; unit?: string } = {}
+    if (amount !== '') payload.amount = parseFloat(amount)
+    if (unit !== '') payload.unit = unit
+    save(payload)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6 flex flex-col gap-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Редактирование</p>
+            <h2 className="text-lg font-semibold text-gray-900">{item.name}</h2>
+          </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+        </div>
+
+        <div className="flex gap-2">
+          <div className="flex-1">
+            <Input
+              label="Количество"
+              type="number"
+              min="0"
+              step="any"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+              placeholder="напр. 500"
+              autoFocus
+            />
+          </div>
+          <div className="flex-1">
+            <Input
+              label="Единица"
+              value={unit}
+              onChange={(e) => setUnit(e.target.value)}
+              placeholder="г, кг, шт..."
+            />
+          </div>
+        </div>
+
+        {error && <p className="text-red-500 text-sm">{(error as Error).message}</p>}
+
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={onClose} className="flex-1">Отмена</Button>
+          <Button onClick={handleSave} loading={isPending} className="flex-1">Сохранить</Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 // --- Item row ---
 
 function ItemRow({ item }: { item: ShoppingListItem }) {
   const toggle = useToggleBought()
   const remove = useDeleteShoppingListItem()
+  const [editOpen, setEditOpen] = useState(false)
 
   return (
-    <div
-      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${
-        item.is_bought ? 'bg-gray-50 opacity-60' : 'bg-white'
-      }`}
-    >
-      <input
-        type="checkbox"
-        checked={item.is_bought}
-        onChange={() => toggle.mutate({ itemId: item.id, is_bought: !item.is_bought })}
-        className="w-4 h-4 rounded accent-blue-600 cursor-pointer shrink-0"
-      />
-      <div className="flex-1 min-w-0">
-        <span
-          className={`text-sm font-medium ${
-            item.is_bought ? 'line-through text-gray-400' : 'text-gray-900'
-          }`}
-        >
-          {item.name}
-        </span>
-        {item.amount != null && (
-          <span className="text-xs text-gray-400 ml-2">
-            {formatAmount(item.amount, item.unit)}
-          </span>
-        )}
-      </div>
-      <button
-        onClick={() => remove.mutate(item.id)}
-        className="opacity-0 group-hover:opacity-100 text-gray-300 hover:text-red-400 transition-opacity text-lg leading-none shrink-0"
+    <>
+      <div
+        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors group ${
+          item.is_bought ? 'bg-gray-50 opacity-60' : 'bg-white'
+        }`}
       >
-        ×
-      </button>
-    </div>
+        <input
+          type="checkbox"
+          checked={item.is_bought}
+          onChange={() => toggle.mutate({ itemId: item.id, is_bought: !item.is_bought })}
+          className="w-4 h-4 rounded accent-blue-600 cursor-pointer shrink-0"
+        />
+        <div className="flex-1 min-w-0">
+          <span
+            className={`text-sm font-medium ${
+              item.is_bought ? 'line-through text-gray-400' : 'text-gray-900'
+            }`}
+          >
+            {item.name}
+          </span>
+          {item.amount != null && (
+            <span className="text-xs text-gray-400 ml-2">
+              {formatAmount(item.amount, item.unit)}
+            </span>
+          )}
+        </div>
+        <div className="opacity-0 group-hover:opacity-100 flex items-center gap-1 transition-opacity shrink-0">
+          <button
+            onClick={() => setEditOpen(true)}
+            className="text-gray-300 hover:text-blue-400 text-sm leading-none px-1"
+            title="Изменить"
+          >
+            ✎
+          </button>
+          <button
+            onClick={() => remove.mutate(item.id)}
+            className="text-gray-300 hover:text-red-400 text-lg leading-none"
+            title="Удалить"
+          >
+            ×
+          </button>
+        </div>
+      </div>
+      {editOpen && <EditItemModal item={item} onClose={() => setEditOpen(false)} />}
+    </>
   )
 }
 
