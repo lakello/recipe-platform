@@ -989,6 +989,42 @@ Endpoints:
 UPDATE users SET role = 'superadmin' WHERE email = 'your@email.com';
 ```
 
+### OAuth Google и Яндекс (feat/oauth-google-yandex)
+
+- `app/models/oauth_account.py` — модель `UserOAuthAccount`: `provider`, `provider_user_id`, FK на `users` с CASCADE; уникальное ограничение `(provider, provider_user_id)`
+- `app/models/user.py` — `password_hash` сделан nullable для поддержки OAuth-only пользователей
+- `app/repositories/oauth_account.py` — `OAuthAccountRepository`: поиск по провайдеру и `provider_user_id`, создание
+- `app/services/oauth.py` — `OAuthService`: обмен authorization code на access token (aiohttp), получение профиля, поиск существующего OAuth-аккаунта, привязка по email или автосоздание нового пользователя, выдача JWT; CSRF-защита через state-параметр
+- `app/api/oauth.py` — OAuth endpoints; state хранится в short-lived httpOnly cookie (5 мин); при ошибке — редирект на `/login?error=oauth_error`; при успехе — установка auth cookies и редирект на `FRONTEND_URL`
+- `alembic/versions/m1e2f3a4b5c6` — создаёт таблицу `user_oauth_accounts`; делает `password_hash` nullable
+- `app/core/config.py` — добавлены OAuth credentials и `FRONTEND_URL`
+- `docker-compose.yml` — OAuth переменные и `FRONTEND_URL` передаются в контейнер backend
+- `infra/k8s/oauth-secrets.example.yaml` — шаблон Kubernetes Secret для OAuth credentials
+
+Endpoints:
+
+| Метод | Путь | Описание |
+|---|---|---|
+| `GET` | `/api/auth/google/login` | Редирект на Google OAuth |
+| `GET` | `/api/auth/google/callback` | Обработка Google callback |
+| `GET` | `/api/auth/yandex/login` | Редирект на Яндекс OAuth |
+| `GET` | `/api/auth/yandex/callback` | Обработка Яндекс callback |
+
+Логика привязки аккаунтов:
+- Есть `UserOAuthAccount` для данного провайдера → логин
+- Нет, но email совпадает → привязка OAuth к существующему аккаунту
+- Email новый → создание пользователя (username генерируется из имени профиля)
+
+Переменные окружения:
+
+| Переменная | Описание |
+|---|---|
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth credentials |
+| `GOOGLE_REDIRECT_URI` | Callback URI (по умолчанию `http://localhost:8000/api/auth/google/callback`) |
+| `YANDEX_CLIENT_ID` / `YANDEX_CLIENT_SECRET` | Яндекс OAuth credentials |
+| `YANDEX_REDIRECT_URI` | Callback URI (по умолчанию `http://localhost:8000/api/auth/yandex/callback`) |
+| `FRONTEND_URL` | URL фронтенда для редиректа после OAuth (по умолчанию `http://localhost:5173`) |
+
 ### Список покупок (feat/shopping-list)
 
 - `app/models/ingredient_category.py` — модель `IngredientCategory`: `name` (unique), `created_at`
@@ -1222,7 +1258,8 @@ Backend находится в разработке.
 14. ~~Follows и feed.~~ ✓
 15. ~~Search (OpenSearch).~~ ✓
 16. ~~Meal plans и shopping lists.~~ ✓
-17. Moderation и admin.
-18. Celery tasks (expanded).
-19. Observability.
-20. Security hardening.
+17. ~~OAuth Google и Яндекс.~~ ✓
+18. Moderation и admin.
+19. Celery tasks (expanded).
+20. Observability.
+21. Security hardening.
