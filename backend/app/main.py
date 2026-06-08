@@ -1,4 +1,6 @@
 import logging
+from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -11,16 +13,31 @@ from app.api.follows import router as follows_router
 from app.api.ingredients import router as ingredients_router
 from app.api.likes import router as likes_router
 from app.api.recipes import router as recipes_router
+from app.api.search import router as search_router
 from app.api.uploads import router as uploads_router
 from app.api.users import router as users_router
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import setup_logging
 from app.core.middleware import CorrelationIdMiddleware
+from app.core.opensearch import create_opensearch_client, ensure_index_exists
 from app.db.session import engine
 
 setup_logging()
 logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    client = create_opensearch_client()
+    try:
+        await ensure_index_exists(client)
+    except Exception as exc:
+        logger.warning("OpenSearch not available at startup: %s", exc)
+    app.state.os_client = client
+    yield
+    await client.close()
+
 
 app = FastAPI(
     title=settings.app_name,
@@ -28,6 +45,7 @@ app = FastAPI(
     docs_url="/api/docs",
     redoc_url="/api/redoc",
     openapi_url="/api/openapi.json",
+    lifespan=lifespan,
 )
 
 app.add_middleware(
@@ -50,6 +68,7 @@ app.include_router(comments_router)
 app.include_router(categories_router)
 app.include_router(ingredients_router)
 app.include_router(uploads_router)
+app.include_router(search_router)
 
 
 @app.get("/health")

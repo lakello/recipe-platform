@@ -79,6 +79,13 @@ class RecipeRepository:
         result = await self.session.execute(base.offset((page - 1) * size).limit(size))
         return list(result.scalars().all()), total
 
+    async def get_by_ids(self, ids: list[uuid.UUID]) -> list[Recipe]:
+        if not ids:
+            return []
+        result = await self.session.execute(select(Recipe).where(Recipe.id.in_(ids)))
+        recipes = {r.id: r for r in result.scalars().all()}
+        return [recipes[id_] for id_ in ids if id_ in recipes]
+
     async def update(self, recipe: Recipe, data: dict) -> Recipe:
         for key, value in data.items():
             setattr(recipe, key, value)
