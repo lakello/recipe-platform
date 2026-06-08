@@ -4,6 +4,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 from app.models.ingredient import IngredientUnit
+from app.schemas.ingredient_category import IngredientCategoryRead
 
 
 class IngredientRead(BaseModel):
@@ -11,6 +12,7 @@ class IngredientRead(BaseModel):
 
     id: uuid.UUID
     name: str
+    category: IngredientCategoryRead | None = None
     created_at: datetime
 
 

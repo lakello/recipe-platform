@@ -36,6 +36,9 @@ export function RecipesListPage() {
               <Link to="/meal-plan">
                 <Button variant="secondary">План питания</Button>
               </Link>
+              <Link to="/shopping-list">
+                <Button variant="secondary">Список покупок</Button>
+              </Link>
               <Link to="/favorites">
                 <Button variant="secondary">Избранное</Button>
               </Link>

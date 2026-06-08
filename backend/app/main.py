@@ -10,11 +10,13 @@ from app.api.auth import router as auth_router
 from app.api.categories import router as categories_router
 from app.api.comments import router as comments_router
 from app.api.follows import router as follows_router
+from app.api.ingredient_categories import router as ingredient_categories_router
 from app.api.ingredients import router as ingredients_router
 from app.api.likes import router as likes_router
 from app.api.meal_plans import router as meal_plans_router
 from app.api.recipes import router as recipes_router
 from app.api.search import router as search_router
+from app.api.shopping_list import router as shopping_list_router
 from app.api.uploads import router as uploads_router
 from app.api.users import router as users_router
 from app.core.config import settings
@@ -67,10 +69,12 @@ app.include_router(recipes_router)
 app.include_router(likes_router)
 app.include_router(comments_router)
 app.include_router(categories_router)
+app.include_router(ingredient_categories_router)
 app.include_router(ingredients_router)
 app.include_router(uploads_router)
 app.include_router(search_router)
 app.include_router(meal_plans_router)
+app.include_router(shopping_list_router)
 
 
 @app.get("/health")
