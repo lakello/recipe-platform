@@ -9,7 +9,7 @@ import {
   useAddMealPlanItem,
   useUpdateMealPlanItem,
   useDeleteMealPlanItem,
-  useCopyToNextWeek,
+  useCopyFromWeek,
 } from '@/features/meal-plan/hooks/useMealPlan'
 import type { MealType, RecipeSummary } from '@/features/meal-plan/api/mealPlanApi'
 
@@ -181,6 +181,92 @@ function RecipePicker({
   )
 }
 
+function CopyWeekModal({
+  targetWeekStart,
+  onClose,
+}: {
+  targetWeekStart: string
+  onClose: () => void
+}) {
+  const [y, mo, d] = targetWeekStart.split('-').map(Number)
+  const targetMonday = new Date(y, mo - 1, d)
+  const [sourceMonday, setSourceMonday] = useState(() => addWeeks(targetMonday, -1))
+  const copy = useCopyFromWeek(targetWeekStart)
+
+  const sourceStr = formatDate(sourceMonday)
+  const isSameWeek = sourceStr === targetWeekStart
+
+  const handleCopy = async () => {
+    await copy.mutateAsync(sourceStr)
+    onClose()
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6 flex flex-col gap-5"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-semibold">Копировать план из недели</h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 text-xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+
+        <p className="text-sm text-gray-500">
+          Блюда из выбранной недели будут добавлены в текущую открытую неделю.
+        </p>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setSourceMonday((d) => addWeeks(d, -1))}
+            className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm font-medium"
+          >
+            ←
+          </button>
+          <span className="flex-1 text-center text-sm text-gray-700">
+            {formatWeekRange(sourceMonday)}
+          </span>
+          <button
+            onClick={() => setSourceMonday((d) => addWeeks(d, 1))}
+            className="px-2 py-1 rounded bg-gray-100 hover:bg-gray-200 text-sm font-medium"
+          >
+            →
+          </button>
+        </div>
+
+        {isSameWeek && (
+          <p className="text-amber-600 text-sm">Нельзя копировать неделю саму в себя.</p>
+        )}
+        {copy.isError && (
+          <p className="text-red-500 text-sm">{(copy.error as Error).message}</p>
+        )}
+
+        <div className="flex gap-2">
+          <Button variant="secondary" onClick={onClose} className="flex-1">
+            Отмена
+          </Button>
+          <Button
+            onClick={handleCopy}
+            loading={copy.isPending}
+            disabled={isSameWeek}
+            className="flex-1"
+          >
+            Скопировать
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 interface PickerTarget {
   dayOfWeek: number
   mealType: MealType
@@ -194,10 +280,9 @@ export function MealPlanPage() {
   const addItem = useAddMealPlanItem(weekStart)
   const updateItem = useUpdateMealPlanItem(weekStart)
   const deleteItem = useDeleteMealPlanItem(weekStart)
-  const copyWeek = useCopyToNextWeek(weekStart)
 
   const [picker, setPicker] = useState<PickerTarget | null>(null)
-  const [copiedMsg, setCopiedMsg] = useState(false)
+  const [copyOpen, setCopyOpen] = useState(false)
 
   const handleSelectRecipe = (recipe: RecipeSummary) => {
     if (!picker) return
@@ -209,12 +294,6 @@ export function MealPlanPage() {
       servings: 1,
     })
     setPicker(null)
-  }
-
-  const handleCopy = async () => {
-    await copyWeek.mutateAsync()
-    setCopiedMsg(true)
-    setTimeout(() => setCopiedMsg(false), 3000)
   }
 
   const itemsFor = (dayOfWeek: number, mealType: MealType) =>
@@ -232,16 +311,8 @@ export function MealPlanPage() {
           </Link>
           <h1 className="text-2xl font-bold text-gray-900">План питания</h1>
         </div>
-        <Button
-          variant="secondary"
-          onClick={handleCopy}
-          disabled={copyWeek.isPending}
-        >
-          {copyWeek.isPending
-            ? 'Копируется...'
-            : copiedMsg
-              ? '✓ Скопировано'
-              : 'Копировать на следующую неделю'}
+        <Button variant="secondary" onClick={() => setCopyOpen(true)}>
+          Копировать из другой недели
         </Button>
       </div>
 
@@ -327,12 +398,13 @@ export function MealPlanPage() {
                             <div className="w-8 h-8 rounded bg-gradient-to-br from-orange-100 to-amber-200 shrink-0" />
                           )}
                           <div className="flex-1 min-w-0">
-                            <p
-                              className="text-xs font-medium text-gray-800 leading-tight truncate"
+                            <Link
+                              to={`/recipes/${item.recipe.id}`}
+                              className="text-xs font-medium text-gray-800 leading-tight truncate hover:text-blue-600 transition-colors block"
                               title={item.recipe.title}
                             >
                               {item.recipe.title}
-                            </p>
+                            </Link>
                             {/* Servings control */}
                             <div className="flex items-center gap-1 mt-0.5">
                               <button
@@ -397,6 +469,14 @@ export function MealPlanPage() {
         <RecipePicker
           onSelect={handleSelectRecipe}
           onClose={() => setPicker(null)}
+        />
+      )}
+
+      {/* Copy week modal */}
+      {copyOpen && (
+        <CopyWeekModal
+          targetWeekStart={weekStart}
+          onClose={() => setCopyOpen(false)}
         />
       )}
     </div>
