@@ -10,6 +10,7 @@ import {
   useToggleBought,
   useDeleteShoppingListItem,
 } from '@/features/shopping-list/hooks/useShoppingList'
+import { shoppingListApi } from '@/features/shopping-list/api/shoppingListApi'
 import type { ShoppingListItem, GenerationMode } from '@/features/shopping-list/api/shoppingListApi'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
