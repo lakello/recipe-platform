@@ -14,6 +14,7 @@ from app.api.ingredient_categories import router as ingredient_categories_router
 from app.api.ingredients import router as ingredients_router
 from app.api.likes import router as likes_router
 from app.api.meal_plans import router as meal_plans_router
+from app.api.oauth import router as oauth_router
 from app.api.recipes import router as recipes_router
 from app.api.search import router as search_router
 from app.api.shopping_list import router as shopping_list_router
@@ -63,6 +64,7 @@ app.add_middleware(CorrelationIdMiddleware)
 register_exception_handlers(app)
 
 app.include_router(auth_router)
+app.include_router(oauth_router)
 app.include_router(users_router)
 app.include_router(follows_router)
 app.include_router(recipes_router)
