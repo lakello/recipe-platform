@@ -35,7 +35,7 @@ class SearchService:
             "visibility": recipe.visibility,
             "author_id": str(recipe.author_id),
             "author_username": recipe.author.username,
-            "photo_url": recipe.photo.url if recipe.photo else None,
+            "photo_url": recipe.photo.key if recipe.photo else None,
             "likes_count": recipe.likes_count,
             "created_at": recipe.created_at.isoformat(),
             "updated_at": recipe.updated_at.isoformat(),
