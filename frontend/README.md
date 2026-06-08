@@ -731,6 +731,16 @@ Backend API:
 
 **Fix (feat/comments):** кнопка «Редактировать» на странице рецепта использует `replace`-навигацию, чтобы edit-страница не накапливалась в истории браузера и не мешала кнопке «Назад».
 
+### OAuth Google и Яндекс (feat/oauth-google-yandex)
+
+- `src/pages/login-page/ui/LoginPage.tsx` — кнопки «Войти через Google» и «Войти через Яндекс» с SVG-иконками провайдеров; клик перенаправляет браузер на backend login endpoint (`/api/auth/google/login`, `/api/auth/yandex/login`); OAuth-ошибки из query-параметра `?error=oauth_error&message=...` отображаются на форме
+
+Поведение:
+- Клик по кнопке выполняет `window.location.href` на backend endpoint (не AJAX-запрос)
+- Backend выполняет OAuth flow, устанавливает auth cookies и редиректит на `FRONTEND_URL`
+- Frontend подхватывает авторизацию через существующий `useCurrentUser` (куки установлены)
+- При ошибке OAuth backend редиректит на `/login?error=oauth_error&message=...`
+
 ### Авторизация (feat/frontend-auth)
 
 - **Зависимости:** react-hook-form, zod, @hookform/resolvers
@@ -981,6 +991,7 @@ Frontend находится в разработке.
 13. ~~Поиск рецептов.~~ ✓
 14. ~~Meal plan.~~ ✓
 15. ~~Shopping list.~~ ✓
-16. Moderation UI.
-17. Admin UI.
-18. UI polish, accessibility, performance.
+16. ~~OAuth Google и Яндекс.~~ ✓
+17. Moderation UI.
+18. Admin UI.
+19. UI polish, accessibility, performance.
