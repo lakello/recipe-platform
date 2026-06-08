@@ -816,6 +816,25 @@ Backend API:
 - Профиль показывает все рецепты пользователя (включая черновики и приватные)
 - После регистрации и входа — автоматический редирект на главную
 
+### Поиск рецептов (feat/search)
+
+- `src/features/search/api/searchApi.ts` — типы `SearchParams`, `SearchResult` и метод `searchRecipes`; параметры `include_ingredients[]` / `exclude_ingredients[]` передаются через `qs.append`
+- `src/features/search/hooks/useSearch.ts` — хук `useSearch(params, enabled)`; запрос выполняется только при наличии хотя бы одного фильтра
+- `src/pages/search-page/ui/SearchPage.tsx` — полная страница поиска: строка поиска (по кнопке «Найти»), фильтры (категория, сложность, макс. время), сортировка, тег-инпуты для включения и исключения ингредиентов, сетка результатов, состояния загрузки и ошибок
+
+Страницы:
+
+| Путь | Описание | Auth |
+|---|---|---|
+| `/search` | Поиск рецептов по названию, ингредиентам и фильтрам | Публичная |
+
+Поведение:
+- Поиск не выполняется, пока не задан хотя бы один фильтр или запрос
+- Текстовый поиск запускается по кнопке «Найти» (не при каждом нажатии клавиши)
+- Фильтры (категория, сложность, время, ингредиенты) применяются мгновенно при изменении
+- Ингредиенты добавляются по Enter или запятой; удаляются по ×
+- Ссылка на страницу поиска доступна с `RecipesListPage`
+
 ### Подписки на авторов (feat/follows)
 
 - `src/features/follows/api/followsApi.ts` — методы: follow, unfollow, listFollowers, listFollowing
@@ -917,8 +936,9 @@ Frontend находится в разработке.
 11. ~~Comments.~~ ✓
 11. ~~Public user profiles, recipe card redesign, author display.~~ ✓
 12. ~~Follows, feed, followers/following pages.~~ ✓
-13. Meal plan.
-12. Shopping list.
+13. ~~Поиск рецептов.~~ ✓
+14. Meal plan.
+15. Shopping list.
 13. Moderation UI.
 14. Admin UI.
 15. UI polish, accessibility, performance.
