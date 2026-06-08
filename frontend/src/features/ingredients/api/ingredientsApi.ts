@@ -1,4 +1,5 @@
 import { apiJson } from '@/shared/api/client'
+import type { IngredientCategory } from '@/features/ingredient-categories/api/ingredientCategoriesApi'
 
 export type IngredientUnit =
   | 'g' | 'kg' | 'ml' | 'l' | 'tsp' | 'tbsp' | 'pcs' | 'cup' | 'pinch' | 'to_taste'
@@ -19,6 +20,7 @@ export const UNIT_LABELS: Record<IngredientUnit, string> = {
 export interface Ingredient {
   id: string
   name: string
+  category: IngredientCategory | null
   created_at: string
 }
 

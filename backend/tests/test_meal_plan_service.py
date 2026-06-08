@@ -55,7 +55,7 @@ def make_item(plan=None):
     return item
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_get_week_creates_plan_if_missing():
     service, repo, _ = make_service()
     plan = make_plan()
@@ -67,7 +67,7 @@ async def test_get_week_creates_plan_if_missing():
     assert result.week_start == MONDAY
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_get_week_rejects_non_monday():
     service, _, _ = make_service()
 
@@ -78,7 +78,7 @@ async def test_get_week_rejects_non_monday():
     assert exc.value.status_code == 400
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_add_item_creates_and_returns_item():
     service, repo, recipe_repo = make_service()
     plan = make_plan()
@@ -100,7 +100,7 @@ async def test_add_item_creates_and_returns_item():
     assert result.servings == 2
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_add_item_raises_404_for_missing_recipe():
     service, _, recipe_repo = make_service()
     recipe_repo.get_by_id.return_value = None
@@ -119,7 +119,7 @@ async def test_add_item_raises_404_for_missing_recipe():
     assert exc.value.status_code == 404
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_update_item_changes_servings():
     service, repo, _ = make_service()
     user_id = uuid.uuid4()
@@ -137,7 +137,7 @@ async def test_update_item_changes_servings():
     assert result.servings == 4
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_update_item_forbidden_for_other_user():
     service, repo, _ = make_service()
     item = make_item()  # plan.user_id is random
@@ -150,7 +150,7 @@ async def test_update_item_forbidden_for_other_user():
     assert exc.value.status_code == 403
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_delete_item_calls_repo():
     service, repo, _ = make_service()
     user_id = uuid.uuid4()
@@ -164,7 +164,7 @@ async def test_delete_item_calls_repo():
     repo.delete_item.assert_awaited_once_with(item)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_delete_item_not_found():
     service, repo, _ = make_service()
     repo.get_item.return_value = None
@@ -176,7 +176,7 @@ async def test_delete_item_not_found():
     assert exc.value.status_code == 404
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_copy_to_next_week_copies_items():
     service, repo, _ = make_service()
     user_id = uuid.uuid4()
@@ -193,7 +193,7 @@ async def test_copy_to_next_week_copies_items():
     assert result.week_start == date(2026, 6, 15)
 
 
-@pytest.mark.asyncio
+@pytest.mark.anyio
 async def test_copy_to_next_week_no_source_raises_404():
     service, repo, _ = make_service()
     repo.get_week_plan.return_value = None

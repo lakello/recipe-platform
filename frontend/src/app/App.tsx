@@ -17,6 +17,7 @@ import { FollowingPage } from '@/pages/following-page'
 import { FeedPage } from '@/pages/feed-page'
 import { SearchPage } from '@/pages/search-page'
 import { MealPlanPage } from '@/pages/meal-plan-page'
+import { ShoppingListPage } from '@/pages/shopping-list-page'
 
 export function App() {
   return (
@@ -93,6 +94,14 @@ export function App() {
             element={
               <ProtectedRoute>
                 <FeedPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/shopping-list"
+            element={
+              <ProtectedRoute>
+                <ShoppingListPage />
               </ProtectedRoute>
             }
           />
