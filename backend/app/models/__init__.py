@@ -5,6 +5,7 @@ import app.models.ingredient  # noqa: F401
 import app.models.ingredient_category  # noqa: F401
 import app.models.like  # noqa: F401
 import app.models.meal_plan  # noqa: F401
+import app.models.oauth_account  # noqa: F401
 import app.models.photo  # noqa: F401
 import app.models.recipe  # noqa: F401
 import app.models.refresh_token  # noqa: F401

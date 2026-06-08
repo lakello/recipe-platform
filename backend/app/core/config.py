@@ -35,6 +35,16 @@ class Settings(BaseSettings):
     cookie_secure: bool = False
     cookie_samesite: str = "lax"
 
+    google_client_id: str = ""
+    google_client_secret: str = ""
+    google_redirect_uri: str = "http://localhost:8000/api/auth/google/callback"
+
+    yandex_client_id: str = ""
+    yandex_client_secret: str = ""
+    yandex_redirect_uri: str = "http://localhost:8000/api/auth/yandex/callback"
+
+    frontend_url: str = "http://localhost:5173"
+
     @field_validator("cors_origins", mode="before")
     @classmethod
     def parse_cors_origins(cls, v: object) -> object:
