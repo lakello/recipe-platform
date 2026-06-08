@@ -9,6 +9,7 @@ Create Date: 2026-06-08 12:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
+from sqlalchemy.dialects.postgresql import ENUM as PgEnum
 
 from alembic import op
 
@@ -23,12 +24,12 @@ MEAL_TYPE_ENUM = ("breakfast", "lunch", "dinner", "snack")
 def upgrade() -> None:
     """Upgrade schema."""
     op.execute(
-        sa.text(
-            "DO $$ BEGIN "
-            "CREATE TYPE mealtype AS ENUM ('breakfast','lunch','dinner','snack'); "
-            "EXCEPTION WHEN duplicate_object THEN NULL; "
-            "END $$;"
-        )
+        sa.text("""
+        DO $$ BEGIN
+            CREATE TYPE mealtype AS ENUM ('breakfast', 'lunch', 'dinner', 'snack');
+        EXCEPTION WHEN duplicate_object THEN NULL;
+        END $$;
+    """)
     )
 
     op.create_table(
@@ -56,7 +57,7 @@ def upgrade() -> None:
         sa.Column("day_of_week", sa.Integer(), nullable=False),
         sa.Column(
             "meal_type",
-            sa.Enum(*MEAL_TYPE_ENUM, name="mealtype", create_type=False),
+            PgEnum(*MEAL_TYPE_ENUM, name="mealtype", create_type=False),
             nullable=False,
         ),
         sa.Column("servings", sa.Integer(), nullable=False),
