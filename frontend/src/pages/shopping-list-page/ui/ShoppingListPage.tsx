@@ -374,7 +374,7 @@ function EditItemModal({
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6 flex flex-col gap-5"
+        className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 flex flex-col gap-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
@@ -385,8 +385,8 @@ function EditItemModal({
           <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
         </div>
 
-        <div className="flex gap-2">
-          <div className="flex-1">
+        <div className="flex gap-3">
+          <div className="flex-1 min-w-0">
             <Input
               label="Количество"
               type="number"
@@ -398,7 +398,7 @@ function EditItemModal({
               autoFocus
             />
           </div>
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <Input
               label="Единица"
               value={unit}
@@ -410,9 +410,9 @@ function EditItemModal({
 
         {error && <p className="text-red-500 text-sm">{(error as Error).message}</p>}
 
-        <div className="flex gap-2">
-          <div className="flex-1"><Button variant="secondary" onClick={onClose}>Отмена</Button></div>
-          <div className="flex-1"><Button onClick={handleSave} loading={isPending}>Сохранить</Button></div>
+        <div className="flex gap-3">
+          <Button variant="secondary" onClick={onClose} className="flex-1">Отмена</Button>
+          <Button onClick={handleSave} loading={isPending} className="flex-1">Сохранить</Button>
         </div>
       </div>
     </div>
