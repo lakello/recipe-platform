@@ -816,6 +816,48 @@ Backend API:
 - Профиль показывает все рецепты пользователя (включая черновики и приватные)
 - После регистрации и входа — автоматический редирект на главную
 
+### Список покупок (feat/shopping-list)
+
+- `src/features/ingredient-categories/api/ingredientCategoriesApi.ts` — типы и API-методы: list, create, update, delete
+- `src/features/ingredient-categories/hooks/useIngredientCategories.ts` — хуки CRUD категорий ингредиентов
+- `src/features/shopping-list/api/shoppingListApi.ts` — типы (`ShoppingList`, `ShoppingListItem`) и методы: `getList`, `generate` (возвращает `task_id`), `getGenerateStatus` (polling), `addItem`, `updateItem`, `deleteItem`
+- `src/features/shopping-list/hooks/useShoppingList.ts` — `useShoppingList`, `useGenerateShoppingList` (polling через `useQuery` + `useEffect`; опрашивает статус каждые 2 сек; инвалидирует список по завершении), `useAddShoppingListItem`, `useToggleBought`, `useDeleteShoppingListItem`
+- `src/pages/shopping-list-page/ui/ShoppingListPage.tsx` — полная страница списка покупок: попап генерации (3 режима: сегодня / 7 дней / произвольные дни с недельным day picker), прогресс-бар купленных, группировка по категории ингредиента, чекбокс «куплено», редактирование количества/единицы по клику на название, удаление при наведении, ручное добавление с автодополнением из справочника, спиннер-баннер во время polling
+- `src/pages/admin-categories-page/` — добавлен таб «Категории ингредиентов» рядом с «Категории рецептов»; CRUD идентичен рецептным категориям, но только поле name
+- `src/features/ingredients/api/ingredientsApi.ts` — добавлено поле `category: IngredientCategory | null` в тип `Ingredient`
+- `src/shared/ui/Button.tsx` — исправлено: `className` из props теперь мержится с базовыми стилями, а не перезаписывает их
+
+Страницы:
+
+| Путь | Описание | Auth |
+|---|---|---|
+| `/shopping-list` | Список покупок с генерацией и управлением элементами | 🔒 |
+
+Поведение:
+- Нажатие «Сгенерировать» открывает попап с выбором режима; после отправки попап закрывается сразу, генерация идёт в фоне (Celery), страница показывает спиннер и обновляет список по завершении
+- Элементы сгруппированы по категории ингредиента; «Без категории» — в конце
+- Клик по названию элемента открывает попап редактирования (количество и единица)
+- Крестик удаления появляется при наведении на строку
+- Ручное добавление: свободный текст с автодополнением из справочника ингредиентов по последнему слову
+
+### План питания (feature/meal-plan)
+
+- `src/features/meal-plan/api/mealPlanApi.ts` — типы (`MealPlan`, `MealPlanItem`, `MealType`) и методы: `getWeek`, `addItem`, `updateItem`, `deleteItem`, `copyWeek`
+- `src/features/meal-plan/hooks/useMealPlan.ts` — хуки CRUD плана питания
+- `src/pages/meal-plan-page/ui/MealPlanPage.tsx` — недельный план: навигация по неделям, 7 колонок × 4 приёма пищи, добавление рецепта в ячейку (поиск по названию), изменение порций, удаление, попап «Копировать из другой недели» с выбором недели
+- `src/pages/recipe-page/` — кнопка «Добавить в план питания» с попапом выбора даты и типа приёма пищи; клик по названию рецепта в плане переходит на страницу рецепта
+
+Страницы:
+
+| Путь | Описание | Auth |
+|---|---|---|
+| `/meal-plan` | Недельный план питания | 🔒 |
+
+Поведение:
+- Неделя начинается с понедельника; кнопки «←» / «→» для навигации
+- Кнопка «Копировать из другой недели» открывает попап с выбором исходной недели; план вставляется в текущую открытую неделю
+- На странице рецепта кнопка «В план питания» доступна авторизованным пользователям
+
 ### Поиск рецептов (feat/search)
 
 - `src/features/search/api/searchApi.ts` — типы `SearchParams`, `SearchResult` и метод `searchRecipes`; параметры `include_ingredients[]` / `exclude_ingredients[]` передаются через `qs.append`
@@ -937,8 +979,8 @@ Frontend находится в разработке.
 11. ~~Public user profiles, recipe card redesign, author display.~~ ✓
 12. ~~Follows, feed, followers/following pages.~~ ✓
 13. ~~Поиск рецептов.~~ ✓
-14. Meal plan.
-15. Shopping list.
-13. Moderation UI.
-14. Admin UI.
-15. UI polish, accessibility, performance.
+14. ~~Meal plan.~~ ✓
+15. ~~Shopping list.~~ ✓
+16. Moderation UI.
+17. Admin UI.
+18. UI polish, accessibility, performance.
