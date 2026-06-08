@@ -11,6 +11,7 @@ from app.models.user import User
 from app.repositories.meal_plan import MealPlanRepository
 from app.repositories.recipe import RecipeRepository
 from app.schemas.meal_plan import (
+    CopyFromWeekRequest,
     CopyWeekRequest,
     MealPlanItemCreate,
     MealPlanItemRead,
@@ -73,3 +74,12 @@ async def copy_to_next_week(
     current_user: User = Depends(get_current_user),
 ) -> MealPlanRead:
     return await service.copy_to_next_week(current_user.id, data)
+
+
+@router.post("/copy-week", response_model=MealPlanRead)
+async def copy_week(
+    data: CopyFromWeekRequest,
+    service: MealPlanService = Depends(_service),
+    current_user: User = Depends(get_current_user),
+) -> MealPlanRead:
+    return await service.copy_from_week(current_user.id, data)

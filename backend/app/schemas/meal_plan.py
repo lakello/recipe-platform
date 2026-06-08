@@ -53,3 +53,8 @@ class MealPlanRead(BaseModel):
 
 class CopyWeekRequest(BaseModel):
     week_start: date
+
+
+class CopyFromWeekRequest(BaseModel):
+    source_week_start: date
+    target_week_start: date

@@ -45,3 +45,14 @@ export function useCopyToNextWeek(weekStart: string) {
     },
   })
 }
+
+export function useCopyFromWeek(targetWeekStart: string) {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (sourceWeekStart: string) =>
+      mealPlanApi.copyFromWeek(sourceWeekStart, targetWeekStart),
+    onSuccess: (data) => {
+      qc.setQueryData(KEY(targetWeekStart), data)
+    },
+  })
+}

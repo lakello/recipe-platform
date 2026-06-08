@@ -67,4 +67,10 @@ export const mealPlanApi = {
       method: 'POST',
       body: JSON.stringify({ week_start: weekStart }),
     }),
+
+  copyFromWeek: (sourceWeekStart: string, targetWeekStart: string): Promise<MealPlan> =>
+    apiJson<MealPlan>('/api/meal-plans/copy-week', {
+      method: 'POST',
+      body: JSON.stringify({ source_week_start: sourceWeekStart, target_week_start: targetWeekStart }),
+    }),
 }

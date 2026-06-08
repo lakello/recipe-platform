@@ -14,6 +14,7 @@ import { FavoriteButton } from '@/features/likes/ui/FavoriteButton'
 import { PhotoUpload } from '@/features/uploads/ui/PhotoUpload'
 import { uploadsApi } from '@/features/uploads/api/uploadsApi'
 import { useRecipePhotoUpload } from '@/features/uploads/hooks/useUpload'
+import { AddToMealPlanModal } from '@/features/meal-plan/ui/AddToMealPlanModal'
 import { Button } from '@/shared/ui/Button'
 import { UserLink } from '@/shared/ui/UserLink'
 import { CommentList } from '@/features/comments/ui/CommentList'
@@ -38,6 +39,7 @@ export function RecipePage() {
 
   const [editingIngredients, setEditingIngredients] = useState(false)
   const [editingSteps, setEditingSteps] = useState(false)
+  const [mealPlanOpen, setMealPlanOpen] = useState(false)
   const { upload: uploadPhoto, remove: removePhoto, isPending: isPhotoLoading, error: photoError } =
     useRecipePhotoUpload(recipeId!)
 
@@ -156,24 +158,31 @@ export function RecipePage() {
           )}
         </dl>
 
-        {isAuthor && (
+        {user && (
           <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100">
-            {recipe.status === 'draft' && (
+            {isAuthor && recipe.status === 'draft' && (
               <Button loading={isPublishing} onClick={() => update({ status: 'published' })}>
                 Опубликовать
               </Button>
             )}
-            <Link to={`/recipes/${recipe.id}/edit`} replace>
-              <Button variant="secondary">Редактировать</Button>
-            </Link>
-            <Button
-              variant="danger"
-              loading={isDeleting}
-              onClick={() => {
-                if (confirm('Удалить рецепт?')) remove(recipe.id)
-              }}
-            >
-              Удалить
+            {isAuthor && (
+              <Link to={`/recipes/${recipe.id}/edit`} replace>
+                <Button variant="secondary">Редактировать</Button>
+              </Link>
+            )}
+            {isAuthor && (
+              <Button
+                variant="danger"
+                loading={isDeleting}
+                onClick={() => {
+                  if (confirm('Удалить рецепт?')) remove(recipe.id)
+                }}
+              >
+                Удалить
+              </Button>
+            )}
+            <Button variant="secondary" onClick={() => setMealPlanOpen(true)}>
+              + В план питания
             </Button>
           </div>
         )}
@@ -265,6 +274,13 @@ export function RecipePage() {
       </div>
       {/* Комментарии */}
       <CommentList recipeId={recipe.id} currentUser={user} />
+
+      {mealPlanOpen && (
+        <AddToMealPlanModal
+          recipeId={recipe.id}
+          onClose={() => setMealPlanOpen(false)}
+        />
+      )}
     </div>
   )
 }

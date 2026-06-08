@@ -7,6 +7,7 @@ from app.models.meal_plan import MealPlanItem
 from app.repositories.meal_plan import MealPlanRepository
 from app.repositories.recipe import RecipeRepository
 from app.schemas.meal_plan import (
+    CopyFromWeekRequest,
     CopyWeekRequest,
     MealPlanItemCreate,
     MealPlanItemRead,
@@ -66,6 +67,21 @@ class MealPlanService:
         target = await self.repo.get_or_create_week_plan(user_id, next_monday)
         await self.repo.copy_items(source.id, target.id)
         updated = await self.repo.get_week_plan(user_id, next_monday)
+        return MealPlanRead.model_validate(updated)
+
+    async def copy_from_week(
+        self, user_id: uuid.UUID, data: CopyFromWeekRequest
+    ) -> MealPlanRead:
+        self._require_monday(data.source_week_start)
+        self._require_monday(data.target_week_start)
+        source = await self.repo.get_week_plan(user_id, data.source_week_start)
+        if not source:
+            raise HTTPException(status_code=404, detail="No plan for source week")
+        target = await self.repo.get_or_create_week_plan(
+            user_id, data.target_week_start
+        )
+        await self.repo.copy_items(source.id, target.id)
+        updated = await self.repo.get_week_plan(user_id, data.target_week_start)
         return MealPlanRead.model_validate(updated)
 
     async def _get_owned_item(
