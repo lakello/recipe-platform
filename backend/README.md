@@ -989,6 +989,25 @@ Endpoints:
 UPDATE users SET role = 'superadmin' WHERE email = 'your@email.com';
 ```
 
+### Поиск рецептов (feat/search)
+
+- `app/core/opensearch.py` — `AsyncOpenSearch`-клиент, маппинг индекса `recipes` (title, description, ingredient_names, category, cooking_time_minutes, difficulty, status, visibility, likes_count)
+- `app/services/search.py` — `SearchService`: `index_recipe` (пропускает непубличные/не-published → удаляет из индекса), `remove_recipe`, `search` с построением `bool`-запроса
+- `app/api/search.py` — `GET /api/search/recipes`: полнотекстовый поиск, фильтры, исключение ингредиентов, сортировка, пагинация; возвращает полные `RecipeRead` из БД по ids из OpenSearch
+- `app/schemas/search.py` — `SearchParams`, `SearchResult`
+- `app/api/recipes.py` — хуки: `index_recipe` при create/update, `remove_recipe` при delete
+- `app/main.py` — `os_client` инициализируется в lifespan, создаёт индекс при старте
+- `tests/test_search_service.py` — 9 unit-тестов
+- `scripts/reindex_opensearch.py` — разовый скрипт переиндексации всех существующих рецептов
+
+Endpoint:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `GET` | `/api/search/recipes` | опц. | Поиск рецептов по названию, ингредиентам, категории, сложности, времени; исключение ингредиентов; сортировка; пагинация |
+
+Параметры поиска: `q`, `category_id`, `min_time`, `max_time`, `difficulty`, `include_ingredients[]`, `exclude_ingredients[]`, `sort` (relevance/newest/popular), `page`, `size`.
+
 ### Docker (feat/docker-compose-local)
 
 - `Dockerfile` — `python:3.12-slim`, кэш зависимостей (requirements.txt отдельным слоем), применение миграций и запуск uvicorn в одной CMD через `sh -c`
@@ -1146,9 +1165,9 @@ Backend находится в разработке.
 12. ~~Comments.~~ ✓
 13. ~~Public user profiles.~~ ✓
 14. ~~Follows и feed.~~ ✓
-15. Meal plans и shopping lists.
-11. Search.
-12. Moderation и admin.
+15. ~~Search (OpenSearch).~~ ✓
+16. Meal plans и shopping lists.
+17. Moderation и admin.
 13. Celery tasks.
 14. Observability.
 15. Security hardening.
