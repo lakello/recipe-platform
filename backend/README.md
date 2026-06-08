@@ -989,6 +989,61 @@ Endpoints:
 UPDATE users SET role = 'superadmin' WHERE email = 'your@email.com';
 ```
 
+### Список покупок (feat/shopping-list)
+
+- `app/models/ingredient_category.py` — модель `IngredientCategory`: `name` (unique), `created_at`
+- `app/models/shopping_list.py` — модели `ShoppingList` (один на пользователя, unique FK) и `ShoppingListItem` (`name`, `amount`, `unit`, `is_bought`, `is_manual`, `ingredient_id` nullable FK)
+- `app/repositories/ingredient_category.py` / `app/services/ingredient_category.py` — CRUD категорий ингредиентов (409 при дубликате)
+- `app/repositories/shopping_list.py` — `get_or_create_list`, `get_item`, `get_item_by_ingredient`, `add_item`, `update_item`, `delete_item`, `get_meal_plan_items_for_dates` (группирует даты по неделям для эффективного OR-запроса)
+- `app/services/shopping_list.py` — умный merge: нормализация единиц (kg↔g, l↔ml), `max(existing, generated)` — добавляет только разницу; генерация из 3 режимов (today, week, custom); CRUD элементов
+- `app/tasks/shopping_list.py` — Celery-таск `tasks.generate_shopping_list`: запускает async-сервис через `asyncio.run()` внутри синхронного воркера
+- `app/models/__init__.py` — импортирует все модули моделей, чтобы SQLAlchemy резолвил все relationship-ссылки до маппинга (нужно для Celery-воркера)
+- `app/api/ingredient_categories.py` — роутер `/api/ingredient-categories`
+- `app/api/shopping_list.py` — роутер `/api/shopping-list`; генерация асинхронная (202 + task_id); polling статуса через Celery result backend (Redis DB 2)
+- `app/celery_app.py` — включён result backend (`CELERY_RESULT_BACKEND_URL`); результаты хранятся 1 час
+- `tests/test_shopping_list_service.py` — 21 тест: unit (нормализация единиц, режимы дат) + integration (merge-алгоритм)
+- Миграции: `k9c0d1e2f3a4` (ingredient_categories + FK в ingredients), `l0d1e2f3a4b5` (shopping_lists, shopping_list_items)
+
+Endpoints:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `GET` | `/api/ingredient-categories` | — | Список категорий ингредиентов |
+| `POST` | `/api/ingredient-categories` | 🔒 admin | Создать категорию |
+| `PATCH` | `/api/ingredient-categories/{id}` | 🔒 admin | Редактировать категорию |
+| `DELETE` | `/api/ingredient-categories/{id}` | 🔒 admin | Удалить категорию |
+| `GET` | `/api/shopping-list` | 🔒 | Текущий список покупок пользователя |
+| `POST` | `/api/shopping-list/generate` | 🔒 | Запустить генерацию (202, возвращает `task_id`) |
+| `GET` | `/api/shopping-list/generate/status/{task_id}` | 🔒 | Статус задачи генерации (polling) |
+| `POST` | `/api/shopping-list/items` | 🔒 | Добавить элемент вручную |
+| `PATCH` | `/api/shopping-list/items/{id}` | 🔒 | Обновить элемент (количество, единица, is_bought) |
+| `DELETE` | `/api/shopping-list/items/{id}` | 🔒 | Удалить элемент |
+
+Переменные окружения:
+
+| Переменная | По умолчанию | Описание |
+|---|---|---|
+| `CELERY_RESULT_BACKEND_URL` | `redis://localhost:6379/2` | Redis DB для хранения результатов Celery-задач |
+
+### План питания (feature/meal-plan)
+
+- `app/models/meal_plan.py` — модели `MealPlan` (неделя пользователя, уникальный `(user_id, week_start)`) и `MealPlanItem` (`recipe_id`, `day_of_week`, `meal_type`, `servings`)
+- `app/repositories/meal_plan.py` — `get_or_create_week`, `add_item`, `get_item`, `update_item`, `delete_item`, `get_items_for_week`, `copy_week`
+- `app/services/meal_plan.py` — `get_week`, `add_item`, `update_item`, `delete_item`, `copy_from_week`; проверка владельца элемента
+- `app/schemas/meal_plan.py` — `MealPlanRead`, `MealPlanItemRead/Create/Update`, `CopyFromWeekRequest`
+- `app/api/meal_plans.py` — роутер `/api/meal-plans`
+- `tests/test_meal_plan_service.py` — unit-тесты сервиса
+
+Endpoints:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `GET` | `/api/meal-plans/week?week_start=` | 🔒 | Получить план на неделю |
+| `POST` | `/api/meal-plans/items` | 🔒 | Добавить блюдо в план |
+| `PATCH` | `/api/meal-plans/items/{id}` | 🔒 | Обновить блюдо (порции, тип приёма пищи) |
+| `DELETE` | `/api/meal-plans/items/{id}` | 🔒 | Удалить блюдо из плана |
+| `POST` | `/api/meal-plans/copy-week` | 🔒 | Скопировать план из выбранной недели в текущую |
+
 ### Поиск рецептов (feat/search)
 
 - `app/core/opensearch.py` — `AsyncOpenSearch`-клиент, маппинг индекса `recipes` (title, description, ingredient_names, category, cooking_time_minutes, difficulty, status, visibility, likes_count)
@@ -1166,8 +1221,8 @@ Backend находится в разработке.
 13. ~~Public user profiles.~~ ✓
 14. ~~Follows и feed.~~ ✓
 15. ~~Search (OpenSearch).~~ ✓
-16. Meal plans и shopping lists.
+16. ~~Meal plans и shopping lists.~~ ✓
 17. Moderation и admin.
-13. Celery tasks.
-14. Observability.
-15. Security hardening.
+18. Celery tasks (expanded).
+19. Observability.
+20. Security hardening.
