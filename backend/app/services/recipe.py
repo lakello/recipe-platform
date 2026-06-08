@@ -77,6 +77,13 @@ class RecipeService:
         recipe = await self._get_owned(recipe_id, current_user_id)
         await self.repository.delete(recipe)
 
+    async def get_by_ids(
+        self, ids: list[uuid.UUID], current_user_id: uuid.UUID | None
+    ) -> list[RecipeRead]:
+        recipes = await self.repository.get_by_ids(ids)
+        recipe_reads = [RecipeRead.model_validate(r) for r in recipes]
+        return await self._enrich_batch(recipe_reads, current_user_id)
+
     def _can_view(self, recipe: Recipe, current_user_id: uuid.UUID | None) -> bool:
         if current_user_id and recipe.author_id == current_user_id:
             return True

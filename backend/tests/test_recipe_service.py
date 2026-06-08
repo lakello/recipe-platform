@@ -168,7 +168,7 @@ async def test_list_recipes_unauthenticated(
     result = await service.list_recipes(current_user_id=None)
 
     assert len(result) == 1
-    repo.list_visible.assert_called_once_with(None, None)
+    repo.list_visible.assert_called_once_with(None, None, None)
 
 
 async def test_create_recipe_with_all_fields(

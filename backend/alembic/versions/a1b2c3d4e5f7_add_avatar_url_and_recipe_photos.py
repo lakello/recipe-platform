@@ -20,7 +20,10 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     """Upgrade schema."""
-    op.add_column("users", sa.Column("avatar_url", sa.String(length=512), nullable=True))
+    op.add_column(
+        "users",
+        sa.Column("avatar_url", sa.String(length=512), nullable=True),
+    )
 
     op.create_table(
         "recipe_photos",

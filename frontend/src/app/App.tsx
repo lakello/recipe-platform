@@ -15,6 +15,7 @@ import { PublicProfilePage } from '@/pages/user-profile-page'
 import { FollowersPage } from '@/pages/followers-page'
 import { FollowingPage } from '@/pages/following-page'
 import { FeedPage } from '@/pages/feed-page'
+import { SearchPage } from '@/pages/search-page'
 
 export function App() {
   return (
@@ -74,6 +75,7 @@ export function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/search" element={<SearchPage />} />
           <Route path="/users/:userId" element={<PublicProfilePage />} />
           <Route path="/users/:userId/followers" element={<FollowersPage />} />
           <Route path="/users/:userId/following" element={<FollowingPage />} />

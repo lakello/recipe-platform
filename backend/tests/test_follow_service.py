@@ -9,8 +9,7 @@ from app.services.follow import FollowService
 def make_service(*, follow=None, user=None):
     follow_repo = AsyncMock()
     user_repo = AsyncMock()
-    if follow is not None:
-        follow_repo.get.return_value = follow
+    follow_repo.get.return_value = follow
     if user is not None:
         user_repo.get_by_id.return_value = user
     return FollowService(follow_repo, user_repo), follow_repo, user_repo
