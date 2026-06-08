@@ -12,6 +12,7 @@ from app.api.comments import router as comments_router
 from app.api.follows import router as follows_router
 from app.api.ingredients import router as ingredients_router
 from app.api.likes import router as likes_router
+from app.api.meal_plans import router as meal_plans_router
 from app.api.recipes import router as recipes_router
 from app.api.search import router as search_router
 from app.api.uploads import router as uploads_router
@@ -69,6 +70,7 @@ app.include_router(categories_router)
 app.include_router(ingredients_router)
 app.include_router(uploads_router)
 app.include_router(search_router)
+app.include_router(meal_plans_router)
 
 
 @app.get("/health")

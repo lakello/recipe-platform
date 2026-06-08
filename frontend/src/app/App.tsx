@@ -16,6 +16,7 @@ import { FollowersPage } from '@/pages/followers-page'
 import { FollowingPage } from '@/pages/following-page'
 import { FeedPage } from '@/pages/feed-page'
 import { SearchPage } from '@/pages/search-page'
+import { MealPlanPage } from '@/pages/meal-plan-page'
 
 export function App() {
   return (
@@ -79,6 +80,14 @@ export function App() {
           <Route path="/users/:userId" element={<PublicProfilePage />} />
           <Route path="/users/:userId/followers" element={<FollowersPage />} />
           <Route path="/users/:userId/following" element={<FollowingPage />} />
+          <Route
+            path="/meal-plan"
+            element={
+              <ProtectedRoute>
+                <MealPlanPage />
+              </ProtectedRoute>
+            }
+          />
           <Route
             path="/feed"
             element={
