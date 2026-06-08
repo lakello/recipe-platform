@@ -8,6 +8,7 @@ from app.celery_app import celery_app
 def generate_shopping_list_task(
     user_id: str, mode: str, dates: list[str] | None = None
 ) -> None:
+    import app.models  # noqa: F401 — ensures all SQLAlchemy mappers are resolved
     from app.db.session import async_session_factory
     from app.repositories.shopping_list import ShoppingListRepository
     from app.schemas.shopping_list import GenerateRequest
