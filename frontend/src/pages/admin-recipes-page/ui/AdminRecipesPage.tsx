@@ -13,7 +13,7 @@ function RecipeRow({ recipe }: { recipe: AdminRecipe }) {
       <td className="py-3 pr-4">
         <p className="font-medium text-gray-900">{recipe.title}</p>
         <p className="text-xs text-gray-400">
-          {recipe.status} · {recipe.visibility}
+          {recipe.author.username} · {recipe.author.email}
         </p>
       </td>
       <td className="py-3 pr-4">
@@ -59,11 +59,27 @@ function RecipeRow({ recipe }: { recipe: AdminRecipe }) {
 
 export function AdminRecipesPage() {
   const [page, setPage] = useState(1)
-  const { data, isPending, error } = useAdminRecipes(page)
+  const [search, setSearch] = useState('')
+  const { data, isPending, error } = useAdminRecipes(page, search || undefined)
+
+  const handleSearch = (value: string) => {
+    setSearch(value)
+    setPage(1)
+  }
 
   return (
     <AdminLayout>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Рецепты</h1>
+
+      <div className="mb-4">
+        <input
+          type="text"
+          placeholder="Поиск по названию или автору..."
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full max-w-sm"
+          value={search}
+          onChange={(e) => handleSearch(e.target.value)}
+        />
+      </div>
 
       {isPending && <p className="text-gray-500">Загрузка...</p>}
       {error && <p className="text-red-500">{error.message}</p>}

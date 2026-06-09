@@ -53,8 +53,25 @@ class RecipeRepository:
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
 
-    async def list_all_admin(self, offset: int, limit: int) -> tuple[list[Recipe], int]:
+    async def list_all_admin(
+        self, offset: int, limit: int, search: str | None = None
+    ) -> tuple[list[Recipe], int]:
+        from app.models.user import User
+
         base = select(Recipe).where(Recipe.status != RecipeStatus.deleted)
+        if search:
+            author_ids_stmt = select(User.id).where(
+                or_(
+                    User.username.ilike(f"%{search}%"),
+                    User.email.ilike(f"%{search}%"),
+                )
+            )
+            base = base.where(
+                or_(
+                    Recipe.title.ilike(f"%{search}%"),
+                    Recipe.author_id.in_(author_ids_stmt),
+                )
+            )
         total_result = await self.session.execute(
             select(func.count()).select_from(base.subquery())
         )

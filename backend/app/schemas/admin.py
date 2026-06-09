@@ -67,12 +67,21 @@ class BlockRequest(BaseModel):
     reason: str | None = None
 
 
+class AdminRecipeAuthor(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    username: str
+    email: str
+
+
 class AdminRecipeRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     title: str
     author_id: uuid.UUID
+    author: AdminRecipeAuthor
     status: str
     visibility: str
     is_hidden: bool
@@ -87,12 +96,21 @@ class AdminRecipePage(BaseModel):
     has_more: bool
 
 
+class AdminCommentAuthor(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    username: str
+
+
 class AdminCommentRead(BaseModel):
     model_config = ConfigDict(from_attributes=True)
 
     id: uuid.UUID
     recipe_id: uuid.UUID
     author_id: uuid.UUID
+    author: AdminCommentAuthor
+    parent_id: uuid.UUID | None
     body: str
     is_hidden: bool
     is_deleted: bool
@@ -101,27 +119,6 @@ class AdminCommentRead(BaseModel):
 
 class AdminCommentPage(BaseModel):
     items: list[AdminCommentRead]
-    total: int
-    page: int
-    size: int
-    has_more: bool
-
-
-class ModerationActionRead(BaseModel):
-    model_config = ConfigDict(from_attributes=True)
-
-    id: uuid.UUID
-    moderator_id: uuid.UUID
-    action_type: str
-    target_type: str
-    target_id: uuid.UUID
-    reason: str | None
-    meta: dict | None
-    created_at: datetime
-
-
-class AuditPage(BaseModel):
-    items: list[ModerationActionRead]
     total: int
     page: int
     size: int

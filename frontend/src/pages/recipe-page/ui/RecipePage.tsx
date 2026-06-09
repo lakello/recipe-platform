@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { IngredientsForm } from '@/features/ingredients/ui/IngredientsForm'
 import { StepsForm } from '@/features/ingredients/ui/StepsForm'
@@ -18,6 +18,7 @@ import { AddToMealPlanModal } from '@/features/meal-plan/ui/AddToMealPlanModal'
 import { Button } from '@/shared/ui/Button'
 import { UserLink } from '@/shared/ui/UserLink'
 import { CommentList } from '@/features/comments/ui/CommentList'
+import { adminApi } from '@/features/admin/api/adminApi'
 
 const DIFFICULTY_LABELS: Record<string, string> = {
   easy: 'Лёгкий',
@@ -40,6 +41,13 @@ export function RecipePage() {
   const [editingIngredients, setEditingIngredients] = useState(false)
   const [editingSteps, setEditingSteps] = useState(false)
   const [mealPlanOpen, setMealPlanOpen] = useState(false)
+  const [reportOpen, setReportOpen] = useState(false)
+  const [reportReason, setReportReason] = useState<'spam' | 'offensive' | 'misinformation' | 'other'>('spam')
+  const [reportDesc, setReportDesc] = useState('')
+  const [reportSent, setReportSent] = useState(false)
+  const [reportError, setReportError] = useState('')
+  const [isReporting, setIsReporting] = useState(false)
+  const reportTextRef = useRef<HTMLTextAreaElement>(null)
   const { upload: uploadPhoto, remove: removePhoto, isPending: isPhotoLoading, error: photoError } =
     useRecipePhotoUpload(recipeId!)
 
@@ -73,6 +81,7 @@ export function RecipePage() {
                 userId={recipe.author.id}
                 username={recipe.author.username}
                 avatarUrl={recipe.author.avatar_url}
+                role={recipe.author.role}
                 size="md"
               />
             </div>
@@ -184,6 +193,14 @@ export function RecipePage() {
             <Button variant="secondary" onClick={() => setMealPlanOpen(true)}>
               + В план питания
             </Button>
+            {!isAuthor && (
+              <Button
+                variant="secondary"
+                onClick={() => { setReportOpen(true); setReportSent(false); setReportError('') }}
+              >
+                Пожаловаться
+              </Button>
+            )}
           </div>
         )}
       </div>
@@ -280,6 +297,79 @@ export function RecipePage() {
           recipeId={recipe.id}
           onClose={() => setMealPlanOpen(false)}
         />
+      )}
+
+      {reportOpen && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setReportOpen(false)}
+        >
+          <div
+            className="bg-white rounded-xl shadow-lg w-full max-w-sm mx-4 p-6"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Пожаловаться на рецепт</h2>
+            {reportSent ? (
+              <p className="text-green-600 text-sm">Жалоба отправлена. Спасибо!</p>
+            ) : (
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault()
+                  setIsReporting(true)
+                  setReportError('')
+                  try {
+                    await adminApi.createReport({
+                      target_type: 'recipe',
+                      target_id: recipe.id,
+                      reason: reportReason,
+                      description: reportDesc || undefined,
+                    })
+                    setReportSent(true)
+                  } catch {
+                    setReportError('Не удалось отправить жалобу.')
+                  } finally {
+                    setIsReporting(false)
+                  }
+                }}
+                className="flex flex-col gap-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Причина</label>
+                  <select
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value as typeof reportReason)}
+                  >
+                    <option value="spam">Спам</option>
+                    <option value="offensive">Оскорбительный контент</option>
+                    <option value="misinformation">Дезинформация</option>
+                    <option value="other">Другое</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Описание (необязательно)</label>
+                  <textarea
+                    ref={reportTextRef}
+                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none"
+                    rows={3}
+                    value={reportDesc}
+                    onChange={(e) => setReportDesc(e.target.value)}
+                    placeholder="Опишите проблему..."
+                  />
+                </div>
+                {reportError && <p className="text-sm text-red-500">{reportError}</p>}
+                <div className="flex gap-2 justify-end">
+                  <Button variant="secondary" type="button" onClick={() => setReportOpen(false)}>
+                    Отмена
+                  </Button>
+                  <Button type="submit" loading={isReporting}>
+                    Отправить
+                  </Button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
       )}
     </div>
   )

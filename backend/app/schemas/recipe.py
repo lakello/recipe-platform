@@ -14,6 +14,7 @@ class RecipeAuthorRead(BaseModel):
 
     id: uuid.UUID
     username: str
+    role: str
     avatar_url: str | None
 
 

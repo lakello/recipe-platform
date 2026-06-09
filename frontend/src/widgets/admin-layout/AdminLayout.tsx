@@ -7,7 +7,6 @@ const NAV_ITEMS = [
   { label: 'Комментарии', path: '/admin/comments', minRole: 'moderator' },
   { label: 'Жалобы', path: '/admin/reports', minRole: 'moderator' },
   { label: 'Категории', path: '/admin/categories', minRole: 'admin' },
-  { label: 'Аудит', path: '/admin/audit', minRole: 'admin' },
 ] as const
 
 const ROLE_ORDER = ['user', 'moderator', 'admin', 'superadmin']

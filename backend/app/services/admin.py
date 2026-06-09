@@ -18,8 +18,6 @@ from app.schemas.admin import (
     AdminRecipeRead,
     AdminUserPage,
     AdminUserRead,
-    AuditPage,
-    ModerationActionRead,
     ReportCreate,
     ReportPage,
     ReportRead,
@@ -46,10 +44,18 @@ class AdminService:
 
     # ── users ─────────────────────────────────────────────────────────────
 
-    async def list_users(self, page: int, size: int) -> AdminUserPage:
+    async def list_users(
+        self,
+        page: int,
+        size: int,
+        search: str | None = None,
+        role: str | None = None,
+    ) -> AdminUserPage:
         size = min(size, _PAGE_MAX)
         offset = (page - 1) * size
-        users, total = await self.user_repo.list_all(offset, size)
+        users, total = await self.user_repo.list_all(
+            offset, size, search=search, role=role
+        )
         return AdminUserPage(
             items=[AdminUserRead.model_validate(u) for u in users],
             total=total,
@@ -62,12 +68,34 @@ class AdminService:
         self, user_id: uuid.UUID, role: UserRole, actor: User
     ) -> UserRead:
         user = await self._get_user(user_id)
+
         if user.id == actor.id:
             raise HTTPException(status_code=400, detail="Cannot change own role")
-        if role == UserRole.superadmin and actor.role != UserRole.superadmin:
+
+        # Superadmin cannot be assigned via panel (by anyone)
+        if role == UserRole.superadmin:
             raise HTTPException(
-                status_code=403, detail="Only superadmin can assign superadmin role"
+                status_code=403,
+                detail="Superadmin role cannot be assigned via panel",
             )
+
+        # Superadmin targets are untouchable
+        if user.role == UserRole.superadmin:
+            raise HTTPException(status_code=403, detail="Cannot modify a superadmin")
+
+        if actor.role == UserRole.admin:
+            # Admin cannot touch other admins
+            if user.role == UserRole.admin:
+                raise HTTPException(
+                    status_code=403, detail="Admin cannot modify another admin"
+                )
+            # Admin can only assign user or moderator
+            if role not in (UserRole.user, UserRole.moderator):
+                raise HTTPException(
+                    status_code=403,
+                    detail="Admin can only assign user or moderator roles",
+                )
+
         old_role = user.role
         user = await self.user_repo.update(user, {"role": role})
         await self._log(
@@ -75,7 +103,7 @@ class AdminService:
             ActionType.assign_role,
             "user",
             user_id,
-            meta={"old_role": old_role, "new_role": role},
+            meta={"old_role": str(old_role), "new_role": str(role)},
         )
         return UserRead.model_validate(user)
 
@@ -85,6 +113,8 @@ class AdminService:
         user = await self._get_user(user_id)
         if user.id == actor.id:
             raise HTTPException(status_code=400, detail="Cannot block yourself")
+        if user.role == UserRole.superadmin:
+            raise HTTPException(status_code=403, detail="Cannot block a superadmin")
         if not user.is_active:
             raise HTTPException(status_code=409, detail="User is already blocked")
         user = await self.user_repo.update(user, {"is_active": False})
@@ -161,10 +191,14 @@ class AdminService:
 
     # ── recipes ───────────────────────────────────────────────────────────
 
-    async def list_recipes_admin(self, page: int, size: int) -> AdminRecipePage:
+    async def list_recipes_admin(
+        self, page: int, size: int, search: str | None = None
+    ) -> AdminRecipePage:
         size = min(size, _PAGE_MAX)
         offset = (page - 1) * size
-        recipes, total = await self.recipe_repo.list_all_admin(offset, size)
+        recipes, total = await self.recipe_repo.list_all_admin(
+            offset, size, search=search
+        )
         return AdminRecipePage(
             items=[AdminRecipeRead.model_validate(r) for r in recipes],
             total=total,
@@ -199,10 +233,19 @@ class AdminService:
 
     # ── comments ──────────────────────────────────────────────────────────
 
-    async def list_comments_admin(self, page: int, size: int) -> AdminCommentPage:
+    async def list_comments_admin(
+        self,
+        page: int,
+        size: int,
+        recipe_id: uuid.UUID | None = None,
+        search: str | None = None,
+        status: str | None = None,
+    ) -> AdminCommentPage:
         size = min(size, _PAGE_MAX)
         offset = (page - 1) * size
-        comments, total = await self.comment_repo.list_all_admin(offset, size)
+        comments, total = await self.comment_repo.list_all_admin(
+            offset, size, recipe_id=recipe_id, search=search, status=status
+        )
         return AdminCommentPage(
             items=[AdminCommentRead.model_validate(c) for c in comments],
             total=total,
@@ -211,19 +254,15 @@ class AdminService:
             has_more=(offset + len(comments)) < total,
         )
 
-    # ── audit log ─────────────────────────────────────────────────────────
-
-    async def list_audit(self, page: int, size: int) -> AuditPage:
-        size = min(size, _PAGE_MAX)
-        offset = (page - 1) * size
-        actions, total = await self.audit_repo.list_all(offset, size)
-        return AuditPage(
-            items=[ModerationActionRead.model_validate(a) for a in actions],
-            total=total,
-            page=page,
-            size=size,
-            has_more=(offset + len(actions)) < total,
-        )
+    async def delete_comment_admin(
+        self, comment_id: uuid.UUID, actor: User
+    ) -> AdminCommentRead:
+        comment = await self.comment_repo.get_by_id(comment_id)
+        if not comment:
+            raise HTTPException(status_code=404, detail="Comment not found")
+        comment = await self.comment_repo.update(comment, {"is_deleted": True})
+        await self._log(actor, ActionType.hide_comment, "comment", comment_id)
+        return AdminCommentRead.model_validate(comment)
 
     # ── helpers ───────────────────────────────────────────────────────────
 

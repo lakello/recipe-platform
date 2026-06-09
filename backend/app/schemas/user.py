@@ -19,6 +19,7 @@ class UserPublicRead(BaseModel):
 
     id: uuid.UUID
     username: str
+    role: str
     avatar_url: str | None
     created_at: datetime
     followers_count: int = 0

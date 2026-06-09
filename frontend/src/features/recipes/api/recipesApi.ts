@@ -9,6 +9,7 @@ export type Difficulty = 'easy' | 'medium' | 'hard'
 export interface RecipeAuthor {
   id: string
   username: string
+  role: string
   avatar_url: string | null
 }
 

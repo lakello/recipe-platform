@@ -1,18 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { adminApi } from '../api/adminApi'
+import { apiJson } from '@/shared/api/client'
 import type { UserRole } from '@/features/profile/api/profileApi'
 
-export const ADMIN_USERS_KEY = (page: number) => ['admin', 'users', page] as const
+export const ADMIN_USERS_KEY = (page: number, search?: string, role?: string) =>
+  ['admin', 'users', page, search, role] as const
 export const ADMIN_REPORTS_KEY = (page: number, status?: string) =>
   ['admin', 'reports', page, status] as const
-export const ADMIN_RECIPES_KEY = (page: number) => ['admin', 'recipes', page] as const
-export const ADMIN_COMMENTS_KEY = (page: number) => ['admin', 'comments', page] as const
-export const ADMIN_AUDIT_KEY = (page: number) => ['admin', 'audit', page] as const
+export const ADMIN_RECIPES_KEY = (page: number, search?: string) =>
+  ['admin', 'recipes', page, search] as const
+export const ADMIN_COMMENTS_KEY = (recipeId?: string, search?: string, status?: string) =>
+  ['admin', 'comments', recipeId, search, status] as const
 
-export function useAdminUsers(page = 1) {
+export function useAdminUsers(page = 1, search?: string, role?: string) {
   return useQuery({
-    queryKey: ADMIN_USERS_KEY(page),
-    queryFn: () => adminApi.getUsers(page),
+    queryKey: ADMIN_USERS_KEY(page, search, role),
+    queryFn: () => adminApi.getUsers(page, 20, search, role),
   })
 }
 
@@ -65,10 +68,10 @@ export function useDismissReport() {
   })
 }
 
-export function useAdminRecipes(page = 1) {
+export function useAdminRecipes(page = 1, search?: string) {
   return useQuery({
-    queryKey: ADMIN_RECIPES_KEY(page),
-    queryFn: () => adminApi.getAdminRecipes(page),
+    queryKey: ADMIN_RECIPES_KEY(page, search),
+    queryFn: () => adminApi.getAdminRecipes(page, 20, search),
   })
 }
 
@@ -89,16 +92,41 @@ export function useUnhideRecipe() {
   })
 }
 
-export function useAdminComments(page = 1) {
+export function useAdminComments(
+  recipeId?: string,
+  search?: string,
+  status?: string,
+  enabled = true,
+) {
   return useQuery({
-    queryKey: ADMIN_COMMENTS_KEY(page),
-    queryFn: () => adminApi.getAdminComments(page),
+    queryKey: ADMIN_COMMENTS_KEY(recipeId, search, status),
+    queryFn: () => adminApi.getAdminComments({ recipeId, search, status }),
+    enabled,
   })
 }
 
-export function useAuditLog(page = 1) {
-  return useQuery({
-    queryKey: ADMIN_AUDIT_KEY(page),
-    queryFn: () => adminApi.getAuditLog(page),
+export function useDeleteCommentAdmin() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (commentId: string) => adminApi.deleteCommentAdmin(commentId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'comments'] }),
+  })
+}
+
+export function useHideCommentAdmin() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (commentId: string) =>
+      apiJson(`/api/comments/${commentId}/hide`, { method: 'POST' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'comments'] }),
+  })
+}
+
+export function useUnhideCommentAdmin() {
+  const qc = useQueryClient()
+  return useMutation({
+    mutationFn: (commentId: string) =>
+      apiJson(`/api/comments/${commentId}/unhide`, { method: 'POST' }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['admin', 'comments'] }),
   })
 }

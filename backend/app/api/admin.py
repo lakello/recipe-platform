@@ -3,7 +3,12 @@ import uuid
 from fastapi import APIRouter, Depends, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.deps import get_current_admin, get_current_moderator, get_current_user
+from app.api.deps import (
+    get_current_admin,
+    get_current_moderator,
+    get_current_superadmin,
+    get_current_user,
+)
 from app.db.session import get_db
 from app.models.user import User
 from app.repositories.comment import CommentRepository
@@ -13,11 +18,11 @@ from app.repositories.report import ReportRepository
 from app.repositories.user import UserRepository
 from app.schemas.admin import (
     AdminCommentPage,
+    AdminCommentRead,
     AdminRecipePage,
     AdminRecipeRead,
     AdminUserPage,
     AssignRoleRequest,
-    AuditPage,
     BlockRequest,
     HideRequest,
     ReportCreate,
@@ -47,10 +52,12 @@ def _service(session: AsyncSession = Depends(get_db)) -> AdminService:
 async def list_users(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
+    search: str | None = Query(None),
+    role: str | None = Query(None),
     service: AdminService = Depends(_service),
     _: User = Depends(get_current_admin),
 ) -> AdminUserPage:
-    return await service.list_users(page, size)
+    return await service.list_users(page, size, search=search, role=role)
 
 
 @router.post("/users/{user_id}/role", response_model=UserRead)
@@ -68,7 +75,7 @@ async def block_user(
     user_id: uuid.UUID,
     data: BlockRequest,
     service: AdminService = Depends(_service),
-    actor: User = Depends(get_current_admin),
+    actor: User = Depends(get_current_superadmin),
 ) -> UserRead:
     return await service.block_user(user_id, actor, data.reason)
 
@@ -77,7 +84,7 @@ async def block_user(
 async def unblock_user(
     user_id: uuid.UUID,
     service: AdminService = Depends(_service),
-    actor: User = Depends(get_current_admin),
+    actor: User = Depends(get_current_superadmin),
 ) -> UserRead:
     return await service.unblock_user(user_id, actor)
 
@@ -130,10 +137,11 @@ async def dismiss_report(
 async def list_recipes_admin(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
+    search: str | None = Query(None),
     service: AdminService = Depends(_service),
     _: User = Depends(get_current_moderator),
 ) -> AdminRecipePage:
-    return await service.list_recipes_admin(page, size)
+    return await service.list_recipes_admin(page, size, search=search)
 
 
 @router.post("/recipes/{recipe_id}/hide", response_model=AdminRecipeRead)
@@ -161,21 +169,22 @@ async def unhide_recipe(
 @router.get("/comments", response_model=AdminCommentPage)
 async def list_comments_admin(
     page: int = Query(1, ge=1),
-    size: int = Query(20, ge=1, le=100),
+    size: int = Query(100, ge=1, le=100),
+    recipe_id: uuid.UUID | None = Query(None),
+    search: str | None = Query(None),
+    status: str | None = Query(None),
     service: AdminService = Depends(_service),
     _: User = Depends(get_current_moderator),
 ) -> AdminCommentPage:
-    return await service.list_comments_admin(page, size)
+    return await service.list_comments_admin(
+        page, size, recipe_id=recipe_id, search=search, status=status
+    )
 
 
-# ── audit ─────────────────────────────────────────────────────────────────────
-
-
-@router.get("/audit", response_model=AuditPage)
-async def list_audit(
-    page: int = Query(1, ge=1),
-    size: int = Query(20, ge=1, le=100),
+@router.post("/comments/{comment_id}/delete", response_model=AdminCommentRead)
+async def delete_comment_admin(
+    comment_id: uuid.UUID,
     service: AdminService = Depends(_service),
-    _: User = Depends(get_current_admin),
-) -> AuditPage:
-    return await service.list_audit(page, size)
+    actor: User = Depends(get_current_moderator),
+) -> AdminCommentRead:
+    return await service.delete_comment_admin(comment_id, actor)
