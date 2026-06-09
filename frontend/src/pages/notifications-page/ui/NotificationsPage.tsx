@@ -181,7 +181,9 @@ export function NotificationsPage() {
           </div>
         )}
 
-        <NotifSettings />
+        <div id="settings">
+          <NotifSettings />
+        </div>
       </div>
     </div>
   )
