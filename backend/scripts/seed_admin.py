@@ -29,9 +29,16 @@ async def seed_admin() -> None:
     async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
     async with async_session() as session:
-        existing = await session.execute(select(User).where(User.email == email))
-        if existing.scalar_one_or_none():
-            print(f"Admin with email {email} already exists.")
+        result = await session.execute(select(User).where(User.email == email))
+        existing = result.scalar_one_or_none()
+        if existing:
+            if existing.role != UserRole.superadmin:
+                existing.role = UserRole.superadmin
+                existing.is_active = True
+                await session.commit()
+                print(f"Updated role to superadmin: {email}")
+            else:
+                print(f"Superadmin already exists: {email}")
             return
 
         password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
