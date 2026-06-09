@@ -36,3 +36,15 @@ class UserRepository:
         await self.session.commit()
         await self.session.refresh(user)
         return user
+
+    async def list_all(self, offset: int, limit: int) -> tuple[list[User], int]:
+        from sqlalchemy import func
+
+        total_result = await self.session.execute(
+            select(func.count()).select_from(User)
+        )
+        total = total_result.scalar_one()
+        result = await self.session.execute(
+            select(User).order_by(User.created_at.desc()).offset(offset).limit(limit)
+        )
+        return list(result.scalars().all()), total

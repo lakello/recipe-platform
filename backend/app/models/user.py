@@ -11,6 +11,7 @@ from app.db.base import Base
 
 class UserRole(enum.StrEnum):
     user = "user"
+    moderator = "moderator"
     admin = "admin"
     superadmin = "superadmin"
 

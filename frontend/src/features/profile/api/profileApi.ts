@@ -1,7 +1,7 @@
 import { apiJson, ApiError } from '@/shared/api/client'
 import { API_BASE_URL } from '@/shared/config/env'
 
-export type UserRole = 'user' | 'admin' | 'superadmin'
+export type UserRole = 'user' | 'moderator' | 'admin' | 'superadmin'
 
 export interface UserProfile {
   id: string

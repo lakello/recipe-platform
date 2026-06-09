@@ -51,6 +51,19 @@ class CommentRepository:
         )
         return list(result.scalars().all()), total
 
+    async def list_all_admin(
+        self, offset: int, limit: int
+    ) -> tuple[list[Comment], int]:
+        base = select(Comment)
+        total_result = await self.session.execute(
+            select(func.count()).select_from(base.subquery())
+        )
+        total = total_result.scalar_one()
+        result = await self.session.execute(
+            base.order_by(Comment.created_at.desc()).offset(offset).limit(limit)
+        )
+        return list(result.scalars().all()), total
+
     async def update(self, comment: Comment, data: dict[str, object]) -> Comment:
         for key, value in data.items():
             setattr(comment, key, value)

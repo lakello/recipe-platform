@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import and_, or_, select
+from sqlalchemy import and_, func, or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.recipe import Recipe, RecipeStatus, RecipeVisibility
@@ -28,30 +28,41 @@ class RecipeRepository:
         category_id: uuid.UUID | None = None,
         author_id: uuid.UUID | None = None,
     ) -> list[Recipe]:
+        public_cond = and_(
+            Recipe.status == RecipeStatus.published,
+            Recipe.visibility == RecipeVisibility.public,
+            Recipe.is_hidden.is_(False),
+        )
         if current_user_id:
             stmt = select(Recipe).where(
                 or_(
-                    and_(
-                        Recipe.status == RecipeStatus.published,
-                        Recipe.visibility == RecipeVisibility.public,
-                    ),
+                    public_cond,
                     and_(
                         Recipe.author_id == current_user_id,
                         Recipe.status != RecipeStatus.deleted,
+                        Recipe.is_hidden.is_(False),
                     ),
                 )
             )
         else:
-            stmt = select(Recipe).where(
-                Recipe.status == RecipeStatus.published,
-                Recipe.visibility == RecipeVisibility.public,
-            )
+            stmt = select(Recipe).where(public_cond)
         if category_id is not None:
             stmt = stmt.where(Recipe.category_id == category_id)
         if author_id is not None:
             stmt = stmt.where(Recipe.author_id == author_id)
         result = await self.session.execute(stmt)
         return list(result.scalars().all())
+
+    async def list_all_admin(self, offset: int, limit: int) -> tuple[list[Recipe], int]:
+        base = select(Recipe).where(Recipe.status != RecipeStatus.deleted)
+        total_result = await self.session.execute(
+            select(func.count()).select_from(base.subquery())
+        )
+        total = total_result.scalar_one()
+        result = await self.session.execute(
+            base.order_by(Recipe.created_at.desc()).offset(offset).limit(limit)
+        )
+        return list(result.scalars().all()), total
 
     async def list_feed(
         self,
