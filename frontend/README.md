@@ -693,6 +693,28 @@ Backend API:
 
 ## Что уже реализовано
 
+### Уведомления (feat/notifications)
+
+- `src/features/notifications/api/notificationsApi.ts` — типы (`Notification`, `NotificationPage`, `UnreadCount`, `NotificationPreferences`) и методы: list, unreadCount, markRead, markAllRead, getPreferences, updatePreferences
+- `src/features/notifications/hooks/useNotifications.ts` — хуки: `useNotifications(page)`, `useUnreadCount` (refetchInterval 30s), `useMarkRead`, `useMarkAllRead`, `useNotificationPreferences`, `useUpdateNotificationPreferences`
+- `src/features/notifications/ui/NotificationBell.tsx` — колокольчик в шапке: бейдж с количеством непрочитанных, выпадающий список последних уведомлений, кнопка «Прочитать все», ссылки на страницу уведомлений и настройки; рефетч при каждом открытии
+- `src/pages/notifications-page/ui/NotificationsPage.tsx` — страница `/notifications`: полный список с пагинацией, клик по строке — отметить прочитанным, секция настроек email (`#settings`)
+- `src/features/auth/hooks/useAuth.ts` — при логине инвалидируется кеш уведомлений, при логауте — удаляется
+
+Страницы:
+
+| Путь | Описание | Auth |
+|---|---|---|
+| `/notifications` | Список уведомлений и настройки email | 🔒 |
+
+Поведение:
+- Колокольчик виден только авторизованным пользователям; отображается на всех страницах приложения
+- Бейдж с количеством непрочитанных обновляется каждые 30 секунд
+- При открытии выпадающего списка выполняется немедленный рефетч
+- Клик по уведомлению с `entity_type=recipe` → переход на страницу рецепта; с `type=follow` → на профиль подписавшегося
+- Кнопка «Прочитать все» убирает бейдж и снимает выделение у всех уведомлений
+- На странице `/notifications#settings` — чекбоксы email-уведомлений по типам
+
 ### Лайки и избранное (feat/likes-and-favorites)
 
 - `src/features/likes/api/likesApi.ts` — методы: like, unlike, addFavorite, removeFavorite, listFavorites
@@ -1024,4 +1046,5 @@ Frontend находится в разработке.
 16. ~~OAuth Google и Яндекс.~~ ✓
 17. ~~Moderation UI.~~ ✓
 18. ~~Admin UI.~~ ✓
-19. UI polish, accessibility, performance.
+19. ~~Уведомления (колокольчик, список, настройки).~~ ✓
+20. UI polish, accessibility, performance.

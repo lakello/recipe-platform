@@ -31,6 +31,9 @@
 | Backend + Frontend: поиск рецептов (OpenSearch) | ✅ Готово |
 | Backend + Frontend: план питания на неделю | ✅ Готово |
 | Backend + Frontend: список покупок (async Celery + polling) | ✅ Готово |
+| Backend + Frontend: OAuth Google и Яндекс | ✅ Готово |
+| Backend + Frontend: модерация и админ-панель | ✅ Готово |
+| Backend + Frontend: уведомления и email-доставка | ✅ Готово |
 | Android | ⏳ Планируется |
 | Desktop | ⏳ Планируется |
 | Инфраструктура (Terraform, Ansible, Helm) | ⏳ Планируется |
@@ -301,7 +304,7 @@ recipe-platform/
 
 Локальная среда предназначена для разработки и отладки.
 
-Планируемый состав local-окружения:
+Состав local-окружения:
 
 - backend;
 - frontend;
@@ -309,7 +312,7 @@ recipe-platform/
 - Redis;
 - OpenSearch;
 - MinIO;
-- Mailhog;
+- Mailhog (SMTP :1025, Web UI `http://localhost:8025`);
 - Celery worker;
 - Celery beat scheduler.
 
