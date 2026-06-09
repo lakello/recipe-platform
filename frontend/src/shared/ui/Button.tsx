@@ -16,12 +16,13 @@ export function Button({
   loading,
   variant = 'primary',
   disabled,
+  className,
   ...props
 }: Props) {
   return (
     <button
       disabled={disabled ?? loading}
-      className={`rounded-md px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed ${variants[variant]}`}
+      className={`rounded-md px-4 py-2 text-sm font-medium transition disabled:cursor-not-allowed ${variants[variant]}${className ? ` ${className}` : ''}`}
       {...props}
     >
       {loading ? 'Загрузка...' : children}

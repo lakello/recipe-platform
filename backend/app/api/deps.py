@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import decode_access_token
 from app.db.session import get_db
-from app.models.user import User
+from app.models.user import User, UserRole
 from app.repositories.user import UserRepository
 
 _bearer = HTTPBearer(auto_error=False)
@@ -27,6 +27,30 @@ async def get_current_user(
         raise HTTPException(status_code=401, detail="User not found")
     if not user.is_active:
         raise HTTPException(status_code=403, detail="Account is disabled")
+    return user
+
+
+async def get_current_admin(
+    user: User = Depends(get_current_user),
+) -> User:
+    if user.role not in (UserRole.admin, UserRole.superadmin):
+        raise HTTPException(status_code=403, detail="Admin access required")
+    return user
+
+
+async def get_current_superadmin(
+    user: User = Depends(get_current_user),
+) -> User:
+    if user.role != UserRole.superadmin:
+        raise HTTPException(status_code=403, detail="Superadmin access required")
+    return user
+
+
+async def get_current_moderator(
+    user: User = Depends(get_current_user),
+) -> User:
+    if user.role not in (UserRole.moderator, UserRole.admin, UserRole.superadmin):
+        raise HTTPException(status_code=403, detail="Moderator access required")
     return user
 
 

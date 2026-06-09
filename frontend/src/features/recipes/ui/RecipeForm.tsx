@@ -1,6 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
+import { useCategoriesList } from '@/features/categories/hooks/useCategories'
 import { Button } from '@/shared/ui/Button'
 import { Input } from '@/shared/ui/Input'
 import type { Recipe } from '../api/recipesApi'
@@ -12,6 +13,7 @@ const schema = z.object({
   cooking_time_minutes: z.number().int().min(1, 'Минимум 1 минута').optional(),
   servings: z.number().int().min(1, 'Минимум 1 порция').optional(),
   difficulty: z.enum(['easy', 'medium', 'hard']).optional(),
+  category_id: z.string().uuid().optional(),
 })
 
 export type RecipeFormData = z.infer<typeof schema>
@@ -31,6 +33,8 @@ const DIFFICULTY_OPTIONS = [
 ]
 
 export function RecipeForm({ defaultValues, onSubmit, isPending, error, submitLabel }: RecipeFormProps) {
+  const { data: categories } = useCategoriesList()
+
   const {
     register,
     handleSubmit,
@@ -44,6 +48,7 @@ export function RecipeForm({ defaultValues, onSubmit, isPending, error, submitLa
       cooking_time_minutes: defaultValues?.cooking_time_minutes ?? undefined,
       servings: defaultValues?.servings ?? undefined,
       difficulty: defaultValues?.difficulty ?? undefined,
+      category_id: defaultValues?.category_id ?? undefined,
     },
   })
 
@@ -62,6 +67,23 @@ export function RecipeForm({ defaultValues, onSubmit, isPending, error, submitLa
 
       <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
+          <label className="text-sm font-medium text-gray-700">Категория</label>
+          <select
+            {...register('category_id', {
+              setValueAs: (v: string) => (v === '' ? undefined : v),
+            })}
+            className="rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <option value="">Без категории</option>
+            {categories?.map((c) => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-gray-700">Видимость</label>
           <select
             {...register('visibility')}
@@ -71,7 +93,9 @@ export function RecipeForm({ defaultValues, onSubmit, isPending, error, submitLa
             <option value="private">Приватный</option>
           </select>
         </div>
+      </div>
 
+      <div className="grid grid-cols-2 gap-4">
         <div className="flex flex-col gap-1">
           <label className="text-sm font-medium text-gray-700">Сложность</label>
           <select
@@ -88,6 +112,8 @@ export function RecipeForm({ defaultValues, onSubmit, isPending, error, submitLa
             ))}
           </select>
         </div>
+
+        <div />
       </div>
 
       <div className="grid grid-cols-2 gap-4">

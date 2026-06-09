@@ -33,6 +33,7 @@ export async function apiFetch(path: string, init?: RequestInit): Promise<Respon
       if (refreshed.ok) {
         return fetchWithCredentials(path, init)
       }
+      window.location.href = '/login'
     } finally {
       isRefreshing = false
     }

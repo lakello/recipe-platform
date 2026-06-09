@@ -21,6 +21,19 @@
 | Frontend: Auth страницы | ✅ Готово |
 | Frontend: базовые рецепты (список, детали, создание, редактирование) | ✅ Готово |
 | Docker Compose для локального запуска | ✅ Готово |
+| Backend + Frontend: категории, роли пользователей | ✅ Готово |
+| Backend + Frontend: ингредиенты и шаги приготовления | ✅ Готово |
+| Backend + Frontend: загрузка фото рецептов и аватаров | ✅ Готово |
+| Backend + Frontend: лайки и избранное | ✅ Готово |
+| Backend + Frontend: комментарии с ответами и модерацией | ✅ Готово |
+| Backend + Frontend: публичные профили пользователей и редизайн карточек рецептов | ✅ Готово |
+| Backend + Frontend: подписки на авторов и лента | ✅ Готово |
+| Backend + Frontend: поиск рецептов (OpenSearch) | ✅ Готово |
+| Backend + Frontend: план питания на неделю | ✅ Готово |
+| Backend + Frontend: список покупок (async Celery + polling) | ✅ Готово |
+| Backend + Frontend: OAuth Google и Яндекс | ✅ Готово |
+| Backend + Frontend: модерация и админ-панель | ✅ Готово |
+| Backend + Frontend: уведомления и email-доставка | ✅ Готово |
 | Android | ⏳ Планируется |
 | Desktop | ⏳ Планируется |
 | Инфраструктура (Terraform, Ansible, Helm) | ⏳ Планируется |
@@ -169,10 +182,12 @@
 Пользователь может:
 
 - составлять недельный план питания;
-- добавлять рецепты на конкретный день;
-- выбирать тип приёма пищи;
+- добавлять рецепты на конкретный день (из поиска или прямо со страницы рецепта);
+- выбирать тип приёма пищи (завтрак, обед, ужин, перекус);
 - менять количество порций;
-- копировать план на следующую неделю;
+- удалять блюда из плана;
+- копировать план из любой другой недели;
+- переходить на страницу рецепта прямо из плана питания;
 - очищать план.
 
 ### Список покупок
@@ -264,6 +279,7 @@ recipe-platform/
     terraform/
     ansible/
     helm/
+    k8s/
   docs/
   scripts/
   .github/
@@ -281,6 +297,7 @@ recipe-platform/
 |`infra/terraform/`|Terraform-код для Yandex Cloud|
 |`infra/ansible/`|Ansible-код для настройки Linux VM|
 |`infra/helm/`|Helm charts для Kubernetes|
+|`infra/k8s/`|Kubernetes-манифесты и шаблоны секретов|
 |`docs/`|Проектная и техническая документация|
 |`scripts/`|Вспомогательные скрипты|
 |`.github/workflows/`|GitHub Actions pipelines|
@@ -289,7 +306,7 @@ recipe-platform/
 
 Локальная среда предназначена для разработки и отладки.
 
-Планируемый состав local-окружения:
+Состав local-окружения:
 
 - backend;
 - frontend;
@@ -297,7 +314,7 @@ recipe-platform/
 - Redis;
 - OpenSearch;
 - MinIO;
-- Mailhog;
+- Mailhog (SMTP :1025, Web UI `http://localhost:8025`);
 - Celery worker;
 - Celery beat scheduler.
 

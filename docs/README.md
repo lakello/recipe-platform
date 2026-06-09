@@ -782,19 +782,21 @@ flowchart TD
 
 ## Статус
 
-Документация находится в разработке.
+Документация не создана.
+
+После второго этапа разработки директория `docs/` содержит только этот README — структуру и планируемое содержимое. Сами документы будут создаваться по мере реализации инфраструктурных и DevOps-этапов проекта.
 
 Приоритет наполнения:
 
-1. 1.Product overview.
-2. 2.Architecture overview.
-3. 3.Local setup.
-4. 4.Backend API overview.
-5. 5.Infrastructure overview.
-6. 6.Terraform guide.
-7. 7.Kubernetes/Helm guide.
-8. 8.CI/CD guide.
-9. 9.Security overview.
-10. 10.Observability overview.
-11. 11.Backup/restore.
-12. 12.Runbooks.
+1. Product overview.
+2. Architecture overview.
+3. Local setup.
+4. Backend API overview.
+5. Infrastructure overview.
+6. Terraform guide.
+7. Kubernetes/Helm guide.
+8. CI/CD guide.
+9. Security overview.
+10. Observability overview.
+11. Backup/restore.
+12. Runbooks.

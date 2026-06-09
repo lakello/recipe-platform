@@ -594,20 +594,21 @@ collect-diagnostics.sh
 
 ## Статус
 
-Скрипты будут добавляться по мере развития проекта.
+Скрипты в корневой директории `scripts/` не созданы — директория содержит только этот README.
+
+Вспомогательные backend-скрипты (не shell) находятся в `backend/scripts/`:
+- `check_alembic_heads.py` — проверяет единственность Alembic head (используется в pre-commit);
+- `reindex_opensearch.py` — переиндексирует все публичные рецепты в OpenSearch;
+- `seed_admin.py` — создаёт суперадмина из env-переменных.
+
+Shell-скрипты для локальной разработки, тестирования, Kubernetes и ops-задач планируются в следующих этапах.
 
 Приоритет:
 
-1. 1.`dev/up.sh`
-2. 2.`dev/down.sh`
-3. 3.`dev/logs.sh`
-4. 4.`test/lint-all.sh`
-5. 5.`test/test-all.sh`
-6. 6.`docker/build-backend.sh`
-7. 7.`docker/build-frontend.sh`
-8. 8.`docker/build-all.sh`
-9. 9.`test/smoke-env.sh`
-10. 10.`k8s/get-events.sh`
-11. 11.`k8s/describe-failed-pods.sh`
-12. 12.`ops/check-cert.sh`
-13. 13.`utils/generate-jwt-secret.sh`
+1. `dev/up.sh`, `dev/down.sh`, `dev/logs.sh`
+2. `test/lint-all.sh`, `test/test-all.sh`
+3. `docker/build-backend.sh`, `docker/build-frontend.sh`
+4. `test/smoke-env.sh`
+5. `k8s/get-events.sh`, `k8s/describe-failed-pods.sh`
+6. `ops/check-cert.sh`
+7. `utils/generate-jwt-secret.sh`

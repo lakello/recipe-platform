@@ -4,10 +4,26 @@ import { recipesApi, type RecipeCreate, type RecipeUpdate } from '../api/recipes
 
 export const RECIPES_KEY = ['recipes']
 
-export function useRecipesList() {
+export function useRecipesList(categoryId?: string) {
   return useQuery({
-    queryKey: RECIPES_KEY,
-    queryFn: recipesApi.list,
+    queryKey: categoryId ? [...RECIPES_KEY, { categoryId }] : RECIPES_KEY,
+    queryFn: () => recipesApi.list(categoryId),
+  })
+}
+
+export function useUserRecipes(authorId: string) {
+  return useQuery({
+    queryKey: [...RECIPES_KEY, { authorId }],
+    queryFn: () => recipesApi.listByAuthor(authorId),
+  })
+}
+
+export const FEED_KEY = ['feed']
+
+export function useFeed() {
+  return useQuery({
+    queryKey: FEED_KEY,
+    queryFn: () => recipesApi.getFeed(),
   })
 }
 
