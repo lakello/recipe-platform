@@ -43,7 +43,7 @@ export function NotificationBell() {
   const ref = useRef<HTMLDivElement>(null)
 
   const { data: unread } = useUnreadCount()
-  const { data, isPending } = useNotifications(1)
+  const { data, isPending, refetch } = useNotifications(1)
   const { mutate: markRead } = useMarkRead()
   const { mutate: markAll } = useMarkAllRead()
 
@@ -62,7 +62,11 @@ export function NotificationBell() {
   return (
     <div ref={ref} className="relative">
       <button
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          const next = !open
+          setOpen(next)
+          if (next) void refetch()
+        }}
         className="relative p-2 rounded-full hover:bg-gray-100 transition-colors"
         aria-label="Уведомления"
       >
