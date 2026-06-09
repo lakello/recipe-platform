@@ -1025,6 +1025,54 @@ Endpoints:
 | `YANDEX_REDIRECT_URI` | Callback URI (по умолчанию `http://localhost:8000/api/auth/yandex/callback`) |
 | `FRONTEND_URL` | URL фронтенда для редиректа после OAuth (по умолчанию `http://localhost:5173`) |
 
+### Роли, модерация и админка (feat/admin-moderation)
+
+- `app/models/user.py` — `UserRole` enum расширен значением `moderator` (итого: `user`, `moderator`, `admin`, `superadmin`)
+- `app/models/report.py` — модель `Report`: `reporter_id`, `target_type` (`recipe`/`comment`/`user`), `target_id` (UUID), `reason` (`spam`/`offensive`/`misinformation`/`other`), `description`, `status` (`pending`/`reviewed`/`dismissed`)
+- `app/models/moderation_action.py` — модель `ModerationAction`: аудит-запись каждого действия модератора; `action_type` enum: `hide_recipe`, `unhide_recipe`, `hide_comment`, `unhide_comment`, `block_user`, `unblock_user`, `assign_role`, `resolve_report`, `dismiss_report`
+- `app/repositories/report.py` / `moderation_action.py` — стандартный CRUD
+- `app/repositories/user.py` — `list_all(search, role)`: поиск по username/email, фильтр по роли
+- `app/repositories/recipe.py` — `list_all_admin(search, has_comments)`: поиск по названию/автору, фильтр рецептов с комментариями
+- `app/repositories/comment.py` — `list_all_admin(recipe_id, search, status)`: фильтры по рецепту, тексту, статусу
+- `app/schemas/admin.py` — схемы: `AdminUserRead/Page`, `AdminRecipeRead/Page` (с вложенным автором включая email), `AdminCommentRead/Page` (с `parent_id` и автором), `ReportCreate/Read/Page`, `AssignRoleRequest`, `BlockRequest`, `HideRequest`
+- `app/schemas/user.py` — добавлено поле `role` в `UserPublicRead`
+- `app/schemas/recipe.py` — добавлено поле `role` в `RecipeAuthorRead`
+- `app/schemas/comment.py` — добавлено поле `role` в `CommentAuthor`
+- `app/services/admin.py` — `AdminService`: list_users, assign_role (с иерархией прав), block_user, unblock_user, create_report, list_reports, review_report, dismiss_report, list_recipes_admin, hide_recipe, unhide_recipe, list_comments_admin, delete_comment_admin; аудит каждого действия через `_log()`
+- `app/api/deps.py` — добавлен `get_current_superadmin`
+- `app/api/admin.py` — роутер `/api/admin`
+- `scripts/seed_admin.py` — создаёт или обновляет суперадмина из env-переменных `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_USERNAME`
+- `tests/test_admin_service.py` — 15 unit-тестов
+- `alembic/versions/n2f3a4b5c6d7` — добавляет `moderator` в enum `userrole`, `is_hidden` в таблицу `recipes`, создаёт таблицы `reports` и `moderation_actions`
+
+Иерархия ролей:
+- **superadmin** — все права; может назначать `user/moderator/admin`; может блокировать пользователей (кроме других superadmin); superadmin назначается только вручную через БД
+- **admin** — скрывает/удаляет рецепты и комментарии; назначает `user/moderator`; не может трогать других admin и superadmin
+- **moderator** — скрывает рецепты и комментарии; обрабатывает жалобы
+
+Endpoints:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `GET` | `/api/admin/users` | 🔒 admin | Список пользователей с поиском и фильтром по роли |
+| `POST` | `/api/admin/users/{id}/role` | 🔒 admin | Назначить роль |
+| `POST` | `/api/admin/users/{id}/block` | 🔒 superadmin | Заблокировать пользователя |
+| `POST` | `/api/admin/users/{id}/unblock` | 🔒 superadmin | Разблокировать пользователя |
+| `POST` | `/api/admin/reports` | 🔒 | Подать жалобу |
+| `GET` | `/api/admin/reports` | 🔒 moderator | Список жалоб с фильтром по статусу |
+| `POST` | `/api/admin/reports/{id}/review` | 🔒 moderator | Принять жалобу |
+| `POST` | `/api/admin/reports/{id}/dismiss` | 🔒 moderator | Отклонить жалобу |
+| `GET` | `/api/admin/recipes` | 🔒 moderator | Список рецептов с поиском; `has_comments=true` — только с комментариями |
+| `POST` | `/api/admin/recipes/{id}/hide` | 🔒 moderator | Скрыть рецепт |
+| `POST` | `/api/admin/recipes/{id}/unhide` | 🔒 moderator | Показать рецепт |
+| `GET` | `/api/admin/comments` | 🔒 moderator | Список комментариев с фильтрами |
+| `POST` | `/api/admin/comments/{id}/delete` | 🔒 moderator | Удалить комментарий (soft delete) |
+
+Запуск seed-скрипта:
+```bash
+docker compose exec backend sh -c "ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=secret python scripts/seed_admin.py"
+```
+
 ### Список покупок (feat/shopping-list)
 
 - `app/models/ingredient_category.py` — модель `IngredientCategory`: `name` (unique), `created_at`
@@ -1259,7 +1307,7 @@ Backend находится в разработке.
 15. ~~Search (OpenSearch).~~ ✓
 16. ~~Meal plans и shopping lists.~~ ✓
 17. ~~OAuth Google и Яндекс.~~ ✓
-18. Moderation и admin.
+18. ~~Moderation и admin.~~ ✓
 19. Celery tasks (expanded).
 20. Observability.
 21. Security hardening.
