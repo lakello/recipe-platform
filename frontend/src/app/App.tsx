@@ -23,6 +23,7 @@ import { FeedPage } from '@/pages/feed-page'
 import { SearchPage } from '@/pages/search-page'
 import { MealPlanPage } from '@/pages/meal-plan-page'
 import { ShoppingListPage } from '@/pages/shopping-list-page'
+import { NotificationsPage } from '@/pages/notifications-page'
 
 export function App() {
   return (
@@ -139,6 +140,14 @@ export function App() {
             element={
               <ProtectedRoute>
                 <ShoppingListPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/notifications"
+            element={
+              <ProtectedRoute>
+                <NotificationsPage />
               </ProtectedRoute>
             }
           />
