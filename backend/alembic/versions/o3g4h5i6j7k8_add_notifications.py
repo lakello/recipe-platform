@@ -26,8 +26,13 @@ notification_type = postgresql.ENUM(
 
 def upgrade() -> None:
     op.execute(
-        "CREATE TYPE IF NOT EXISTS notificationtype AS ENUM "
-        "('like', 'comment', 'reply', 'follow', 'moderation')"
+        """
+        DO $$ BEGIN
+            CREATE TYPE notificationtype AS ENUM ('like', 'comment', 'reply', 'follow', 'moderation');
+        EXCEPTION
+            WHEN duplicate_object THEN null;
+        END $$;
+        """
     )
     op.create_table(
         "notifications",
