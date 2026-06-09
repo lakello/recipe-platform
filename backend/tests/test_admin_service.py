@@ -136,16 +136,43 @@ async def test_assign_role_cannot_change_own(
     assert exc.value.status_code == 400
 
 
-async def test_assign_superadmin_requires_superadmin(
+async def test_assign_superadmin_always_forbidden(
     service: AdminService,
     mock_user_repo: AsyncMock,
 ) -> None:
-    actor = make_user(role=UserRole.admin)
+    """Superadmin role cannot be assigned via panel by anyone."""
+    actor = make_user(role=UserRole.superadmin)
     target = make_user(id=uuid.uuid4(), role=UserRole.user)
     mock_user_repo.get_by_id.return_value = target
 
     with pytest.raises(HTTPException) as exc:
         await service.assign_role(target.id, UserRole.superadmin, actor)
+    assert exc.value.status_code == 403
+
+
+async def test_assign_role_admin_cannot_touch_admin(
+    service: AdminService,
+    mock_user_repo: AsyncMock,
+) -> None:
+    actor = make_user(role=UserRole.admin)
+    target = make_user(id=uuid.uuid4(), role=UserRole.admin)
+    mock_user_repo.get_by_id.return_value = target
+
+    with pytest.raises(HTTPException) as exc:
+        await service.assign_role(target.id, UserRole.user, actor)
+    assert exc.value.status_code == 403
+
+
+async def test_assign_role_superadmin_target_untouchable(
+    service: AdminService,
+    mock_user_repo: AsyncMock,
+) -> None:
+    actor = make_user(role=UserRole.admin)
+    target = make_user(id=uuid.uuid4(), role=UserRole.superadmin)
+    mock_user_repo.get_by_id.return_value = target
+
+    with pytest.raises(HTTPException) as exc:
+        await service.assign_role(target.id, UserRole.user, actor)
     assert exc.value.status_code == 403
 
 
@@ -157,8 +184,8 @@ async def test_block_user_success(
     mock_user_repo: AsyncMock,
     mock_audit_repo: AsyncMock,
 ) -> None:
-    actor = make_user(role=UserRole.admin)
-    target = make_user(id=uuid.uuid4(), is_active=True)
+    actor = make_user(role=UserRole.superadmin)
+    target = make_user(id=uuid.uuid4(), is_active=True, role=UserRole.user)
     mock_user_repo.get_by_id.return_value = target
     mock_user_repo.update.return_value = make_user(id=target.id, is_active=False)
     mock_audit_repo.create.return_value = MagicMock(spec=ModerationAction)
@@ -173,8 +200,8 @@ async def test_block_already_blocked(
     service: AdminService,
     mock_user_repo: AsyncMock,
 ) -> None:
-    actor = make_user(role=UserRole.admin)
-    target = make_user(id=uuid.uuid4(), is_active=False)
+    actor = make_user(role=UserRole.superadmin)
+    target = make_user(id=uuid.uuid4(), is_active=False, role=UserRole.user)
     mock_user_repo.get_by_id.return_value = target
 
     with pytest.raises(HTTPException) as exc:
@@ -187,13 +214,26 @@ async def test_block_self_forbidden(
     mock_user_repo: AsyncMock,
 ) -> None:
     actor_id = uuid.uuid4()
-    actor = make_user(id=actor_id, role=UserRole.admin)
-    target = make_user(id=actor_id, is_active=True)
+    actor = make_user(id=actor_id, role=UserRole.superadmin)
+    target = make_user(id=actor_id, is_active=True, role=UserRole.superadmin)
     mock_user_repo.get_by_id.return_value = target
 
     with pytest.raises(HTTPException) as exc:
         await service.block_user(actor_id, actor, None)
     assert exc.value.status_code == 400
+
+
+async def test_block_superadmin_forbidden(
+    service: AdminService,
+    mock_user_repo: AsyncMock,
+) -> None:
+    actor = make_user(role=UserRole.superadmin)
+    target = make_user(id=uuid.uuid4(), is_active=True, role=UserRole.superadmin)
+    mock_user_repo.get_by_id.return_value = target
+
+    with pytest.raises(HTTPException) as exc:
+        await service.block_user(target.id, actor, None)
+    assert exc.value.status_code == 403
 
 
 async def test_unblock_user_success(
@@ -279,24 +319,24 @@ async def test_hide_recipe_success(
     from app.models.recipe import Recipe
 
     actor = make_user(role=UserRole.moderator)
-    recipe = MagicMock(spec=Recipe)
-    recipe.id = uuid.uuid4()
-    recipe.is_hidden = False
-    recipe.title = "Test"
-    recipe.author_id = uuid.uuid4()
-    recipe.status = "published"
-    recipe.visibility = "public"
-    recipe.created_at = datetime.now(UTC)
+    author = make_user(id=uuid.uuid4(), role=UserRole.user)
 
+    def make_recipe_mock(is_hidden: bool) -> MagicMock:
+        r = MagicMock(spec=Recipe)
+        r.id = uuid.uuid4()
+        r.is_hidden = is_hidden
+        r.title = "Test"
+        r.author_id = author.id
+        r.author = author
+        r.status = "published"
+        r.visibility = "public"
+        r.created_at = datetime.now(UTC)
+        return r
+
+    recipe = make_recipe_mock(False)
     mock_recipe_repo.get_by_id.return_value = recipe
-    hidden_recipe = MagicMock(spec=Recipe)
+    hidden_recipe = make_recipe_mock(True)
     hidden_recipe.id = recipe.id
-    hidden_recipe.is_hidden = True
-    hidden_recipe.title = recipe.title
-    hidden_recipe.author_id = recipe.author_id
-    hidden_recipe.status = recipe.status
-    hidden_recipe.visibility = recipe.visibility
-    hidden_recipe.created_at = recipe.created_at
     mock_recipe_repo.update.return_value = hidden_recipe
     mock_audit_repo.create.return_value = MagicMock(spec=ModerationAction)
 
@@ -315,6 +355,7 @@ async def test_hide_already_hidden_recipe(
     recipe = MagicMock(spec=Recipe)
     recipe.id = uuid.uuid4()
     recipe.is_hidden = True
+    recipe.author = make_user()
     mock_recipe_repo.get_by_id.return_value = recipe
 
     with pytest.raises(HTTPException) as exc:

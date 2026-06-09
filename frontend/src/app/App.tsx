@@ -16,7 +16,6 @@ import { AdminUsersPage } from '@/pages/admin-users-page'
 import { AdminRecipesPage } from '@/pages/admin-recipes-page'
 import { AdminCommentsPage } from '@/pages/admin-comments-page'
 import { AdminReportsPage } from '@/pages/admin-reports-page'
-import { AdminAuditPage } from '@/pages/admin-audit-page'
 import { PublicProfilePage } from '@/pages/user-profile-page'
 import { FollowersPage } from '@/pages/followers-page'
 import { FollowingPage } from '@/pages/following-page'
@@ -112,14 +111,6 @@ export function App() {
             element={
               <AdminRoute minRole="moderator">
                 <AdminReportsPage />
-              </AdminRoute>
-            }
-          />
-          <Route
-            path="/admin/audit"
-            element={
-              <AdminRoute minRole="admin">
-                <AdminAuditPage />
               </AdminRoute>
             }
           />

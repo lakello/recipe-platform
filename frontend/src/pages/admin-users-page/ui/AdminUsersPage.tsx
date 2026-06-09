@@ -6,15 +6,42 @@ import type { UserRole } from '@/features/profile/api/profileApi'
 import { Button } from '@/shared/ui/Button'
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser'
 
-const ROLES: UserRole[] = ['user', 'moderator', 'admin', 'superadmin']
+const ASSIGNABLE_ROLES: UserRole[] = ['user', 'moderator', 'admin']
+const FILTER_ROLES = ['', 'user', 'moderator', 'admin', 'superadmin'] as const
 
-function UserRow({ user, currentUserId }: { user: AdminUser; currentUserId?: string }) {
+function UserRow({
+  user,
+  currentUser,
+}: {
+  user: AdminUser
+  currentUser?: { id: string; role: UserRole }
+}) {
   const [showRoleSelect, setShowRoleSelect] = useState(false)
   const { mutate: assignRole, isPending: isAssigning } = useAssignRole()
   const { mutate: block, isPending: isBlocking } = useBlockUser()
   const { mutate: unblock, isPending: isUnblocking } = useUnblockUser()
 
-  const isSelf = user.id === currentUserId
+  const isSelf = user.id === currentUser?.id
+  const actorRole = currentUser?.role
+  const targetIsSuperadmin = user.role === 'superadmin'
+
+  // Who can block: only superadmin, and not another superadmin/self
+  const canBlock = actorRole === 'superadmin' && !isSelf && !targetIsSuperadmin
+
+  // Assignable roles based on actor
+  const rolesForActor =
+    actorRole === 'superadmin'
+      ? ASSIGNABLE_ROLES
+      : actorRole === 'admin'
+        ? (['user', 'moderator'] as UserRole[])
+        : []
+
+  // Can change role: not self, not superadmin target, admin can't touch admin
+  const canChangeRole =
+    !isSelf &&
+    !targetIsSuperadmin &&
+    rolesForActor.length > 0 &&
+    !(actorRole === 'admin' && user.role === 'admin')
 
   return (
     <tr className="border-b border-gray-100 last:border-0">
@@ -23,7 +50,7 @@ function UserRow({ user, currentUserId }: { user: AdminUser; currentUserId?: str
         <p className="text-xs text-gray-400">{user.email}</p>
       </td>
       <td className="py-3 pr-4">
-        {showRoleSelect ? (
+        {showRoleSelect && canChangeRole ? (
           <div className="flex items-center gap-2">
             <select
               className="text-sm border border-gray-300 rounded-lg px-2 py-1"
@@ -35,7 +62,7 @@ function UserRow({ user, currentUserId }: { user: AdminUser; currentUserId?: str
                 )
               }}
             >
-              {ROLES.map((r) => (
+              {rolesForActor.map((r) => (
                 <option key={r} value={r}>{r}</option>
               ))}
             </select>
@@ -45,9 +72,9 @@ function UserRow({ user, currentUserId }: { user: AdminUser; currentUserId?: str
           </div>
         ) : (
           <button
-            onClick={() => setShowRoleSelect(true)}
-            disabled={isSelf || isAssigning}
-            className="text-sm px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+            onClick={() => canChangeRole && setShowRoleSelect(true)}
+            disabled={!canChangeRole || isAssigning}
+            className="text-sm px-2 py-0.5 rounded-full font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-default"
           >
             {user.role}
           </button>
@@ -65,7 +92,7 @@ function UserRow({ user, currentUserId }: { user: AdminUser; currentUserId?: str
         </span>
       </td>
       <td className="py-3 text-right">
-        {!isSelf && (
+        {canBlock && (
           user.is_active ? (
             <Button
               variant="danger"
@@ -95,12 +122,44 @@ function UserRow({ user, currentUserId }: { user: AdminUser; currentUserId?: str
 
 export function AdminUsersPage() {
   const [page, setPage] = useState(1)
-  const { data, isPending, error } = useAdminUsers(page)
+  const [search, setSearch] = useState('')
+  const [roleFilter, setRoleFilter] = useState('')
+  const { data, isPending, error } = useAdminUsers(page, search || undefined, roleFilter || undefined)
   const { data: currentUser } = useCurrentUser()
+
+  const handleSearch = (value: string) => {
+    setSearch(value)
+    setPage(1)
+  }
+
+  const handleRoleFilter = (value: string) => {
+    setRoleFilter(value)
+    setPage(1)
+  }
 
   return (
     <AdminLayout>
       <h1 className="text-2xl font-bold text-gray-900 mb-6">Пользователи</h1>
+
+      <div className="flex gap-3 mb-4">
+        <input
+          type="text"
+          placeholder="Поиск по имени или email..."
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 max-w-xs"
+          value={search}
+          onChange={(e) => handleSearch(e.target.value)}
+        />
+        <select
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm"
+          value={roleFilter}
+          onChange={(e) => handleRoleFilter(e.target.value)}
+        >
+          <option value="">Все роли</option>
+          {FILTER_ROLES.filter(Boolean).map((r) => (
+            <option key={r} value={r}>{r}</option>
+          ))}
+        </select>
+      </div>
 
       {isPending && <p className="text-gray-500">Загрузка...</p>}
       {error && <p className="text-red-500">{error.message}</p>}
@@ -119,7 +178,7 @@ export function AdminUsersPage() {
               </thead>
               <tbody className="px-4">
                 {data.items.map((u) => (
-                  <UserRow key={u.id} user={u} currentUserId={currentUser?.id} />
+                  <UserRow key={u.id} user={u} currentUser={currentUser} />
                 ))}
               </tbody>
             </table>
