@@ -13,6 +13,7 @@ from app.db.session import get_db
 from app.models.user import User
 from app.repositories.comment import CommentRepository
 from app.repositories.moderation_action import ModerationActionRepository
+from app.repositories.notification import NotificationRepository
 from app.repositories.recipe import RecipeRepository
 from app.repositories.report import ReportRepository
 from app.repositories.user import UserRepository
@@ -31,6 +32,7 @@ from app.schemas.admin import (
 )
 from app.schemas.user import UserRead
 from app.services.admin import AdminService
+from app.services.notification import NotificationService
 
 router = APIRouter(prefix="/api/admin", tags=["admin"])
 
@@ -42,6 +44,14 @@ def _service(session: AsyncSession = Depends(get_db)) -> AdminService:
         CommentRepository(session),
         ReportRepository(session),
         ModerationActionRepository(session),
+    )
+
+
+def _notif_service(session: AsyncSession = Depends(get_db)) -> NotificationService:
+    return NotificationService(
+        NotificationRepository(session),
+        RecipeRepository(session),
+        CommentRepository(session),
     )
 
 
@@ -65,9 +75,17 @@ async def assign_role(
     user_id: uuid.UUID,
     data: AssignRoleRequest,
     service: AdminService = Depends(_service),
+    notif_service: NotificationService = Depends(_notif_service),
     actor: User = Depends(get_current_admin),
 ) -> UserRead:
-    return await service.assign_role(user_id, data.role, actor)
+    result = await service.assign_role(user_id, data.role, actor)
+    notif = await notif_service.create_moderation_notification(
+        user_id, f"Вашей роли присвоено: {data.role}"
+    )
+    from app.tasks.email import send_notification_email
+
+    send_notification_email.delay(str(notif.id))
+    return result
 
 
 @router.post("/users/{user_id}/block", response_model=UserRead)
@@ -75,18 +93,35 @@ async def block_user(
     user_id: uuid.UUID,
     data: BlockRequest,
     service: AdminService = Depends(_service),
+    notif_service: NotificationService = Depends(_notif_service),
     actor: User = Depends(get_current_superadmin),
 ) -> UserRead:
-    return await service.block_user(user_id, actor, data.reason)
+    result = await service.block_user(user_id, actor, data.reason)
+    reason_text = f" Причина: {data.reason}" if data.reason else ""
+    notif = await notif_service.create_moderation_notification(
+        user_id, f"Ваш аккаунт заблокирован.{reason_text}"
+    )
+    from app.tasks.email import send_notification_email
+
+    send_notification_email.delay(str(notif.id))
+    return result
 
 
 @router.post("/users/{user_id}/unblock", response_model=UserRead)
 async def unblock_user(
     user_id: uuid.UUID,
     service: AdminService = Depends(_service),
+    notif_service: NotificationService = Depends(_notif_service),
     actor: User = Depends(get_current_superadmin),
 ) -> UserRead:
-    return await service.unblock_user(user_id, actor)
+    result = await service.unblock_user(user_id, actor)
+    notif = await notif_service.create_moderation_notification(
+        user_id, "Ваш аккаунт разблокирован."
+    )
+    from app.tasks.email import send_notification_email
+
+    send_notification_email.delay(str(notif.id))
+    return result
 
 
 # ── reports ───────────────────────────────────────────────────────────────────
@@ -152,18 +187,41 @@ async def hide_recipe(
     recipe_id: uuid.UUID,
     data: HideRequest,
     service: AdminService = Depends(_service),
+    notif_service: NotificationService = Depends(_notif_service),
     actor: User = Depends(get_current_moderator),
 ) -> AdminRecipeRead:
-    return await service.hide_recipe(recipe_id, actor, data.reason)
+    result = await service.hide_recipe(recipe_id, actor, data.reason)
+    reason_text = f" Причина: {data.reason}" if data.reason else ""
+    notif = await notif_service.create_moderation_notification(
+        result.author_id,
+        f"Ваш рецепт «{result.title}» скрыт модератором.{reason_text}",
+        entity_id=recipe_id,
+        entity_type="recipe",
+    )
+    from app.tasks.email import send_notification_email
+
+    send_notification_email.delay(str(notif.id))
+    return result
 
 
 @router.post("/recipes/{recipe_id}/unhide", response_model=AdminRecipeRead)
 async def unhide_recipe(
     recipe_id: uuid.UUID,
     service: AdminService = Depends(_service),
+    notif_service: NotificationService = Depends(_notif_service),
     actor: User = Depends(get_current_moderator),
 ) -> AdminRecipeRead:
-    return await service.unhide_recipe(recipe_id, actor)
+    result = await service.unhide_recipe(recipe_id, actor)
+    notif = await notif_service.create_moderation_notification(
+        result.author_id,
+        f"Ваш рецепт «{result.title}» снова виден.",
+        entity_id=recipe_id,
+        entity_type="recipe",
+    )
+    from app.tasks.email import send_notification_email
+
+    send_notification_email.delay(str(notif.id))
+    return result
 
 
 # ── comments ──────────────────────────────────────────────────────────────────

@@ -24,6 +24,7 @@ def make_recipe(author_id: uuid.UUID | None = None, **kwargs) -> Recipe:
     author.id = author_id
     author.username = "tester"
     author.avatar_url = None
+    author.role = "user"
     recipe = MagicMock(spec=Recipe)
     recipe.id = uuid.uuid4()
     recipe.author_id = author_id

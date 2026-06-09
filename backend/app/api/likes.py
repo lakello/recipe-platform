@@ -6,11 +6,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.deps import get_current_user, get_optional_user
 from app.db.session import get_db
 from app.models.user import User
+from app.repositories.comment import CommentRepository
 from app.repositories.like import FavoriteRepository, LikeRepository
+from app.repositories.notification import NotificationRepository
 from app.repositories.recipe import RecipeRepository
 from app.schemas.like import FavoriteStatus, LikeStatus
 from app.schemas.recipe import RecipeRead
 from app.services.like import FavoriteService, LikeService
+from app.services.notification import NotificationService
 
 router = APIRouter(tags=["likes"])
 
@@ -27,13 +30,28 @@ def _favorite_service(session: AsyncSession = Depends(get_db)) -> FavoriteServic
     )
 
 
+def _notif_service(session: AsyncSession = Depends(get_db)) -> NotificationService:
+    return NotificationService(
+        NotificationRepository(session),
+        RecipeRepository(session),
+        CommentRepository(session),
+    )
+
+
 @router.post("/api/recipes/{recipe_id}/like", response_model=LikeStatus)
 async def like_recipe(
     recipe_id: uuid.UUID,
     service: LikeService = Depends(_like_service),
+    notif_service: NotificationService = Depends(_notif_service),
     current_user: User = Depends(get_current_user),
 ) -> LikeStatus:
-    return await service.like(recipe_id, current_user.id)
+    result = await service.like(recipe_id, current_user.id)
+    notif = await notif_service.create_like_notification(current_user.id, recipe_id)
+    if notif:
+        from app.tasks.email import send_notification_email
+
+        send_notification_email.delay(str(notif.id))
+    return result
 
 
 @router.delete("/api/recipes/{recipe_id}/like", response_model=LikeStatus)

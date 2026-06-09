@@ -19,6 +19,7 @@ def make_user(username: str = "tester") -> User:
     user.id = uuid.uuid4()
     user.username = username
     user.avatar_url = None
+    user.role = "user"
     return user
 
 
@@ -272,7 +273,9 @@ async def test_deleted_comment_body_masked(
 async def test_comment_read_masks_hidden_body() -> None:
     from app.schemas.comment import CommentAuthor, CommentRead
 
-    author = CommentAuthor(id=uuid.uuid4(), username="user", avatar_url=None)
+    author = CommentAuthor(
+        id=uuid.uuid4(), username="user", avatar_url=None, role="user"
+    )
     comment = CommentRead(
         id=uuid.uuid4(),
         recipe_id=uuid.uuid4(),
@@ -291,7 +294,9 @@ async def test_comment_read_masks_hidden_body() -> None:
 async def test_comment_read_masks_deleted_body() -> None:
     from app.schemas.comment import CommentAuthor, CommentRead
 
-    author = CommentAuthor(id=uuid.uuid4(), username="user", avatar_url=None)
+    author = CommentAuthor(
+        id=uuid.uuid4(), username="user", avatar_url=None, role="user"
+    )
     comment = CommentRead(
         id=uuid.uuid4(),
         recipe_id=uuid.uuid4(),
