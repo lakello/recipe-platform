@@ -54,11 +54,20 @@ class RecipeRepository:
         return list(result.scalars().all())
 
     async def list_all_admin(
-        self, offset: int, limit: int, search: str | None = None
+        self,
+        offset: int,
+        limit: int,
+        search: str | None = None,
+        has_comments: bool = False,
     ) -> tuple[list[Recipe], int]:
+        from sqlalchemy import exists
+
+        from app.models.comment import Comment
         from app.models.user import User
 
         base = select(Recipe).where(Recipe.status != RecipeStatus.deleted)
+        if has_comments:
+            base = base.where(exists().where(Comment.recipe_id == Recipe.id))
         if search:
             author_ids_stmt = select(User.id).where(
                 or_(

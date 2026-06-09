@@ -192,12 +192,16 @@ class AdminService:
     # ── recipes ───────────────────────────────────────────────────────────
 
     async def list_recipes_admin(
-        self, page: int, size: int, search: str | None = None
+        self,
+        page: int,
+        size: int,
+        search: str | None = None,
+        has_comments: bool = False,
     ) -> AdminRecipePage:
         size = min(size, _PAGE_MAX)
         offset = (page - 1) * size
         recipes, total = await self.recipe_repo.list_all_admin(
-            offset, size, search=search
+            offset, size, search=search, has_comments=has_comments
         )
         return AdminRecipePage(
             items=[AdminRecipeRead.model_validate(r) for r in recipes],
