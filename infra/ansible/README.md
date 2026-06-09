@@ -825,18 +825,20 @@ ansible-playbook -i inventories/dev/hosts.yml playbooks/site.yml -vvv
 
 ## Статус
 
-Ansible-конфигурация находится в разработке.
+Не начато. Запланировано на следующий (DevOps) этап.
+
+После второго этапа разработки директория `infra/ansible/` содержит только этот README.
 
 Приоритет реализации:
 
-1. 1.Базовая структура inventories/playbooks/roles.
-2. 2.Role `common`.
-3. 3.Role `users`.
-4. 4.Role `ssh`.
-5. 5.Role `firewall`.
-6. 6.Role `docker`.
-7. 7.Role `fail2ban`.
-8. 8.Role `hardening`.
-9. 9.Role `github-runner`.
-10. 10.Role `node-exporter`.
-11. 11.ansible-lint в CI.
+1. Базовая структура inventories/playbooks/roles.
+2. Role `common`.
+3. Role `users`.
+4. Role `ssh`.
+5. Role `firewall`.
+6. Role `docker`.
+7. Role `fail2ban`.
+8. Role `hardening`.
+9. Role `github-runner`.
+10. Role `node-exporter`.
+11. ansible-lint в CI.

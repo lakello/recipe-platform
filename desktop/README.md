@@ -633,21 +633,25 @@ https://api.example.com/api
 
 ## Статус
 
-Desktop-приложение находится в разработке.
+Не начато. Запланировано на следующий этап.
+
+После второго этапа разработки директория `desktop/` содержит только этот README.
+
+Разработка desktop-приложения начнётся после завершения инфраструктурного этапа (DevOps).
 
 Приоритет реализации:
 
-1. 1.Базовый Tauri-проект.
-2. 2.React + TypeScript + Vite.
-3. 3.API client.
-4. 4.Auth flow.
-5. 5.Recipes list.
-6. 6.Recipe details.
-7. 7.Search.
-8. 8.Favorites.
-9. 9.Meal plan.
-10. 10.Shopping list.
-11. 11.Profile.
-12. 12.File upload.
-13. 13.Desktop packaging.
-14. 14.Windows/Linux build in CI.
+1. Базовый Tauri-проект.
+2. React + TypeScript + Vite.
+3. API client.
+4. Auth flow.
+5. Recipes list.
+6. Recipe details.
+7. Search.
+8. Favorites.
+9. Meal plan.
+10. Shopping list.
+11. Profile.
+12. File upload.
+13. Desktop packaging.
+14. Windows/Linux build в CI.
