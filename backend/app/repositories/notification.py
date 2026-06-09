@@ -12,7 +12,7 @@ class NotificationRepository:
 
     async def create(self, notification: Notification) -> Notification:
         self.session.add(notification)
-        await self.session.flush()
+        await self.session.commit()
         await self.session.refresh(notification)
         return notification
 
@@ -47,7 +47,7 @@ class NotificationRepository:
 
     async def mark_read(self, notification: Notification) -> Notification:
         notification.is_read = True
-        await self.session.flush()
+        await self.session.commit()
         await self.session.refresh(notification)
         return notification
 
@@ -57,7 +57,7 @@ class NotificationRepository:
             .where(Notification.user_id == user_id, Notification.is_read.is_(False))
             .values(is_read=True)
         )
-        await self.session.flush()
+        await self.session.commit()
 
     async def count_unread(self, user_id: uuid.UUID) -> int:
         return (

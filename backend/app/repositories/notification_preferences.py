@@ -20,7 +20,8 @@ class NotificationPreferencesRepository:
         if prefs is None:
             prefs = NotificationPreferences(user_id=user_id)
             self.session.add(prefs)
-            await self.session.flush()
+            await self.session.commit()
+            await self.session.refresh(prefs)
         return prefs
 
     async def update(
@@ -29,6 +30,6 @@ class NotificationPreferencesRepository:
         prefs = await self.get_or_default(user_id)
         for key, value in data.items():
             setattr(prefs, key, value)
-        await self.session.flush()
+        await self.session.commit()
         await self.session.refresh(prefs)
         return prefs
