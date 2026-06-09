@@ -6,6 +6,10 @@ Usage:
 
 import asyncio
 import os
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import bcrypt
 from sqlalchemy import select
