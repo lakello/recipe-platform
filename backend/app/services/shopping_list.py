@@ -1,7 +1,8 @@
 import uuid
 from datetime import date, timedelta
+from typing import TypedDict
 
-from fastapi import HTTPException
+from fastapi import HTTPException  # noqa: I001
 
 from app.models.shopping_list import ShoppingListItem
 from app.repositories.shopping_list import ShoppingListRepository
@@ -12,6 +13,13 @@ from app.schemas.shopping_list import (
     ShoppingListItemUpdate,
     ShoppingListRead,
 )
+
+
+class _AggEntry(TypedDict):
+    amount: float
+    base_unit: str
+    name: str
+
 
 # Units that can be normalized to a common base unit for comparison
 _NORMALIZE: dict[str, tuple[str, float]] = {
@@ -65,7 +73,7 @@ class ShoppingListService:
 
         # Aggregate ingredient amounts from the meal plan
         # ingredient_id → {amount_base, base_unit, name}
-        aggregated: dict[uuid.UUID, dict] = {}
+        aggregated: dict[uuid.UUID, _AggEntry] = {}
         no_amount_ids: dict[uuid.UUID, str] = {}  # ingredient_id → name
 
         for mp_item in meal_items:

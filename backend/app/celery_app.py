@@ -6,7 +6,7 @@ celery_app = Celery(
     "recipe_platform",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend_url,
-    include=["app.tasks.thumbnails", "app.tasks.shopping_list"],
+    include=["app.tasks.thumbnails", "app.tasks.shopping_list", "app.tasks.email"],
 )
 
 celery_app.conf.update(

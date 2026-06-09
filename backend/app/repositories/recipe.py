@@ -123,7 +123,7 @@ class RecipeRepository:
         recipes = {r.id: r for r in result.scalars().all()}
         return [recipes[id_] for id_ in ids if id_ in recipes]
 
-    async def update(self, recipe: Recipe, data: dict) -> Recipe:
+    async def update(self, recipe: Recipe, data: dict[str, object]) -> Recipe:
         for key, value in data.items():
             setattr(recipe, key, value)
         await self.session.commit()

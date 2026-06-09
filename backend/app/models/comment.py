@@ -36,4 +36,4 @@ class Comment(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    author: Mapped["User"] = relationship("User", lazy="selectin")  # noqa: F821
+    author: Mapped["User"] = relationship("User", lazy="selectin")  # noqa: F821  # type: ignore[name-defined]

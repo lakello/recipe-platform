@@ -17,6 +17,7 @@ def make_recipe(**kwargs) -> Recipe:
     author.id = author_id
     author.username = "tester"
     author.avatar_url = None
+    author.role = "user"
     defaults = {
         "id": uuid.uuid4(),
         "author_id": author_id,

@@ -34,15 +34,15 @@ class IngredientRepository:
     async def replace_recipe_ingredients(
         self,
         recipe_id: uuid.UUID,
-        items: list[dict],
+        items: list[dict[str, object]],
     ) -> None:
         await self.session.execute(
-            RecipeIngredient.__table__.delete().where(
+            RecipeIngredient.__table__.delete().where(  # type: ignore[attr-defined]
                 RecipeIngredient.recipe_id == recipe_id
             )
         )
         for order, item in enumerate(items):
-            ingredient = await self.get_or_create(item["ingredient_name"])
+            ingredient = await self.get_or_create(str(item["ingredient_name"]))
             self.session.add(
                 RecipeIngredient(
                     recipe_id=recipe_id,
@@ -57,10 +57,10 @@ class IngredientRepository:
     async def replace_recipe_steps(
         self,
         recipe_id: uuid.UUID,
-        items: list[dict],
+        items: list[dict[str, object]],
     ) -> None:
         await self.session.execute(
-            RecipeStep.__table__.delete().where(RecipeStep.recipe_id == recipe_id)
+            RecipeStep.__table__.delete().where(RecipeStep.recipe_id == recipe_id)  # type: ignore[attr-defined]
         )
         for order, item in enumerate(items):
             self.session.add(

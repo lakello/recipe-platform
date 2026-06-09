@@ -37,7 +37,7 @@ class ReportRepository:
         )
         return list(result.scalars().all()), total
 
-    async def update(self, report: Report, data: dict) -> Report:
+    async def update(self, report: Report, data: dict[str, object]) -> Report:
         for key, value in data.items():
             setattr(report, key, value)
         await self.session.commit()

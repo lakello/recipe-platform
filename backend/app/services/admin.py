@@ -289,7 +289,7 @@ class AdminService:
         target_type: str,
         target_id: uuid.UUID,
         reason: str | None = None,
-        meta: dict | None = None,
+        meta: dict[str, object] | None = None,
     ) -> None:
         await self.audit_repo.create(
             ModerationAction(

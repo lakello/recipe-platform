@@ -98,6 +98,14 @@ services:
     networks:
       - app_network
 
+  mailhog:
+    image: mailhog/mailhog:latest
+    container_name: project_mailhog
+    ports:
+      - "${MAILHOG_PORT:-8025}:8025"
+    networks:
+      - app_network
+
   celery-worker:
     build:
       context: ./backend
@@ -116,11 +124,15 @@ services:
       - S3_BUCKET_PHOTOS=${S3_BUCKET_PHOTOS}
       - S3_BUCKET_AVATARS=${S3_BUCKET_AVATARS}
       - OPENSEARCH_URL=${OPENSEARCH_URL}
+      - SMTP_HOST=${SMTP_HOST:-mailhog}
+      - SMTP_PORT=${SMTP_PORT:-1025}
     depends_on:
       backend:
         condition: service_healthy
       redis:
         condition: service_healthy
+      mailhog:
+        condition: service_started
     networks:
       - app_network
 
