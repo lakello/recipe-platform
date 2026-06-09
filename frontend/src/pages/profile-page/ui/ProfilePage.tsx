@@ -142,7 +142,12 @@ export function ProfilePage() {
       </div>
 
       <div className="rounded-xl bg-white p-6 shadow-sm">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Мои рецепты</h2>
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900">Мои рецепты</h2>
+          <Link to="/recipes/new">
+            <Button>+ Создать рецепт</Button>
+          </Link>
+        </div>
         {!myRecipes && <p className="text-gray-500 text-sm">Загрузка...</p>}
         {myRecipes && myRecipes.length === 0 && (
           <p className="text-gray-500 text-sm">Рецептов пока нет.</p>

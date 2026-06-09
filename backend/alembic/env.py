@@ -7,9 +7,11 @@ import app.models.comment  # noqa: F401
 import app.models.follow  # noqa: F401
 import app.models.ingredient  # noqa: F401
 import app.models.like  # noqa: F401
+import app.models.moderation_action  # noqa: F401
 import app.models.photo  # noqa: F401
 import app.models.recipe  # noqa: F401
 import app.models.refresh_token  # noqa: F401
+import app.models.report  # noqa: F401
 import app.models.user  # noqa: F401
 from alembic import context
 from app.core.config import settings

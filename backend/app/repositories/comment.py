@@ -51,6 +51,36 @@ class CommentRepository:
         )
         return list(result.scalars().all()), total
 
+    async def list_all_admin(
+        self,
+        offset: int,
+        limit: int,
+        recipe_id: uuid.UUID | None = None,
+        search: str | None = None,
+        status: str | None = None,
+    ) -> tuple[list[Comment], int]:
+        base = select(Comment)
+        if recipe_id is not None:
+            base = base.where(Comment.recipe_id == recipe_id)
+        if search:
+            base = base.where(Comment.body.ilike(f"%{search}%"))
+        if status == "hidden":
+            base = base.where(Comment.is_hidden.is_(True))
+        elif status == "deleted":
+            base = base.where(Comment.is_deleted.is_(True))
+        elif status == "visible":
+            base = base.where(
+                Comment.is_hidden.is_(False), Comment.is_deleted.is_(False)
+            )
+        total_result = await self.session.execute(
+            select(func.count()).select_from(base.subquery())
+        )
+        total = total_result.scalar_one()
+        result = await self.session.execute(
+            base.order_by(Comment.created_at.desc()).offset(offset).limit(limit)
+        )
+        return list(result.scalars().all()), total
+
     async def update(self, comment: Comment, data: dict[str, object]) -> Comment:
         for key, value in data.items():
             setattr(comment, key, value)

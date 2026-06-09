@@ -9,6 +9,7 @@ class CommentAuthor(BaseModel):
 
     id: uuid.UUID
     username: str
+    role: str
     avatar_url: str | None
 
 

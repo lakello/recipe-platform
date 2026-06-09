@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { AdminLayout } from '@/widgets/admin-layout'
 import {
   useCreateCategory,
   useDeleteCategory,
@@ -213,13 +213,9 @@ export function AdminCategoriesPage() {
   } = useCreateIngredientCategory()
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12">
-      <div className="flex items-center gap-3 mb-8">
-        <Link to="/recipes">
-          <Button variant="secondary">← Рецепты</Button>
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Управление категориями</h1>
-      </div>
+    <AdminLayout>
+    <div className="max-w-2xl">
+      <h1 className="text-2xl font-bold text-gray-900 mb-8">Управление категориями</h1>
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6">
@@ -307,5 +303,6 @@ export function AdminCategoriesPage() {
         </>
       )}
     </div>
+    </AdminLayout>
   )
 }
