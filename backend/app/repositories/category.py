@@ -32,7 +32,7 @@ class CategoryRepository:
         result = await self.session.execute(select(Category).order_by(Category.name))
         return list(result.scalars().all())
 
-    async def update(self, category: Category, data: dict) -> Category:
+    async def update(self, category: Category, data: dict[str, object]) -> Category:
         for key, value in data.items():
             setattr(category, key, value)
         await self.session.commit()

@@ -53,18 +53,18 @@ class Recipe(Base):
         index=True,
     )
     is_hidden: Mapped[bool] = mapped_column(Boolean, default=False, server_default="f")
-    author: Mapped["User"] = relationship("User", lazy="selectin")  # noqa: F821
-    category: Mapped["Category | None"] = relationship("Category", lazy="selectin")  # noqa: F821
-    photo: Mapped["RecipePhoto | None"] = relationship(  # noqa: F821
+    author: Mapped["User"] = relationship("User", lazy="selectin")  # noqa: F821  # type: ignore[name-defined]
+    category: Mapped["Category | None"] = relationship("Category", lazy="selectin")  # noqa: F821  # type: ignore[name-defined]
+    photo: Mapped["RecipePhoto | None"] = relationship(  # noqa: F821  # type: ignore[name-defined]
         "RecipePhoto", lazy="selectin", uselist=False, cascade="all, delete-orphan"
     )
-    ingredients: Mapped[list["RecipeIngredient"]] = relationship(  # noqa: F821
+    ingredients: Mapped[list["RecipeIngredient"]] = relationship(  # noqa: F821  # type: ignore[name-defined]
         "RecipeIngredient",
         lazy="selectin",
         order_by="RecipeIngredient.order",
         cascade="all, delete-orphan",
     )
-    steps: Mapped[list["RecipeStep"]] = relationship(  # noqa: F821
+    steps: Mapped[list["RecipeStep"]] = relationship(  # noqa: F821  # type: ignore[name-defined]
         "RecipeStep",
         lazy="selectin",
         order_by="RecipeStep.order",

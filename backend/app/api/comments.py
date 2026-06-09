@@ -7,15 +7,25 @@ from app.api.deps import get_current_moderator, get_current_user
 from app.db.session import get_db
 from app.models.user import User
 from app.repositories.comment import CommentRepository
+from app.repositories.notification import NotificationRepository
 from app.repositories.recipe import RecipeRepository
 from app.schemas.comment import CommentCreate, CommentPage, CommentRead, CommentUpdate
 from app.services.comment import CommentService
+from app.services.notification import NotificationService
 
 router = APIRouter(tags=["comments"])
 
 
 def _service(session: AsyncSession = Depends(get_db)) -> CommentService:
     return CommentService(CommentRepository(session), RecipeRepository(session))
+
+
+def _notif_service(session: AsyncSession = Depends(get_db)) -> NotificationService:
+    return NotificationService(
+        NotificationRepository(session),
+        RecipeRepository(session),
+        CommentRepository(session),
+    )
 
 
 @router.post(
@@ -27,9 +37,18 @@ async def add_comment(
     recipe_id: uuid.UUID,
     data: CommentCreate,
     service: CommentService = Depends(_service),
+    notif_service: NotificationService = Depends(_notif_service),
     current_user: User = Depends(get_current_user),
 ) -> CommentRead:
-    return await service.add_comment(recipe_id, current_user.id, data)
+    result = await service.add_comment(recipe_id, current_user.id, data)
+    notif = await notif_service.create_comment_notification(
+        current_user.id, recipe_id, result.id, data.parent_id
+    )
+    if notif:
+        from app.tasks.email import send_notification_email
+
+        send_notification_email.delay(str(notif.id))
+    return result
 
 
 @router.get("/api/recipes/{recipe_id}/comments", response_model=CommentPage)

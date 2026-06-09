@@ -35,7 +35,7 @@ class IngredientCategoryRepository:
         return list(result.scalars().all())
 
     async def update(
-        self, category: IngredientCategory, data: dict
+        self, category: IngredientCategory, data: dict[str, object]
     ) -> IngredientCategory:
         for key, value in data.items():
             setattr(category, key, value)

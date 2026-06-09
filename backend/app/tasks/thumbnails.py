@@ -5,7 +5,7 @@ from app.celery_app import celery_app
 logger = logging.getLogger(__name__)
 
 
-@celery_app.task(name="tasks.generate_thumbnail")
+@celery_app.task(name="tasks.generate_thumbnail")  # type: ignore[misc]
 def generate_thumbnail(photo_id: str, source_key: str) -> None:
     """Generate thumbnail for a recipe photo stored in object storage."""
     logger.info("Generating thumbnail for photo %s (key: %s)", photo_id, source_key)

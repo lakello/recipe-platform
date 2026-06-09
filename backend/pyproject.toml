@@ -15,6 +15,19 @@ python_version = "3.12"
 strict = true
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = [
+    "app.models.recipe",
+    "app.models.comment",
+    "app.models.meal_plan",
+    "app.models.notification",
+]
+disable_error_code = ["name-defined"]
+
+[[tool.mypy.overrides]]
+module = ["app.tasks.*"]
+disable_error_code = ["misc", "untyped-decorator", "unused-ignore"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 asyncio_mode = "auto"

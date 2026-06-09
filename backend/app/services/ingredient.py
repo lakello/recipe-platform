@@ -2,6 +2,7 @@ import uuid
 
 from fastapi import HTTPException
 
+from app.models.recipe import Recipe
 from app.repositories.ingredient import IngredientRepository
 from app.repositories.recipe import RecipeRepository
 from app.schemas.ingredient import (
@@ -55,7 +56,9 @@ class IngredientService:
         recipe = await self.recipe_repo.get_by_id(recipe_id)
         return RecipeRead.model_validate(recipe)
 
-    async def _get_owned(self, recipe_id: uuid.UUID, current_user_id: uuid.UUID):  # type: ignore[return]
+    async def _get_owned(
+        self, recipe_id: uuid.UUID, current_user_id: uuid.UUID
+    ) -> Recipe:
         recipe = await self.recipe_repo.get_by_id(recipe_id)
         if not recipe:
             raise HTTPException(status_code=404, detail="Recipe not found")

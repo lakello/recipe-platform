@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -33,7 +35,7 @@ class Settings(BaseSettings):
 
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
     cookie_secure: bool = False
-    cookie_samesite: str = "lax"
+    cookie_samesite: Literal["lax", "strict", "none"] = "lax"
 
     google_client_id: str = ""
     google_client_secret: str = ""
@@ -44,6 +46,14 @@ class Settings(BaseSettings):
     yandex_redirect_uri: str = "http://localhost:8000/api/auth/yandex/callback"
 
     frontend_url: str = "http://localhost:5173"
+
+    smtp_host: str = "localhost"
+    smtp_port: int = 1025
+    smtp_from: str = "noreply@recipe-platform.local"
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_tls: bool = False
+    email_notifications_enabled: bool = True
 
     @field_validator("cors_origins", mode="before")
     @classmethod
