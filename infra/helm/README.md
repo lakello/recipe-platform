@@ -979,23 +979,25 @@ curl -f https://dev.example.com/api/ready
 
 ## Статус
 
-Helm charts находятся в разработке.
+Не начато. Запланировано на следующий (DevOps) этап.
+
+После второго этапа разработки директория `infra/helm/` содержит только этот README.
 
 Приоритет реализации:
 
-1. 1.Базовый chart `recipe-platform`.
-2. 2.Backend Deployment/Service.
-3. 3.Frontend Deployment/Service.
-4. 4.Worker Deployment.
-5. 5.Scheduler Deployment.
-6. 6.ConfigMap.
-7. 7.Secrets references / ExternalSecret.
-8. 8.Ingress.
-9. 9.Migration Job.
-10. 10.Probes.
-11. 11.Resources.
-12. 12.HPA.
-13. 13.PDB.
-14. 14.NetworkPolicy.
-15. 15.ServiceMonitor.
-16. 16.CI/CD integration.
+1. Базовый chart `recipe-platform`.
+2. Backend Deployment/Service.
+3. Frontend Deployment/Service.
+4. Worker Deployment.
+5. Scheduler Deployment.
+6. ConfigMap.
+7. Secrets references / ExternalSecret.
+8. Ingress.
+9. Migration Job.
+10. Probes.
+11. Resources.
+12. HPA.
+13. PDB.
+14. NetworkPolicy.
+15. ServiceMonitor.
+16. CI/CD integration.
