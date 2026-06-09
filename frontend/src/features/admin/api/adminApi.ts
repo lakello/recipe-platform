@@ -146,9 +146,10 @@ export const adminApi = {
     apiJson<Report>(`/api/admin/reports/${reportId}/dismiss`, { method: 'POST' }),
 
   // recipes
-  getAdminRecipes: (page = 1, size = 20, search?: string) => {
+  getAdminRecipes: (page = 1, size = 20, search?: string, hasComments?: boolean) => {
     const params = new URLSearchParams({ page: String(page), size: String(size) })
     if (search) params.set('search', search)
+    if (hasComments) params.set('has_comments', 'true')
     return apiJson<AdminRecipePage>(`/api/admin/recipes?${params}`)
   },
 

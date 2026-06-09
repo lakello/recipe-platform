@@ -193,7 +193,7 @@ export function AdminCommentsPage() {
   const [commentSearch, setCommentSearch] = useState('')
   const [commentStatus, setCommentStatus] = useState('')
 
-  const { data: recipesData, isPending, error } = useAdminRecipes(page, recipeSearch || undefined)
+  const { data: recipesData, isPending, error } = useAdminRecipes(page, recipeSearch || undefined, true)
 
   const handleRecipeSearch = (v: string) => {
     setRecipeSearch(v)

@@ -138,10 +138,13 @@ async def list_recipes_admin(
     page: int = Query(1, ge=1),
     size: int = Query(20, ge=1, le=100),
     search: str | None = Query(None),
+    has_comments: bool = Query(False),
     service: AdminService = Depends(_service),
     _: User = Depends(get_current_moderator),
 ) -> AdminRecipePage:
-    return await service.list_recipes_admin(page, size, search=search)
+    return await service.list_recipes_admin(
+        page, size, search=search, has_comments=has_comments
+    )
 
 
 @router.post("/recipes/{recipe_id}/hide", response_model=AdminRecipeRead)

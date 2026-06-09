@@ -7,8 +7,8 @@ export const ADMIN_USERS_KEY = (page: number, search?: string, role?: string) =>
   ['admin', 'users', page, search, role] as const
 export const ADMIN_REPORTS_KEY = (page: number, status?: string) =>
   ['admin', 'reports', page, status] as const
-export const ADMIN_RECIPES_KEY = (page: number, search?: string) =>
-  ['admin', 'recipes', page, search] as const
+export const ADMIN_RECIPES_KEY = (page: number, search?: string, hasComments?: boolean) =>
+  ['admin', 'recipes', page, search, hasComments] as const
 export const ADMIN_COMMENTS_KEY = (recipeId?: string, search?: string, status?: string) =>
   ['admin', 'comments', recipeId, search, status] as const
 
@@ -68,10 +68,10 @@ export function useDismissReport() {
   })
 }
 
-export function useAdminRecipes(page = 1, search?: string) {
+export function useAdminRecipes(page = 1, search?: string, hasComments?: boolean) {
   return useQuery({
-    queryKey: ADMIN_RECIPES_KEY(page, search),
-    queryFn: () => adminApi.getAdminRecipes(page, 20, search),
+    queryKey: ADMIN_RECIPES_KEY(page, search, hasComments),
+    queryFn: () => adminApi.getAdminRecipes(page, 20, search, hasComments),
   })
 }
 
