@@ -1,6 +1,5 @@
 import { Navigate } from 'react-router-dom'
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser'
-import { NotificationBell } from '@/features/notifications/ui/NotificationBell'
 
 interface Props {
   children: React.ReactNode
@@ -21,12 +20,5 @@ export function ProtectedRoute({ children }: Props) {
     return <Navigate to="/login" replace />
   }
 
-  return (
-    <>
-      <div className="fixed top-3 right-4 z-50">
-        <NotificationBell />
-      </div>
-      {children}
-    </>
-  )
+  return <>{children}</>
 }
