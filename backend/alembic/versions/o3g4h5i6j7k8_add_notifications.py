@@ -26,7 +26,7 @@ notification_type = postgresql.ENUM(
 
 def upgrade() -> None:
     op.execute(
-        "CREATE TYPE notificationtype AS ENUM "
+        "CREATE TYPE IF NOT EXISTS notificationtype AS ENUM "
         "('like', 'comment', 'reply', 'follow', 'moderation')"
     )
     op.create_table(
@@ -37,7 +37,6 @@ def upgrade() -> None:
             postgresql.UUID(as_uuid=True),
             sa.ForeignKey("users.id", ondelete="CASCADE"),
             nullable=False,
-            index=True,
         ),
         sa.Column(
             "actor_id",
@@ -61,8 +60,11 @@ def upgrade() -> None:
             server_default=sa.func.now(),
             nullable=False,
         ),
+        if_not_exists=True,
     )
-    op.create_index("ix_notifications_user_id", "notifications", ["user_id"])
+    op.create_index(
+        "ix_notifications_user_id", "notifications", ["user_id"], if_not_exists=True
+    )
 
 
 def downgrade() -> None:
