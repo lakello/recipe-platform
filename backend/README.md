@@ -1147,6 +1147,44 @@ Endpoint:
 
 Параметры поиска: `q`, `category_id`, `min_time`, `max_time`, `difficulty`, `include_ingredients[]`, `exclude_ingredients[]`, `sort` (relevance/newest/popular), `page`, `size`.
 
+### Уведомления (feat/notifications)
+
+- `app/models/notification.py` — модель `Notification`: `user_id`, `actor_id`, `type` (like/comment/reply/follow/moderation), `entity_id`, `entity_type`, `body`, `is_read`; `actor` загружается через `lazy="selectin"`
+- `app/models/notification_preferences.py` — модель `NotificationPreferences`: email-флаги по типам (like/comment/follow)
+- `app/repositories/notification.py` — `NotificationRepository`: create, get_by_id, list_for_user, mark_read, mark_all_read, count_unread
+- `app/repositories/notification_preferences.py` — `NotificationPreferencesRepository`: get_or_default, update
+- `app/services/notification.py` — `NotificationService`: list, mark_read, mark_all_read, count_unread, create_like_notification (без уведомления себе), create_comment_notification (comment или reply в зависимости от parent_id), create_follow_notification, create_moderation_notification
+- `app/api/notifications.py` — роутер уведомлений
+- `app/api/likes.py`, `app/api/comments.py`, `app/api/follows.py`, `app/api/admin.py` — вызов `create_*_notification` + `send_notification_email.delay()` после успешного действия
+- `app/tasks/email.py` — Celery-задача `tasks.send_notification_email`: загружает уведомление из БД, проверяет email-настройки пользователя, отправляет письмо через SMTP; retry до 5 раз с exponential backoff (max 600s)
+- `app/core/config.py` — добавлены SMTP-настройки (`smtp_host`, `smtp_port`, `smtp_tls`, `smtp_user`, `smtp_password`, `smtp_from`) и `email_notifications_enabled`
+- `docker-compose.yml` — добавлен сервис `mailhog` (SMTP :1025, Web UI :8025); добавлены `SMTP_HOST`/`SMTP_PORT` в окружение `celery-worker`
+- `alembic/versions/o3g4h5i6j7k8` — создаёт таблицу `notifications` с enum `notification_type`
+- `alembic/versions/p4h5i6j7k8l9` — создаёт таблицу `notification_preferences`
+
+Endpoints:
+
+| Метод | Путь | Auth | Описание |
+|---|---|---|---|
+| `GET` | `/api/notifications` | 🔒 | Список уведомлений с пагинацией и счётчиком непрочитанных |
+| `GET` | `/api/notifications/unread-count` | 🔒 | Количество непрочитанных |
+| `PATCH` | `/api/notifications/{id}/read` | 🔒 | Отметить одно уведомление прочитанным |
+| `PATCH` | `/api/notifications/read-all` | 🔒 | Отметить все прочитанными |
+| `GET` | `/api/notifications/preferences` | 🔒 | Получить email-настройки |
+| `PATCH` | `/api/notifications/preferences` | 🔒 | Обновить email-настройки |
+
+Переменные окружения:
+
+| Переменная | По умолчанию | Описание |
+|---|---|---|
+| `SMTP_HOST` | `localhost` | SMTP-сервер (в Docker — `mailhog`) |
+| `SMTP_PORT` | `1025` | SMTP-порт |
+| `SMTP_FROM` | `noreply@recipe-platform.local` | Адрес отправителя |
+| `SMTP_TLS` | `false` | Использовать TLS |
+| `EMAIL_NOTIFICATIONS_ENABLED` | `true` | Включить email-уведомления |
+
+Для просмотра писем в dev-окружении: `http://localhost:8025` (Mailhog Web UI).
+
 ### Docker (feat/docker-compose-local)
 
 - `Dockerfile` — `python:3.12-slim`, кэш зависимостей (requirements.txt отдельным слоем), применение миграций и запуск uvicorn в одной CMD через `sh -c`
@@ -1308,6 +1346,6 @@ Backend находится в разработке.
 16. ~~Meal plans и shopping lists.~~ ✓
 17. ~~OAuth Google и Яндекс.~~ ✓
 18. ~~Moderation и admin.~~ ✓
-19. Celery tasks (expanded).
+19. ~~Уведомления и email-доставка (Celery).~~ ✓
 20. Observability.
 21. Security hardening.
