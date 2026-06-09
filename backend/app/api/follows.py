@@ -9,11 +9,13 @@ from app.models.user import User
 from app.repositories.comment import CommentRepository
 from app.repositories.follow import FollowRepository
 from app.repositories.like import FavoriteRepository, LikeRepository
+from app.repositories.notification import NotificationRepository
 from app.repositories.recipe import RecipeRepository
 from app.repositories.user import UserRepository
 from app.schemas.follow import FollowUserPage
 from app.schemas.recipe import RecipeRead
 from app.services.follow import FollowService
+from app.services.notification import NotificationService
 from app.services.recipe import RecipeService
 
 router = APIRouter(tags=["follows"])
@@ -21,6 +23,14 @@ router = APIRouter(tags=["follows"])
 
 def _follow_service(session: AsyncSession = Depends(get_db)) -> FollowService:
     return FollowService(FollowRepository(session), UserRepository(session))
+
+
+def _notif_service(session: AsyncSession = Depends(get_db)) -> NotificationService:
+    return NotificationService(
+        NotificationRepository(session),
+        RecipeRepository(session),
+        CommentRepository(session),
+    )
 
 
 def _recipe_service(session: AsyncSession = Depends(get_db)) -> RecipeService:
@@ -36,9 +46,14 @@ def _recipe_service(session: AsyncSession = Depends(get_db)) -> RecipeService:
 async def follow_user(
     user_id: uuid.UUID,
     service: FollowService = Depends(_follow_service),
+    notif_service: NotificationService = Depends(_notif_service),
     current_user: User = Depends(get_current_user),
 ) -> None:
     await service.follow(current_user.id, user_id)
+    notif = await notif_service.create_follow_notification(current_user.id, user_id)
+    from app.tasks.email import send_notification_email
+
+    send_notification_email.delay(str(notif.id))
 
 
 @router.delete("/api/users/{user_id}/follow", status_code=204)

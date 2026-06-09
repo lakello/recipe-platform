@@ -70,7 +70,9 @@ class ShoppingListRepository:
         await self.session.refresh(item)
         return item
 
-    async def update_item(self, item: ShoppingListItem, data: dict) -> ShoppingListItem:
+    async def update_item(
+        self, item: ShoppingListItem, data: dict[str, object]
+    ) -> ShoppingListItem:
         for key, value in data.items():
             setattr(item, key, value)
         await self.session.commit()

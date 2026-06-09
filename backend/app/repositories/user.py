@@ -30,7 +30,7 @@ class UserRepository:
         )
         return result.scalar_one_or_none()
 
-    async def update(self, user: User, data: dict) -> User:
+    async def update(self, user: User, data: dict[str, object]) -> User:
         for key, value in data.items():
             setattr(user, key, value)
         await self.session.commit()

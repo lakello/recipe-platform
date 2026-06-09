@@ -34,7 +34,7 @@ class ModerationAction(Base):
     target_type: Mapped[str] = mapped_column(String(50))
     target_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), index=True)
     reason: Mapped[str | None] = mapped_column(Text, nullable=True)
-    meta: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    meta: Mapped[dict[str, object] | None] = mapped_column(JSONB, nullable=True)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

@@ -59,12 +59,12 @@ class SearchService:
             logger.warning("Failed to remove recipe %s from index: %s", recipe_id, exc)
 
     async def search(self, params: SearchParams) -> tuple[list[uuid.UUID], int]:
-        must_clauses: list[dict] = []
-        filter_clauses: list[dict] = [
+        must_clauses: list[dict[str, object]] = []
+        filter_clauses: list[dict[str, object]] = [
             {"term": {"status": "published"}},
             {"term": {"visibility": "public"}},
         ]
-        must_not_clauses: list[dict] = []
+        must_not_clauses: list[dict[str, object]] = []
 
         if params.q:
             must_clauses.append(
@@ -81,7 +81,7 @@ class SearchService:
         if params.category_id:
             filter_clauses.append({"term": {"category_id": str(params.category_id)}})
 
-        range_filter: dict = {}
+        range_filter: dict[str, int] = {}
         if params.min_time:
             range_filter["gte"] = params.min_time
         if params.max_time:
@@ -98,13 +98,13 @@ class SearchService:
         for ingredient in params.exclude_ingredients:
             must_not_clauses.append({"match": {"ingredient_names": ingredient}})
 
-        bool_query: dict = {"filter": filter_clauses}
+        bool_query: dict[str, object] = {"filter": filter_clauses}
         if must_clauses:
             bool_query["must"] = must_clauses
         if must_not_clauses:
             bool_query["must_not"] = must_not_clauses
 
-        sort: list
+        sort: list[object]
         if params.sort == "newest":
             sort = [{"created_at": "desc"}]
         elif params.sort == "popular":

@@ -11,10 +11,10 @@ logger = logging.getLogger(__name__)
 def _error_response(
     status_code: int, message: str, details: object = None
 ) -> JSONResponse:
-    content: dict = {"error": {"code": status_code, "message": message}}
+    inner: dict[str, object] = {"code": status_code, "message": message}
     if details is not None:
-        content["error"]["details"] = details
-    return JSONResponse(status_code=status_code, content=content)
+        inner["details"] = details
+    return JSONResponse(status_code=status_code, content={"error": inner})
 
 
 def register_exception_handlers(app: FastAPI) -> None:

@@ -66,4 +66,4 @@ class MealPlanItem(Base):
     )
 
     meal_plan: Mapped["MealPlan"] = relationship("MealPlan", back_populates="items")
-    recipe: Mapped["Recipe"] = relationship("Recipe", lazy="selectin")  # noqa: F821
+    recipe: Mapped["Recipe"] = relationship("Recipe", lazy="selectin")  # noqa: F821  # type: ignore[name-defined]
