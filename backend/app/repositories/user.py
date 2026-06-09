@@ -30,9 +30,37 @@ class UserRepository:
         )
         return result.scalar_one_or_none()
 
-    async def update(self, user: User, data: dict) -> User:
+    async def update(self, user: User, data: dict[str, object]) -> User:
         for key, value in data.items():
             setattr(user, key, value)
         await self.session.commit()
         await self.session.refresh(user)
         return user
+
+    async def list_all(
+        self,
+        offset: int,
+        limit: int,
+        search: str | None = None,
+        role: str | None = None,
+    ) -> tuple[list[User], int]:
+        from sqlalchemy import func, or_
+
+        base = select(User)
+        if search:
+            base = base.where(
+                or_(
+                    User.username.ilike(f"%{search}%"),
+                    User.email.ilike(f"%{search}%"),
+                )
+            )
+        if role:
+            base = base.where(User.role == role)
+        total_result = await self.session.execute(
+            select(func.count()).select_from(base.subquery())
+        )
+        total = total_result.scalar_one()
+        result = await self.session.execute(
+            base.order_by(User.created_at.desc()).offset(offset).limit(limit)
+        )
+        return list(result.scalars().all()), total

@@ -19,7 +19,7 @@ export function RecipeEditPage() {
         <RecipeForm
           defaultValues={recipe}
           onSubmit={(data: RecipeFormData) => {
-            update(data, { onSuccess: () => navigate(`/recipes/${recipeId}`) })
+            update(data, { onSuccess: () => navigate(`/recipes/${recipeId}`, { replace: true }) })
           }}
           isPending={isPending}
           error={error}

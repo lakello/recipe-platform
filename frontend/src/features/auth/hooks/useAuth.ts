@@ -22,6 +22,7 @@ export function useLogin() {
     mutationFn: (data: LoginData) => authApi.login(data),
     onSuccess: async () => {
       await queryClient.refetchQueries({ queryKey: CURRENT_USER_KEY })
+      void queryClient.invalidateQueries({ queryKey: ['notifications'] })
       navigate('/')
     },
   })
@@ -34,6 +35,7 @@ export function useLogout() {
     mutationFn: authApi.logout,
     onSettled: () => {
       queryClient.setQueryData(CURRENT_USER_KEY, null)
+      queryClient.removeQueries({ queryKey: ['notifications'] })
       navigate('/login')
     },
   })
