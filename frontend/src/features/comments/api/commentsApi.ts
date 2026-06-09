@@ -3,6 +3,7 @@ import { apiJson, apiFetch } from '@/shared/api/client'
 export interface CommentAuthor {
   id: string
   username: string
+  role: string
   avatar_url: string | null
 }
 

@@ -27,7 +27,10 @@ export function CommentItem({ comment, recipeId, currentUser, isReply = false }:
   const [editing, setEditing] = useState(false)
   const [showReplies, setShowReplies] = useState(false)
 
-  const isModerator = currentUser?.role === 'admin' || currentUser?.role === 'superadmin'
+  const isModerator =
+    currentUser?.role === 'moderator' ||
+    currentUser?.role === 'admin' ||
+    currentUser?.role === 'superadmin'
   const isOwner = currentUser?.id === comment.author_id
   const isGhost = comment.is_deleted || comment.is_hidden
 
@@ -64,6 +67,7 @@ export function CommentItem({ comment, recipeId, currentUser, isReply = false }:
             userId={comment.author.id}
             username={comment.author.username}
             avatarUrl={comment.author.avatar_url}
+            role={comment.author.role}
           />
           <span className="text-xs text-gray-400">{formatDate(comment.created_at)}</span>
         </div>

@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './router/ProtectedRoute'
+import { AdminRoute } from './router/AdminRoute'
 import { QueryProvider } from './providers/QueryProvider'
 import { LoginPage } from '@/pages/login-page'
 import { ProfilePage } from '@/pages/profile-page'
@@ -11,6 +12,10 @@ import { RecipeEditPage } from '@/pages/recipe-edit-page'
 import { DraftsPage } from '@/pages/drafts-page'
 import { FavoritesPage } from '@/pages/favorites-page'
 import { AdminCategoriesPage } from '@/pages/admin-categories-page'
+import { AdminUsersPage } from '@/pages/admin-users-page'
+import { AdminRecipesPage } from '@/pages/admin-recipes-page'
+import { AdminCommentsPage } from '@/pages/admin-comments-page'
+import { AdminReportsPage } from '@/pages/admin-reports-page'
 import { PublicProfilePage } from '@/pages/user-profile-page'
 import { FollowersPage } from '@/pages/followers-page'
 import { FollowingPage } from '@/pages/following-page'
@@ -72,9 +77,41 @@ export function App() {
           <Route
             path="/admin/categories"
             element={
-              <ProtectedRoute>
+              <AdminRoute minRole="admin">
                 <AdminCategoriesPage />
-              </ProtectedRoute>
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <AdminRoute minRole="admin">
+                <AdminUsersPage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/recipes"
+            element={
+              <AdminRoute minRole="moderator">
+                <AdminRecipesPage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/comments"
+            element={
+              <AdminRoute minRole="moderator">
+                <AdminCommentsPage />
+              </AdminRoute>
+            }
+          />
+          <Route
+            path="/admin/reports"
+            element={
+              <AdminRoute minRole="moderator">
+                <AdminReportsPage />
+              </AdminRoute>
             }
           />
           <Route path="/search" element={<SearchPage />} />

@@ -14,6 +14,7 @@ class RecipeAuthorRead(BaseModel):
 
     id: uuid.UUID
     username: str
+    role: str
     avatar_url: str | None
 
 
@@ -56,6 +57,7 @@ class RecipeRead(BaseModel):
     photo: RecipePhotoRead | None
     ingredients: list[RecipeIngredientRead]
     steps: list[RecipeStepRead]
+    is_hidden: bool = False
     likes_count: int = 0
     is_liked: bool = False
     is_favorited: bool = False
