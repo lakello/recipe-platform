@@ -4,7 +4,9 @@ import { Button } from '@/shared/ui/Button'
 import {
   useMarkAllRead,
   useMarkRead,
+  useNotificationPreferences,
   useNotifications,
+  useUpdateNotificationPreferences,
 } from '@/features/notifications/hooks/useNotifications'
 import type { Notification } from '@/features/notifications/api/notificationsApi'
 
@@ -76,53 +78,36 @@ function NotifRow({ n }: { n: Notification }) {
   return link ? <Link to={link}>{content}</Link> : content
 }
 
-const NOTIF_PREFS_KEY = 'notif_prefs'
-type NotifPrefs = { email_like: boolean; email_comment: boolean; email_follow: boolean }
+type PrefKey = 'email_like' | 'email_comment' | 'email_follow'
 
-function loadPrefs(): NotifPrefs {
-  try {
-    return JSON.parse(localStorage.getItem(NOTIF_PREFS_KEY) ?? 'null') ?? {
-      email_like: true,
-      email_comment: true,
-      email_follow: true,
-    }
-  } catch {
-    return { email_like: true, email_comment: true, email_follow: true }
-  }
-}
-
-function savePrefs(prefs: NotifPrefs) {
-  localStorage.setItem(NOTIF_PREFS_KEY, JSON.stringify(prefs))
-}
+const PREF_ITEMS: { key: PrefKey; label: string }[] = [
+  { key: 'email_like', label: 'Email при лайке рецепта' },
+  { key: 'email_comment', label: 'Email при комментарии к рецепту' },
+  { key: 'email_follow', label: 'Email при новой подписке' },
+]
 
 function NotifSettings() {
-  const [prefs, setPrefs] = useState<NotifPrefs>(loadPrefs)
+  const { data: prefs, isPending } = useNotificationPreferences()
+  const { mutate: updatePrefs } = useUpdateNotificationPreferences()
 
-  function toggle(key: keyof NotifPrefs) {
-    const next = { ...prefs, [key]: !prefs[key] }
-    setPrefs(next)
-    savePrefs(next)
+  if (isPending) {
+    return (
+      <div className="bg-white rounded-xl shadow-sm p-5">
+        <p className="text-sm text-gray-400">Загрузка настроек...</p>
+      </div>
+    )
   }
-
-  const items: { key: keyof NotifPrefs; label: string }[] = [
-    { key: 'email_like', label: 'Email при лайке рецепта' },
-    { key: 'email_comment', label: 'Email при комментарии к рецепту' },
-    { key: 'email_follow', label: 'Email при новой подписке' },
-  ]
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-5">
       <h2 className="font-semibold text-gray-900 mb-4">Настройки уведомлений</h2>
-      <p className="text-xs text-gray-400 mb-3">
-        Email-настройки сохраняются локально в браузере.
-      </p>
       <div className="space-y-3">
-        {items.map(({ key, label }) => (
+        {PREF_ITEMS.map(({ key, label }) => (
           <label key={key} className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
-              checked={prefs[key]}
-              onChange={() => toggle(key)}
+              checked={prefs?.[key] ?? true}
+              onChange={() => updatePrefs({ [key]: !(prefs?.[key] ?? true) })}
               className="w-4 h-4 rounded text-blue-600"
             />
             <span className="text-sm text-gray-700">{label}</span>

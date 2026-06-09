@@ -26,6 +26,12 @@ export interface UnreadCount {
   count: number
 }
 
+export interface NotificationPreferences {
+  email_like: boolean
+  email_comment: boolean
+  email_follow: boolean
+}
+
 export const notificationsApi = {
   list: (page = 1, size = 20) =>
     apiJson<NotificationPage>(`/api/notifications?page=${page}&size=${size}`),
@@ -37,4 +43,14 @@ export const notificationsApi = {
 
   markAllRead: () =>
     apiFetch('/api/notifications/read-all', { method: 'PATCH' }),
+
+  getPreferences: () =>
+    apiJson<NotificationPreferences>('/api/notifications/preferences'),
+
+  updatePreferences: (data: Partial<NotificationPreferences>) =>
+    apiJson<NotificationPreferences>('/api/notifications/preferences', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
 }
