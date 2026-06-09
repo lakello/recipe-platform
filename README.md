@@ -279,6 +279,7 @@ recipe-platform/
     terraform/
     ansible/
     helm/
+    k8s/
   docs/
   scripts/
   .github/
@@ -296,6 +297,7 @@ recipe-platform/
 |`infra/terraform/`|Terraform-код для Yandex Cloud|
 |`infra/ansible/`|Ansible-код для настройки Linux VM|
 |`infra/helm/`|Helm charts для Kubernetes|
+|`infra/k8s/`|Kubernetes-манифесты и шаблоны секретов|
 |`docs/`|Проектная и техническая документация|
 |`scripts/`|Вспомогательные скрипты|
 |`.github/workflows/`|GitHub Actions pipelines|

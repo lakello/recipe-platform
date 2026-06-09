@@ -620,20 +620,19 @@ Desktop
 
 ## Статус
 
-GitHub Actions workflows находятся в разработке.
+Не начато. Запланировано на следующий (DevOps) этап.
+
+После второго этапа разработки директория `.github/workflows/` содержит только этот README. Реальных workflow-файлов нет.
 
 Приоритет реализации:
 
-1. `pull-request.yml`
-2. Backend checks.
-3. Frontend checks.
-4. Docker build test.
-5. Helm lint/template.
-6. Terraform fmt/validate.
-7. Ansible lint/syntax.
-8. Security scan.
-9. `deploy-dev.yml`
-10. `deploy-staging.yml`
-11. `deploy-prod.yml`
-12. Android workflow.
-13. Desktop workflow.
+1. `pull-request.yml` — backend lint/tests, frontend lint/typecheck, Docker build.
+2. `deploy-dev.yml` — сборка образов, push в GHCR, деплой через Helm.
+3. `deploy-staging.yml`.
+4. `deploy-prod.yml` — с manual approval.
+5. Terraform fmt/validate.
+6. Ansible lint/syntax.
+7. Helm lint/template.
+8. Security scan (Trivy, Gitleaks).
+9. Android workflow.
+10. Desktop workflow.
