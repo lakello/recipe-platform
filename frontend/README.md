@@ -887,6 +887,36 @@ Backend API:
 - Ингредиенты добавляются по Enter или запятой; удаляются по ×
 - Ссылка на страницу поиска доступна с `RecipesListPage`
 
+### Роли, модерация и панель управления (feat/admin-moderation)
+
+- `src/app/router/AdminRoute.tsx` — защита маршрутов по минимальной роли (`minRole`); поддерживает `moderator / admin / superadmin`
+- `src/widgets/admin-layout/AdminLayout.tsx` — sidebar с навигацией; пункты фильтруются по роли текущего пользователя
+- `src/features/admin/api/adminApi.ts` — полный API-клиент: пользователи (поиск, фильтр по роли, назначение роли, блокировка), жалобы, рецепты (поиск, скрытие), комментарии (поиск по тексту/статусу/рецепту, скрытие, удаление)
+- `src/features/admin/hooks/useAdmin.ts` — хуки: `useAdminUsers`, `useAssignRole`, `useBlockUser`, `useUnblockUser`, `useAdminReports`, `useReviewReport`, `useDismissReport`, `useAdminRecipes`, `useHideRecipe`, `useUnhideRecipe`, `useAdminComments`, `useHideCommentAdmin`, `useUnhideCommentAdmin`, `useDeleteCommentAdmin`
+- `src/shared/ui/UserLink.tsx` — добавлен необязательный prop `role`; для ролей `moderator` / `admin` / `superadmin` показывается цветной бейдж (жёлтый / красный / фиолетовый)
+- `src/features/comments/ui/CommentItem.tsx` — исправлен `isModerator`: теперь включает роль `moderator` (раньше учитывал только `admin` и `superadmin`)
+- `src/features/profile/api/profileApi.ts` — добавлено поле `role` в `UserPublicRead`
+- `src/features/recipes/api/recipesApi.ts` — добавлено поле `role` в `RecipeAuthor`
+- `src/features/comments/api/commentsApi.ts` — добавлено поле `role` в `CommentAuthor`
+- `src/pages/profile-page/` — кнопка «+ Создать рецепт» над списком своих рецептов
+- `src/pages/recipe-page/` — кнопка «Пожаловаться» (скрыта у автора); открывает попап с выбором причины и описанием
+
+Страницы панели управления:
+
+| Путь | Описание | Минимальная роль |
+|---|---|---|
+| `/admin/users` | Список пользователей: поиск по имени/email, фильтр по роли, назначение роли, блокировка | admin |
+| `/admin/recipes` | Список рецептов: поиск по названию/автору, скрытие/показ | moderator |
+| `/admin/comments` | Аккордион по рецептам; вложенные комментарии; поиск по рецепту, тексту, статусу; скрытие и удаление | moderator |
+| `/admin/reports` | Список жалоб с фильтром по статусу; принять / отклонить | moderator |
+| `/admin/categories` | Управление категориями рецептов и ингредиентов | admin |
+
+Поведение:
+- На странице комментариев отображаются только рецепты, у которых есть хотя бы один комментарий
+- Комментарии раскрываются по клику на строку рецепта; повторный клик скрывает
+- Ролевые бейджи отображаются рядом с именем пользователя на страницах рецепта и в комментариях
+- Кнопка «Пожаловаться» видна только авторизованным пользователям, не являющимся автором рецепта
+
 ### Подписки на авторов (feat/follows)
 
 - `src/features/follows/api/followsApi.ts` — методы: follow, unfollow, listFollowers, listFollowing
@@ -992,6 +1022,6 @@ Frontend находится в разработке.
 14. ~~Meal plan.~~ ✓
 15. ~~Shopping list.~~ ✓
 16. ~~OAuth Google и Яндекс.~~ ✓
-17. Moderation UI.
-18. Admin UI.
+17. ~~Moderation UI.~~ ✓
+18. ~~Admin UI.~~ ✓
 19. UI polish, accessibility, performance.
