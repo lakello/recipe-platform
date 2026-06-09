@@ -636,22 +636,26 @@ Android может участвовать в GitHub Actions pipeline.
 
 ## Статус
 
-Android-приложение находится в разработке.
+Не начато. Запланировано на следующий этап.
+
+После второго этапа разработки директория `android/` содержит только этот README.
+
+Разработка Android-приложения начнётся после завершения инфраструктурного этапа (DevOps).
 
 Приоритет реализации:
 
-1. 1.Базовый Android-проект.
-2. 2.Настройка Gradle.
-3. 3.Build flavors.
-4. 4.Navigation Compose.
-5. 5.API client.
-6. 6.Auth flow.
-7. 7.Recipes list.
-8. 8.Recipe details.
-9. 9.Search.
-10. 10.Favorites.
-11. 11.Meal plan.
-12. 12.Shopping list.
-13. 13.Profile.
-14. 14.Offline cache.
-15. 15.Push notifications.
+1. Базовый Android-проект.
+2. Настройка Gradle.
+3. Build flavors.
+4. Navigation Compose.
+5. API client.
+6. Auth flow.
+7. Recipes list.
+8. Recipe details.
+9. Search.
+10. Favorites.
+11. Meal plan.
+12. Shopping list.
+13. Profile.
+14. Offline cache.
+15. Push notifications.
