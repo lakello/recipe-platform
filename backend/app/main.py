@@ -6,6 +6,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
+from app.api.admin import router as admin_router
 from app.api.auth import router as auth_router
 from app.api.categories import router as categories_router
 from app.api.comments import router as comments_router
@@ -63,6 +64,7 @@ app.add_middleware(CorrelationIdMiddleware)
 
 register_exception_handlers(app)
 
+app.include_router(admin_router)
 app.include_router(auth_router)
 app.include_router(oauth_router)
 app.include_router(users_router)

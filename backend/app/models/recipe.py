@@ -2,7 +2,7 @@ import enum
 import uuid
 from datetime import datetime
 
-from sqlalchemy import DateTime, Enum, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -52,6 +52,7 @@ class Recipe(Base):
         nullable=True,
         index=True,
     )
+    is_hidden: Mapped[bool] = mapped_column(Boolean, default=False, server_default="f")
     author: Mapped["User"] = relationship("User", lazy="selectin")  # noqa: F821
     category: Mapped["Category | None"] = relationship("Category", lazy="selectin")  # noqa: F821
     photo: Mapped["RecipePhoto | None"] = relationship(  # noqa: F821

@@ -51,6 +51,7 @@ def make_ingredient(name: str = "Мука") -> Ingredient:
     ing = MagicMock(spec=Ingredient)
     ing.id = uuid.uuid4()
     ing.name = name
+    ing.category = None
     ing.created_at = datetime.now(UTC)
     return ing
 
