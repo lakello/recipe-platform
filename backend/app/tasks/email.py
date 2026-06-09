@@ -82,16 +82,29 @@ def send_notification_email(self: object, notification_id: str) -> None:
 
     async def _fetch() -> tuple[str, str, str | None, str | None] | None:
         async with async_session_factory() as session:
+            from app.repositories.notification_preferences import (
+                NotificationPreferencesRepository,
+            )
+
             n_repo = NotificationRepository(session)
             u_repo = UserRepository(session)
+            prefs_repo = NotificationPreferencesRepository(session)
             n = await n_repo.get_by_id(uuid.UUID(notification_id))
             if not n:
                 return None
             recipient = await u_repo.get_by_id(n.user_id)
             if not recipient:
                 return None
+            prefs = await prefs_repo.get_or_default(n.user_id)
+            notif_type = str(n.type)
+            if notif_type == "like" and not prefs.email_like:
+                return None
+            if notif_type in ("comment", "reply") and not prefs.email_comment:
+                return None
+            if notif_type == "follow" and not prefs.email_follow:
+                return None
             actor_name = n.actor.username if n.actor else None
-            return recipient.email, str(n.type), actor_name, n.body
+            return recipient.email, notif_type, actor_name, n.body
 
     result = asyncio.run(_fetch())
     if not result:

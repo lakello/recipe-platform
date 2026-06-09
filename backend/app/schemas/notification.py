@@ -47,3 +47,15 @@ class NotificationPage(BaseModel):
 
 class UnreadCount(BaseModel):
     count: int
+
+
+class NotificationPreferencesRead(BaseModel):
+    email_like: bool
+    email_comment: bool
+    email_follow: bool
+
+
+class NotificationPreferencesUpdate(BaseModel):
+    email_like: bool | None = None
+    email_comment: bool | None = None
+    email_follow: bool | None = None
