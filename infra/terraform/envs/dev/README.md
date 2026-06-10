@@ -20,9 +20,10 @@ envs/dev/
 
 ## Подключённые модули
 
-| Модуль    | Назначение                                      |
-|-----------|-------------------------------------------------|
-| `network` | VPC, subnets, NAT gateway, security groups      |
+| Модуль       | Назначение                                                   |
+|--------------|--------------------------------------------------------------|
+| `network`    | VPC, subnets, NAT gateway, security groups                   |
+| `kubernetes` | Managed Kubernetes cluster, node groups system и app         |
 
 ## Команды
 
@@ -48,3 +49,4 @@ make help     # список команд
 | `availability_zones`  | Зоны доступности                    |
 | `public_subnet_cidr`  | CIDR публичной подсети              |
 | `private_subnet_cidr` | CIDR приватной подсети              |
+| `k8s_version`         | Версия Kubernetes                   |
