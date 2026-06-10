@@ -125,3 +125,53 @@ resource "yandex_vpc_security_group" "database_sg" {
     security_group_id = yandex_vpc_security_group.private_sg.id
   }
 }
+
+resource "yandex_vpc_security_group" "kubernetes_sg" {
+  name        = "${var.environment}-kubernetes-sg"
+  description = "Группа безопасности для Kubernetes узлов в окружении ${var.environment}"
+  network_id  = yandex_vpc_network.this.id
+
+  labels = var.instance_tags
+
+  egress {
+    protocol       = "ANY"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+    from_port      = 0
+    to_port        = 65535
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "Доступ к Kubernetes API серверу"
+    port           = 443
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "kubelet API для управления узлами"
+    port           = 10250
+    v4_cidr_blocks = [var.public_subnet_cidr, var.private_subnet_cidr]
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "Доступ к узлам Kubernetes для приложений и сервисов внутри кластера"
+    from_port      = 30000
+    to_port        = 32767
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    protocol       = "ICMP"
+    description    = "для healthcheck от балансировщика"
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    protocol          = "ANY"
+    description       = "для обмена данными между узлами кластера"
+    v4_cidr_blocks    = [var.public_subnet_cidr, var.private_subnet_cidr]
+    security_group_id = yandex_vpc_security_group.kubernetes_sg.id
+  }
+}

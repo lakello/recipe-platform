@@ -27,3 +27,8 @@ output "database_sg_id" {
   value       = yandex_vpc_security_group.database_sg.id
   description = "Идентификатор созданной группы безопасности базы данных"
 }
+
+output "kubernetes_sg_id" {
+  value       = yandex_vpc_security_group.kubernetes_sg.id
+  description = "Идентификатор созданной группы безопасности для Kubernetes узлов"
+}
