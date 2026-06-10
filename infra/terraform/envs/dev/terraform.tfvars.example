@@ -1,2 +1,11 @@
 cloud_id  = "YCAGV1234567890"
 folder_id = "YCAGV1234567890"
+
+environment = ""
+availability_zones = ["1", "2"]
+instance_tags = {
+  "env" = ""
+  "project" = "recipe-platform"
+}
+public_subnet_cidr = "10.10.1.0/24"
+private_subnet_cidr = "10.10.2.0/24"
