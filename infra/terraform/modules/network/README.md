@@ -13,6 +13,7 @@ Terraform-модуль для создания сетевой инфрастру
   - `public_sg` — разрешает входящий HTTP (80) и HTTPS (443) из интернета
   - `private_sg` — разрешает внутренний трафик внутри VPC
   - `database_sg` — разрешает доступ к PostgreSQL (5432) и Redis (6379) только из `private_sg`
+  - `kubernetes_sg` — правила для Kubernetes нод: API server (443), kubelet (10250), NodePort (30000–32767), ICMP, node-to-node трафик
 
 ## Переменные
 
@@ -34,6 +35,7 @@ Terraform-модуль для создания сетевой инфрастру
 | `public_sg_id`    | ID публичной security group     |
 | `private_sg_id`   | ID приватной security group     |
 | `database_sg_id`  | ID security group для БД        |
+| `kubernetes_sg_id`| ID security group для Kubernetes|
 
 ## Использование
 
