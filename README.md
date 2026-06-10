@@ -37,7 +37,8 @@
 | Android | ⏳ Планируется |
 | Desktop | ⏳ Планируется |
 | Инфраструктура: Terraform базовая структура | ✅ Готово |
-| Инфраструктура: Terraform модули (network, k8s, postgres, redis, ...) | ⏳ Планируется |
+| Инфраструктура: Terraform модуль network (VPC, subnets, NAT, security groups) | ✅ Готово |
+| Инфраструктура: Terraform модули (kubernetes, postgres, redis, ...) | ⏳ Планируется |
 | Инфраструктура: Ansible, Helm, CI/CD | ⏳ Планируется |
 | CI/CD | ⏳ Планируется |
 
