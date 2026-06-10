@@ -291,10 +291,13 @@ terraform.rc
 # Terraform variable files may contain secrets
 *.tfvars
 *.tfvars.json
+*.hcl
 
 # Allow non-secret examples
 !*.tfvars.example
 !*.tfvars.json.example
+!*.hcl.example
+!**/.terraform.lock.hcl
 
 # =========================
 # Ansible
