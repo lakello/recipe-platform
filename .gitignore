@@ -473,3 +473,4 @@ temp/
 # MCP конфиг (содержит строку подключения к БД)
 .mcp.json
 .obsidian/
+infra/terraform/modules/**/.terraform.lock.hcl
