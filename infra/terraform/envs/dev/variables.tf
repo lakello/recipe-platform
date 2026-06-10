@@ -32,3 +32,8 @@ variable "private_subnet_cidr" {
   description = "CIDR блок для приватной подсети"
   type        = string
 }
+
+variable "k8s_version" {
+  description = "Версия Kubernetes"
+  type        = string
+}

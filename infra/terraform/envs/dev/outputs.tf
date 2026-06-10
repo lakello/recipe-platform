@@ -29,3 +29,30 @@ output "database_sg_id" {
   value       = module.network.database_sg_id
   description = "Идентификатор созданной группы безопасности базы данных"
 }
+
+output "kubernetes_sg_id" {
+  value       = module.network.kubernetes_sg_id
+  description = "Идентификатор созданной группы безопасности для Kubernetes узлов"
+}
+
+#kubernetes module
+
+output "cluster_id" {
+  value       = module.kubernetes.cluster_id
+  description = "Идентификатор созданного кластера Kubernetes"
+}
+
+output "cluster_name" {
+  value       = module.kubernetes.cluster_name
+  description = "Имя созданного кластера Kubernetes"
+}
+
+output "system_node_group_id" {
+  value       = module.kubernetes.system_node_group_id
+  description = "Идентификатор созданной системной группы узлов Kubernetes"
+}
+
+output "app_node_group_id" {
+  value       = module.kubernetes.app_node_group_id
+  description = "Идентификатор созданной группы узлов для приложений Kubernetes"
+}
