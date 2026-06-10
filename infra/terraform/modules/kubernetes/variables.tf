@@ -7,7 +7,7 @@ variable "environment" {
 variable "k8s_version" {
   type        = string
   description = "Версия Kubernetes для кластера и групп узлов"
-  default     = "1.28"
+  default     = "1.33"
 }
 
 
@@ -48,13 +48,13 @@ variable "node_memory" {
 variable "node_disk_type" {
   type        = string
   description = "Тип диска для нод (network-ssd для скорости, network-hdd для экономии)"
-  default     = "network-ssd"
+  default     = "network-hdd"
 }
 
 variable "node_disk_size" {
   type        = number
   description = "Размер диска ноды в гигабайтах"
-  default     = 64
+  default     = 30
 }
 
 

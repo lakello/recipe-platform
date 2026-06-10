@@ -12,6 +12,7 @@ module "kubernetes" {
   environment        = var.environment
   availability_zones = var.availability_zones
   folder_id          = var.folder_id
+  k8s_version        = var.k8s_version
   vpc_id             = module.network.vpc_id
 
   subnet_ids = [

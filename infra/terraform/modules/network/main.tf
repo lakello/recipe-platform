@@ -169,9 +169,8 @@ resource "yandex_vpc_security_group" "kubernetes_sg" {
   }
 
   ingress {
-    protocol          = "ANY"
-    description       = "для обмена данными между узлами кластера"
-    v4_cidr_blocks    = [var.public_subnet_cidr, var.private_subnet_cidr]
-    security_group_id = yandex_vpc_security_group.kubernetes_sg.id
+    protocol       = "ANY"
+    description    = "для обмена данными между узлами кластера"
+    v4_cidr_blocks = [var.public_subnet_cidr, var.private_subnet_cidr]
   }
 }
