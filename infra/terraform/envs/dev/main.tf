@@ -1,5 +1,6 @@
 module "network" {
-  source              = "../../modules/network"
+  source = "../../modules/network"
+
   environment         = var.environment
   instance_tags       = var.instance_tags
   availability_zones  = var.availability_zones
@@ -8,7 +9,8 @@ module "network" {
 }
 
 module "kubernetes" {
-  source             = "../../modules/kubernetes"
+  source = "../../modules/kubernetes"
+
   environment        = var.environment
   availability_zones = var.availability_zones
   folder_id          = var.folder_id
@@ -43,4 +45,18 @@ module "postgres" {
   security_group_ids = [
     module.network.database_sg_id,
   ]
+}
+
+module "redis" {
+  source = "../../modules/redis"
+
+  cluster_name = "recipe-platform-redis-${var.environment}"
+  environment  = var.environment
+  network_id   = module.network.vpc_id
+  zone         = var.availability_zones[0]
+  subnet_id    = module.network.private_subnet_id
+  security_group_ids = [
+    module.network.database_sg_id,
+  ]
+  redis_password = var.redis_password
 }
