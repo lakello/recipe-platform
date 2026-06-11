@@ -24,6 +24,7 @@ envs/dev/
 |--------------|--------------------------------------------------------------|
 | `network`    | VPC, subnets, NAT gateway, security groups                   |
 | `kubernetes` | Managed Kubernetes cluster, node groups system и app         |
+| `postgres`   | Managed PostgreSQL кластер, БД и пользователь приложения     |
 
 ## Команды
 
@@ -50,3 +51,6 @@ make help     # список команд
 | `public_subnet_cidr`  | CIDR публичной подсети              |
 | `private_subnet_cidr` | CIDR приватной подсети              |
 | `k8s_version`         | Версия Kubernetes                   |
+| `database_name`       | Имя базы данных PostgreSQL          |
+| `database_user`       | Имя пользователя БД                 |
+| `database_password`   | Пароль пользователя БД (sensitive)  |
