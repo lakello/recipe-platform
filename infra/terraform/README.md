@@ -149,8 +149,7 @@ infra/terraform/
   modules/
     network/        # VPC, subnets, route tables, NAT, security groups ✅
     kubernetes/     # Managed Kubernetes cluster и node groups ✅
-    kubernetes/     # Yandex Managed Kubernetes cluster и node groups
-    postgres/       # Yandex Managed PostgreSQL
+    postgres/       # Yandex Managed PostgreSQL ✅
     redis/          # Yandex Managed Redis
     object-storage/ # Object Storage buckets
     compute/        # Compute instance (bastion / self-hosted runner)
@@ -744,5 +743,6 @@ Terraform outputs должны отдавать только несекретн�
 - Реализован модуль `network`: VPC, public/private subnets, NAT gateway, route table, security groups.
 - Реализован модуль `kubernetes`: Managed Kubernetes cluster, node groups system и app, autoscaling, kubernetes_sg.
 - Оба модуля подключены в `envs/dev`. Кластер запущен, ноды в статусе Ready.
+- Реализован модуль `postgres`: Managed PostgreSQL кластер, БД и пользователь приложения, backup window, retention 7 дней, доступ ограничен `database_sg`.
 
-Следующий шаг: реализация модуля `postgres`.
+Следующий шаг: реализация модуля `redis`.
