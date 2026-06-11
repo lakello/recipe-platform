@@ -15,3 +15,4 @@ k8s_version = "1.33"
 database_name     = "recipe_platform_db"
 database_user     = "db_user"
 database_password = "secure_password" # pragma: allowlist secret
+redis_password    = "secure_redis_password" # pragma: allowlist secret
