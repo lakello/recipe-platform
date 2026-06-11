@@ -78,3 +78,15 @@ output "db_user" {
   description = "Имя пользователя базы данных"
   value       = module.postgres.db_user
 }
+
+#redis module
+
+output "redis_cluster_id" {
+  description = "ID кластера Redis"
+  value       = module.redis.cluster_id
+}
+
+output "redis_fqdn" {
+  description = "Полное доменное имя кластера Redis"
+  value       = module.redis.fqdn
+}
