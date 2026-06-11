@@ -25,6 +25,7 @@ envs/dev/
 | `network`    | VPC, subnets, NAT gateway, security groups                   |
 | `kubernetes` | Managed Kubernetes cluster, node groups system и app         |
 | `postgres`   | Managed PostgreSQL кластер, БД и пользователь приложения     |
+| `redis`      | Managed Redis кластер с паролем и ограничением доступа       |
 
 ## Команды
 
@@ -54,3 +55,4 @@ make help     # список команд
 | `database_name`       | Имя базы данных PostgreSQL          |
 | `database_user`       | Имя пользователя БД                 |
 | `database_password`   | Пароль пользователя БД (sensitive)  |
+| `redis_password`      | Пароль доступа к Redis (sensitive)  |
