@@ -53,3 +53,9 @@ variable "database_password" {
   type        = string
   sensitive   = true
 }
+
+variable "redis_password" {
+  description = "Пароль для доступа к Redis"
+  type        = string
+  sensitive   = true
+}
