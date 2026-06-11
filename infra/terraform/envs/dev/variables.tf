@@ -59,3 +59,14 @@ variable "redis_password" {
   type        = string
   sensitive   = true
 }
+
+variable "service_access_id" {
+  description = "ID сервисного аккаунта для доступа к Yandex Object Storage"
+  type        = string
+}
+
+variable "service_access_key" {
+  description = "Ключ сервисного аккаунта для доступа к Yandex Object Storage"
+  type        = string
+  sensitive   = true
+}
