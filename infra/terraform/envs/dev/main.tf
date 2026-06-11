@@ -27,3 +27,20 @@ module "kubernetes" {
     module.network.kubernetes_sg_id,
   ]
 }
+
+module "postgres" {
+  source = "../../modules/postgres"
+
+  cluster_name      = "recipe-platform-postgres-${var.environment}"
+  environment       = var.environment
+  folder_id         = var.folder_id
+  database_name     = var.database_name
+  database_user     = var.database_user
+  database_password = var.database_password
+  network_id        = module.network.vpc_id
+  zone              = var.availability_zones[1]
+  subnet_id         = module.network.private_subnet_id
+  security_group_ids = [
+    module.network.database_sg_id,
+  ]
+}

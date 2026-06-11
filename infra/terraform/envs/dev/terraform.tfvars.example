@@ -11,3 +11,7 @@ public_subnet_cidr  = "10.10.1.0/24"
 private_subnet_cidr = "10.10.2.0/24"
 
 k8s_version = "1.33"
+
+database_name     = "recipe_platform_db"
+database_user     = "db_user"
+database_password = "secure_password" # pragma: allowlist secret
