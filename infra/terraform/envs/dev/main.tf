@@ -53,10 +53,23 @@ module "redis" {
   cluster_name = "recipe-platform-redis-${var.environment}"
   environment  = var.environment
   network_id   = module.network.vpc_id
-  zone         = var.availability_zones[0]
+  zone         = var.availability_zones[1]
   subnet_id    = module.network.private_subnet_id
   security_group_ids = [
     module.network.database_sg_id,
   ]
   redis_password = var.redis_password
+}
+
+module "object_storage" {
+  source = "../../modules/object-storage"
+
+  bucket_config = {
+    "recipe-platform-bucket-${var.environment}" = {
+      versioning = var.environment == "prod" ? true : false
+    }
+  }
+  access_key = var.service_access_id
+  secret_key = var.service_access_key
+  folder_id  = var.folder_id
 }

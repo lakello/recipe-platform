@@ -90,3 +90,16 @@ output "redis_fqdn" {
   description = "Полное доменное имя кластера Redis"
   value       = module.redis.fqdn
 }
+
+#object-storage module
+
+output "object_storage_access_key_id" {
+  value       = module.object_storage.access_key_id
+  description = "ID статического ключа доступа для Object Storage"
+}
+
+output "object_storage_secret_access_key" {
+  value       = module.object_storage.secret_access_key
+  description = "Секретный ключ для доступа к Object Storage"
+  sensitive   = true
+}
