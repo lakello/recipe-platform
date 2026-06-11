@@ -37,7 +37,7 @@ output "kubernetes_sg_id" {
 
 #kubernetes module
 
-output "cluster_id" {
+output "kubernetes_cluster_id" {
   value       = module.kubernetes.cluster_id
   description = "Идентификатор созданного кластера Kubernetes"
 }
@@ -55,4 +55,26 @@ output "system_node_group_id" {
 output "app_node_group_id" {
   value       = module.kubernetes.app_node_group_id
   description = "Идентификатор созданной группы узлов для приложений Kubernetes"
+}
+
+#postgres module
+
+output "postgres_cluster_id" {
+  description = "ID кластера PostgreSQL"
+  value       = module.postgres.cluster_id
+}
+
+output "fqdn" {
+  description = "Полное доменное имя кластера PostgreSQL"
+  value       = module.postgres.fqdn
+}
+
+output "db_name" {
+  description = "Имя базы данных"
+  value       = module.postgres.db_name
+}
+
+output "db_user" {
+  description = "Имя пользователя базы данных"
+  value       = module.postgres.db_user
 }
