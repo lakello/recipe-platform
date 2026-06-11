@@ -20,12 +20,13 @@ envs/dev/
 
 ## Подключённые модули
 
-| Модуль       | Назначение                                                   |
-|--------------|--------------------------------------------------------------|
-| `network`    | VPC, subnets, NAT gateway, security groups                   |
-| `kubernetes` | Managed Kubernetes cluster, node groups system и app         |
-| `postgres`   | Managed PostgreSQL кластер, БД и пользователь приложения     |
-| `redis`      | Managed Redis кластер с паролем и ограничением доступа       |
+| Модуль           | Назначение                                                   |
+|------------------|--------------------------------------------------------------|
+| `network`        | VPC, subnets, NAT gateway, security groups                   |
+| `kubernetes`     | Managed Kubernetes cluster, node groups system и app         |
+| `postgres`       | Managed PostgreSQL кластер, БД и пользователь приложения     |
+| `redis`          | Managed Redis кластер с паролем и ограничением доступа       |
+| `object_storage` | Object Storage bucket, service account, IAM, static keys     |
 
 ## Команды
 
@@ -56,3 +57,5 @@ make help     # список команд
 | `database_user`       | Имя пользователя БД                 |
 | `database_password`   | Пароль пользователя БД (sensitive)  |
 | `redis_password`      | Пароль доступа к Redis (sensitive)  |
+| `service_access_id`   | Access key ID для S3 API (Object Storage) |
+| `service_access_key`  | Secret key для S3 API (sensitive)   |
