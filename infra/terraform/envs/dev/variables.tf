@@ -37,3 +37,19 @@ variable "k8s_version" {
   description = "Версия Kubernetes"
   type        = string
 }
+
+variable "database_name" {
+  description = "Имя базы данных"
+  type        = string
+}
+
+variable "database_user" {
+  description = "Имя пользователя базы данных"
+  type        = string
+}
+
+variable "database_password" {
+  description = "Пароль пользователя базы данных"
+  type        = string
+  sensitive   = true
+}
