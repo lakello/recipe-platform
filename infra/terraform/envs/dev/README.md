@@ -9,6 +9,7 @@ envs/dev/
   providers.tf              # Yandex Cloud provider (yandex-cloud/yandex ~> 0.206)
   backend.tf                # S3 remote backend (Yandex Object Storage)
   backend.hcl.example       # шаблон credentials для backend (не коммитится)
+  data.tf                   # data sources (yandex_compute_image для bastion)
   main.tf                   # подключение модулей
   variables.tf              # входные переменные окружения
   outputs.tf                # outputs окружения
@@ -27,6 +28,7 @@ envs/dev/
 | `postgres`       | Managed PostgreSQL кластер, БД и пользователь приложения     |
 | `redis`          | Managed Redis кластер с паролем и ограничением доступа       |
 | `object_storage` | Object Storage bucket, service account, IAM, static keys     |
+| `compute`        | Bastion/self-hosted runner VM, static IP, security group     |
 
 ## Команды
 
@@ -59,3 +61,5 @@ make help     # список команд
 | `redis_password`      | Пароль доступа к Redis (sensitive)  |
 | `service_access_id`   | Access key ID для S3 API (Object Storage) |
 | `service_access_key`  | Secret key для S3 API (sensitive)   |
+| `alloved_ssh_cidr`    | CIDR вашего IP для доступа к bastion по SSH (например, `1.2.3.4/32`) |
+| `ssh_public_key`      | Публичный SSH-ключ для авторизации на bastion |
