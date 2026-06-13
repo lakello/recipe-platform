@@ -70,3 +70,13 @@ variable "service_access_key" {
   type        = string
   sensitive   = true
 }
+
+variable "alloved_ssh_cidr" {
+  description = "Разрешённый SSH IP "
+  type        = string
+}
+
+variable "ssh_public_key" {
+  description = "Публичный ключ SSH"
+  type        = string
+}

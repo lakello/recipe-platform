@@ -103,3 +103,20 @@ output "object_storage_secret_access_key" {
   description = "Секретный ключ для доступа к Object Storage"
   sensitive   = true
 }
+
+#compute module
+
+output "bastion_instance_id" {
+  description = "ID созданного инстанса"
+  value       = module.compute.instance_id
+}
+
+output "bastion_public_ip" {
+  description = "Статический публичный IP-адрес (для Ansible-инвентаря)"
+  value       = module.compute.public_ip
+}
+
+output "bastion_internal_ip" {
+  description = "Внутренний IP-адрес инстанса"
+  value       = module.compute.internal_ip
+}
