@@ -73,3 +73,13 @@ module "object_storage" {
   secret_key = var.service_access_key
   folder_id  = var.folder_id
 }
+
+module "compute" {
+  source = "../../modules/compute"
+
+  subnet_id        = module.network.public_subnet_id
+  allowed_ssh_cidr = var.alloved_ssh_cidr
+  network_id       = module.network.vpc_id
+  ssh_public_key   = var.ssh_public_key
+  image_id         = data.yandex_compute_image.bastion_image_ubuntu.id
+}
