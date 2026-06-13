@@ -22,3 +22,5 @@ service_access_key = ""
 
 alloved_ssh_cidr = ""
 ssh_public_key = ""
+
+dns_zone_name = ""

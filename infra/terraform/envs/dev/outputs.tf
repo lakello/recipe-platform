@@ -120,3 +120,15 @@ output "bastion_internal_ip" {
   description = "Внутренний IP-адрес инстанса"
   value       = module.compute.internal_ip
 }
+
+#dns module
+
+output "dns_zone_id" {
+  description = "ID созданной DNS-зоны"
+  value       = module.dns.zone_id
+}
+
+output "dns_name_servers" {
+  description = "Список авторитетных DNS-серверов Yandex Cloud"
+  value       = module.dns.name_servers
+}
