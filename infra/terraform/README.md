@@ -59,19 +59,22 @@ Terraform не должен:
 Yandex Cloud
 ```
 
-Планируемые сервисы:
+Сервисы Yandex Cloud:
 
-- Yandex VPC;
-- Yandex Managed Kubernetes;
-- Yandex Managed PostgreSQL;
-- Yandex Managed Redis;
-- Yandex Object Storage;
-- Yandex DNS;
-- Yandex Certificate Manager, если потребуется;
-- Yandex Lockbox;
-- Yandex Compute Cloud;
-- Yandex Monitoring;
-- Yandex Cloud Logging.
+| Сервис | Terraform-модуль | Статус |
+|---|---|---|
+| Yandex VPC | `modules/network` | ✅ Готово |
+| Yandex Managed Kubernetes | `modules/kubernetes` | ✅ Готово |
+| Yandex Managed PostgreSQL | `modules/postgres` | ✅ Готово |
+| Yandex Managed Redis | `modules/redis` | ✅ Готово |
+| Yandex Object Storage | `modules/object-storage` | ✅ Готово |
+| Yandex DNS | `modules/dns` | ✅ Готово |
+| Yandex Compute Cloud (bastion / runner VM) | `modules/compute` | ✅ Готово |
+| Service accounts / IAM | `modules/iam` | ⏳ Планируется |
+| Yandex Certificate Manager | — | ⏳ Планируется |
+| Yandex Lockbox | — | ⏳ Планируется |
+| Yandex Monitoring | — | ⏳ Планируется |
+| Yandex Cloud Logging | — | ⏳ Планируется |
 
 ## Окружения
 
@@ -85,7 +88,7 @@ prod
 
 Окружение `local` не создаётся Terraform — оно запускается через Docker Compose.
 
-### Dev
+### Dev ✅ Реализовано
 
 Используется для автоматического деплоя из ветки `develop`.
 
@@ -96,9 +99,11 @@ prod
 - отдельный bucket;
 - отдельные secrets;
 - отдельный Kubernetes namespace;
-- можно использовать preemptible nodes, если подходит.
+- можно использовать preemptible nodes.
 
-### Staging
+Все модули подключены в `envs/dev/main.tf`. Конфигурация готова к `terraform apply`.
+
+### Staging 🚧 В работе
 
 Production-like окружение для проверки релизов.
 
@@ -112,7 +117,9 @@ Production-like окружение для проверки релизов.
 - нагрузочные smoke tests;
 - деплой из `release/*`.
 
-### Production
+Текущий статус: есть backend.tf, providers.tf и Makefile. `main.tf` с подключением модулей не создан — конфигурация требует доработки.
+
+### Production 🚧 В работе
 
 Публичное стабильное окружение.
 
@@ -127,6 +134,8 @@ Production-like окружение для проверки релизов.
 - отдельные secrets;
 - ограниченный доступ;
 - осторожное применение Terraform изменений.
+
+Текущий статус: есть backend.tf, providers.tf и Makefile. `main.tf` с подключением модулей не создан — конфигурация требует доработки.
 
 ## Структура
 
@@ -143,18 +152,18 @@ infra/terraform/
       terraform.tfvars.example
       Makefile                    # init/plan/apply/destroy/fmt/validate
     staging/
-      terraform.tfvars.example
+      backend.tf, backend.hcl.example, providers.tf, Makefile  # main.tf не создан
     prod/
-      terraform.tfvars.example
+      backend.tf, backend.hcl.example, providers.tf, Makefile  # main.tf не создан
   modules/
     network/        # VPC, subnets, route tables, NAT, security groups ✅
     kubernetes/     # Managed Kubernetes cluster и node groups ✅
     postgres/       # Yandex Managed PostgreSQL ✅
     redis/          # Yandex Managed Redis ✅
-    object-storage/ # Object Storage buckets ✅
+    object-storage/ # Object Storage buckets, service account, IAM, static keys ✅
     compute/        # Compute instance (bastion / self-hosted runner) ✅
-    dns/            # DNS-записи ✅
-    iam/            # Service accounts и IAM-права
+    dns/            # DNS-зона, A-записи, wildcard ✅
+    iam/            # Service accounts и IAM-права ⏳ (пустые файлы)
   README.md
 ```
 
