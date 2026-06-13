@@ -29,6 +29,7 @@ envs/dev/
 | `redis`          | Managed Redis кластер с паролем и ограничением доступа       |
 | `object_storage` | Object Storage bucket, service account, IAM, static keys     |
 | `compute`        | Bastion/self-hosted runner VM, static IP, security group     |
+| `dns`            | Публичная DNS-зона, A-записи для поддоменов, wildcard        |
 
 ## Команды
 
@@ -63,3 +64,4 @@ make help     # список команд
 | `service_access_key`  | Secret key для S3 API (sensitive)   |
 | `alloved_ssh_cidr`    | CIDR вашего IP для доступа к bastion по SSH (например, `1.2.3.4/32`) |
 | `ssh_public_key`      | Публичный SSH-ключ для авторизации на bastion |
+| `dns_zone_name`       | DNS-зона в формате FQDN с точкой на конце (например, `example.com.`) |
