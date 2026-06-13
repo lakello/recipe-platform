@@ -1,0 +1,26 @@
+cloud_id  = "YCAGV1234567890"
+folder_id = "YCAGV1234567890"
+
+environment = ""
+availability_zones = ["1", "2"]
+instance_tags = {
+  "env" = ""
+  "project" = "recipe-platform"
+}
+public_subnet_cidr  = "10.10.1.0/24"
+private_subnet_cidr = "10.10.2.0/24"
+
+k8s_version = "1.33"
+
+database_name     = "recipe_platform_db"
+database_user     = "db_user"
+database_password = "secure_password" # pragma: allowlist secret
+redis_password    = "secure_redis_password" # pragma: allowlist secret
+
+service_access_id = ""
+service_access_key = ""
+
+alloved_ssh_cidr = ""
+ssh_public_key = ""
+
+dns_zone_name = ""
