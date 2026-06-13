@@ -83,3 +83,13 @@ module "compute" {
   ssh_public_key   = var.ssh_public_key
   image_id         = data.yandex_compute_image.bastion_image_ubuntu.id
 }
+
+module "dns" {
+  source = "../../modules/dns"
+
+  zone_name  = var.dns_zone_name
+  ingress_ip = module.compute.public_ip
+
+  subdomains      = ["", "dev", "staging", "api", "grafana"]
+  create_wildcard = true
+}
