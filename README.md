@@ -39,9 +39,17 @@
 | Инфраструктура: Terraform базовая структура | ✅ Готово |
 | Инфраструктура: Terraform модуль network (VPC, subnets, NAT, security groups) | ✅ Готово |
 | Инфраструктура: Terraform модуль kubernetes (Managed K8s, node groups, autoscaling) | ✅ Готово |
-| Инфраструктура: Terraform модули (postgres, redis, ...) | ⏳ Планируется |
-| Инфраструктура: Ansible, Helm, CI/CD | ⏳ Планируется |
-| CI/CD | ⏳ Планируется |
+| Инфраструктура: Terraform модуль postgres (Managed PostgreSQL, БД, пользователь) | ✅ Готово |
+| Инфраструктура: Terraform модуль redis (Managed Redis) | ✅ Готово |
+| Инфраструктура: Terraform модуль object-storage (bucket, service account, IAM, ключи) | ✅ Готово |
+| Инфраструктура: Terraform модуль compute (bastion / self-hosted runner, static IP) | ✅ Готово |
+| Инфраструктура: Terraform модуль dns (публичная зона, A-записи, wildcard) | ✅ Готово |
+| Инфраструктура: Terraform окружение dev (все модули подключены, Makefile) | ✅ Готово |
+| Инфраструктура: Terraform окружения staging / prod (базовая структура) | 🚧 В работе |
+| Инфраструктура: Terraform модуль iam (service accounts, IAM-права) | ⏳ Планируется |
+| Инфраструктура: Ansible (настройка Linux VM, hardening, runner) | ⏳ Планируется |
+| Инфраструктура: Helm charts (деплой в Kubernetes) | ⏳ Планируется |
+| CI/CD (GitHub Actions workflows) | ⏳ Планируется |
 
 ## Цели проекта
 
