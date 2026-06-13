@@ -80,3 +80,8 @@ variable "ssh_public_key" {
   description = "Публичный ключ SSH"
   type        = string
 }
+
+variable "dns_zone_name" {
+  description = "Имя DNS-зоны"
+  type        = string
+}
