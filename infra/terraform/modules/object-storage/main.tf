@@ -36,19 +36,3 @@ resource "yandex_storage_bucket" "bucket" {
     max_age_seconds = 3000
   }
 }
-
-resource "yandex_iam_service_account" "service_account" {
-  name        = "object-storage-service-account"
-  description = "Service account for Object Storage access"
-}
-
-resource "yandex_resourcemanager_folder_iam_member" "folder_member" {
-  folder_id = var.folder_id
-  role      = "storage.editor"
-  member    = "serviceAccount:${yandex_iam_service_account.service_account.id}"
-}
-
-resource "yandex_iam_service_account_static_access_key" "access_key" {
-  service_account_id = yandex_iam_service_account.service_account.id
-  description        = "Static access key for Object Storage"
-}

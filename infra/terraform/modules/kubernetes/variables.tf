@@ -75,12 +75,19 @@ variable "autoscaling_config" {
 
 
 
-variable "folder_id" {
-  type        = string
-  description = "ID папки в Yandex.Cloud, где будет создан кластер"
-}
-
 variable "availability_zones" {
   description = "Зоны доступности"
   type        = list(string)
+}
+
+
+
+variable "cluster_sa_id" {
+  description = "ID сервисного аккаунта для кластера"
+  type        = string
+}
+
+variable "node_sa_id" {
+  description = "ID сервисного аккаунта для нод"
+  type        = string
 }
