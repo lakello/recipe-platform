@@ -4,10 +4,11 @@ Terraform-модуль для создания Managed Kubernetes кластер
 
 ## Что создаёт модуль
 
-- **Service account** — аккаунт для управления кластером с ролями `k8s.clusters.agent`, `k8s.tunnelClusters.agent`, `vpc.publicAdmin`, `container-registry.images.puller`
 - **Kubernetes cluster** — Managed Kubernetes с публичным endpoint у master
 - **Node group `system`** — фиксированные 2 ноды для системных компонентов (Ingress, CoreDNS), taint `CriticalAddonsOnly=true:NoSchedule`
 - **Node group `app`** — автоскейлинг-группа для приложений (backend, frontend, workers), preemptible в non-prod
+
+Сервисные аккаунты создаются вне модуля — в `modules/iam` — и передаются через переменные `cluster_sa_id` и `node_sa_id`.
 
 ## Размещение нод
 
@@ -18,7 +19,8 @@ Terraform-модуль для создания Managed Kubernetes кластер
 | Переменная            | Тип          | Описание                                        | Дефолт         |
 |-----------------------|--------------|-------------------------------------------------|----------------|
 | `environment`         | string       | Название окружения                              | `"dev"`        |
-| `folder_id`           | string       | ID папки в Yandex Cloud                         | —              |
+| `cluster_sa_id`       | string       | ID SA для управления кластером (из модуля iam)  | —              |
+| `node_sa_id`          | string       | ID SA для нод (из модуля iam)                   | —              |
 | `k8s_version`         | string       | Версия Kubernetes                               | `"1.33"`       |
 | `vpc_id`              | string       | ID VPC сети                                     | —              |
 | `subnet_ids`          | list(string) | IDs подсетей (index 0 — public, 1 — private)    | —              |
@@ -46,10 +48,11 @@ Terraform-модуль для создания Managed Kubernetes кластер
 module "kubernetes" {
   source             = "../../modules/kubernetes"
   environment        = var.environment
-  folder_id          = var.folder_id
   k8s_version        = var.k8s_version
   availability_zones = var.availability_zones
   vpc_id             = module.network.vpc_id
+  cluster_sa_id      = module.iam.k8s_cluster_sa_id
+  node_sa_id         = module.iam.k8s_node_sa_id
 
   subnet_ids = [
     module.network.public_subnet_id,
