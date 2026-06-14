@@ -91,19 +91,6 @@ output "redis_fqdn" {
   value       = module.redis.fqdn
 }
 
-#object-storage module
-
-output "object_storage_access_key_id" {
-  value       = module.object_storage.access_key_id
-  description = "ID статического ключа доступа для Object Storage"
-}
-
-output "object_storage_secret_access_key" {
-  value       = module.object_storage.secret_access_key
-  description = "Секретный ключ для доступа к Object Storage"
-  sensitive   = true
-}
-
 #compute module
 
 output "bastion_instance_id" {
@@ -131,4 +118,21 @@ output "dns_zone_id" {
 output "dns_name_servers" {
   description = "Список авторитетных DNS-серверов Yandex Cloud"
   value       = module.dns.name_servers
+}
+
+#iam module
+
+output "object_storage_access_key_id" {
+  value       = module.iam.access_key_id
+  description = "ID статического ключа доступа для Object Storage"
+}
+
+output "object_storage_secret_access_key" {
+  value       = module.iam.secret_access_key
+  description = "Секретный ключ для доступа к Object Storage"
+  sensitive   = true
+}
+
+output "cicd_sa_id" {
+  value = module.iam.cicd_sa_id
 }
