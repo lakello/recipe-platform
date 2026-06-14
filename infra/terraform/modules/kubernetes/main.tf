@@ -1,30 +1,10 @@
-resource "yandex_iam_service_account" "k8s_sa" {
-  name        = "${var.environment}-k8s-sa"
-  description = "Сервисный аккаунт для управления кластером и нодами K8s"
-}
-
-resource "yandex_resourcemanager_folder_iam_member" "k8s_roles" {
-  for_each = toset([
-    "k8s.clusters.agent",
-    "k8s.tunnelClusters.agent",
-    "vpc.publicAdmin",
-    "container-registry.images.puller"
-  ])
-
-  folder_id = var.folder_id
-  role      = each.value
-  member    = "serviceAccount:${yandex_iam_service_account.k8s_sa.id}"
-}
-
-
-
 resource "yandex_kubernetes_cluster" "this" {
   name        = "${var.environment}-k8s-cluster"
   description = "Основной кластер Managed Kubernetes"
   network_id  = var.vpc_id
 
-  service_account_id      = yandex_iam_service_account.k8s_sa.id
-  node_service_account_id = yandex_iam_service_account.k8s_sa.id
+  service_account_id      = var.cluster_sa_id
+  node_service_account_id = var.node_sa_id
 
   master {
     version = var.k8s_version
@@ -38,13 +18,7 @@ resource "yandex_kubernetes_cluster" "this" {
 
     public_ip = true
   }
-
-  depends_on = [
-    yandex_resourcemanager_folder_iam_member.k8s_roles
-  ]
 }
-
-
 
 resource "yandex_kubernetes_node_group" "system" {
   cluster_id  = yandex_kubernetes_cluster.this.id
@@ -88,8 +62,6 @@ resource "yandex_kubernetes_node_group" "system" {
     role = "system"
   }
 }
-
-
 
 resource "yandex_kubernetes_node_group" "app" {
   cluster_id  = yandex_kubernetes_cluster.this.id
