@@ -24,10 +24,11 @@ envs/dev/
 | Модуль           | Назначение                                                   |
 |------------------|--------------------------------------------------------------|
 | `network`        | VPC, subnets, NAT gateway, security groups                   |
+| `iam`            | Сервисные аккаунты и IAM-роли для всех компонентов           |
 | `kubernetes`     | Managed Kubernetes cluster, node groups system и app         |
 | `postgres`       | Managed PostgreSQL кластер, БД и пользователь приложения     |
 | `redis`          | Managed Redis кластер с паролем и ограничением доступа       |
-| `object_storage` | Object Storage bucket, service account, IAM, static keys     |
+| `object_storage` | Object Storage bucket с CORS и lifecycle rules               |
 | `compute`        | Bastion/self-hosted runner VM, static IP, security group     |
 | `dns`            | Публичная DNS-зона, A-записи для поддоменов, wildcard        |
 
@@ -60,8 +61,6 @@ make help     # список команд
 | `database_user`       | Имя пользователя БД                 |
 | `database_password`   | Пароль пользователя БД (sensitive)  |
 | `redis_password`      | Пароль доступа к Redis (sensitive)  |
-| `service_access_id`   | Access key ID для S3 API (Object Storage) |
-| `service_access_key`  | Secret key для S3 API (sensitive)   |
 | `alloved_ssh_cidr`    | CIDR вашего IP для доступа к bastion по SSH (например, `1.2.3.4/32`) |
 | `ssh_public_key`      | Публичный SSH-ключ для авторизации на bastion |
 | `dns_zone_name`       | DNS-зона в формате FQDN с точкой на конце (например, `example.com.`) |
