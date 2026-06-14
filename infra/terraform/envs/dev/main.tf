@@ -8,14 +8,23 @@ module "network" {
   private_subnet_cidr = var.private_subnet_cidr
 }
 
+module "iam" {
+  source = "../../modules/iam"
+
+  folder_id = var.folder_id
+  env       = var.environment
+}
+
 module "kubernetes" {
   source = "../../modules/kubernetes"
 
   environment        = var.environment
   availability_zones = var.availability_zones
-  folder_id          = var.folder_id
   k8s_version        = var.k8s_version
   vpc_id             = module.network.vpc_id
+
+  cluster_sa_id = module.iam.k8s_cluster_sa_id
+  node_sa_id    = module.iam.k8s_node_sa_id
 
   subnet_ids = [
     module.network.public_subnet_id,
@@ -69,9 +78,8 @@ module "object_storage" {
       versioning = var.environment == "prod" ? true : false
     }
   }
-  access_key = var.service_access_id
-  secret_key = var.service_access_key
-  folder_id  = var.folder_id
+  access_key = module.iam.access_key_id
+  secret_key = module.iam.secret_access_key
 }
 
 module "compute" {
