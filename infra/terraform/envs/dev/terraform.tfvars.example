@@ -17,9 +17,6 @@ database_user     = "db_user"
 database_password = "secure_password" # pragma: allowlist secret
 redis_password    = "secure_redis_password" # pragma: allowlist secret
 
-service_access_id = ""
-service_access_key = ""
-
 alloved_ssh_cidr = ""
 ssh_public_key = ""
 

@@ -16,11 +16,6 @@ variable "secret_key" {
   sensitive   = true
 }
 
-variable "folder_id" {
-  description = "ID папки в Yandex Cloud для назначения прав доступа"
-  type        = string
-}
-
 variable "allowed_origins" {
   description = "Список разрешенных источников для CORS"
   type        = list(string)
