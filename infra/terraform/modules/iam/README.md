@@ -1,32 +1,60 @@
 # Модуль iam
 
-Terraform-модуль для создания service accounts и управления IAM-правами в Yandex Cloud.
+Terraform-модуль для централизованного управления сервисными аккаунтами и IAM-правами в Yandex Cloud.
 
-## Назначение
+## Что создаёт
 
-Модуль инкапсулирует создание сервисных аккаунтов и назначение IAM-ролей. Разделение IAM-логики в отдельный модуль позволяет переиспользовать его в разных окружениях и чётко управлять правами доступа.
+| Ресурс | Имя | Роли |
+|--------|-----|------|
+| SA для кластера K8s | `{env}-k8s-cluster-sa` | `k8s.clusters.agent`, `k8s.tunnelClusters.agent`, `vpc.publicAdmin` |
+| SA для нод K8s | `{env}-k8s-node-sa` | `container-registry.images.puller` |
+| SA для Object Storage | `{env}-storage-sa` | `storage.editor` |
+| SA для CI/CD | `{env}-cicd-sa` | `container-registry.images.pusher`, `k8s.cluster-api.cluster-admin` |
 
-## Текущий статус
+Для `storage-sa` дополнительно создаётся `yandex_iam_service_account_static_access_key` — статический ключ для S3-совместимого доступа к Object Storage.
 
-⏳ **Не реализован.** Директория содержит пустые файлы-заглушки (`main.tf`, `variables.tf`, `outputs.tf`).
+## Принцип минимальных прав
 
-Функциональность IAM частично покрыта в модуле `object-storage` (создание SA для доступа к бакету) и в модуле `kubernetes` (SA для кластера).
+Кластерный SA и SA нод разделены намеренно: ноды не имеют прав `vpc.publicAdmin` — только доступ к Container Registry для pull образов.
 
-## Планируемый функционал
+## Переменные
 
-- `yandex_iam_service_account` — сервисные аккаунты для компонентов (backend, Kubernetes, CI/CD runner);
-- `yandex_resourcemanager_folder_iam_member` — назначение IAM-ролей;
-- управление static access keys для S3-совместимого доступа.
+| Переменная  | Тип    | Описание                          |
+|-------------|--------|-----------------------------------|
+| `folder_id` | string | ID папки в Yandex Cloud           |
+| `env`       | string | Префикс окружения (dev, stage, prod) |
 
-## Структура
+## Outputs
 
+| Output               | Описание                                  |
+|----------------------|-------------------------------------------|
+| `k8s_cluster_sa_id`  | ID SA для управления кластером K8s        |
+| `k8s_node_sa_id`     | ID SA для нод K8s                         |
+| `storage_sa_id`      | ID SA для Object Storage                  |
+| `cicd_sa_id`         | ID SA для CI/CD pipeline                  |
+| `access_key_id`      | Access key ID для Object Storage (S3 API) |
+| `secret_access_key`  | Secret key для Object Storage (sensitive) |
+
+## Пример использования
+
+```hcl
+module "iam" {
+  source    = "../../modules/iam"
+  folder_id = var.folder_id
+  env       = var.environment
+}
+
+module "kubernetes" {
+  source        = "../../modules/kubernetes"
+  cluster_sa_id = module.iam.k8s_cluster_sa_id
+  node_sa_id    = module.iam.k8s_node_sa_id
+  # ...
+}
+
+module "object_storage" {
+  source     = "../../modules/object-storage"
+  access_key = module.iam.access_key_id
+  secret_key = module.iam.secret_access_key
+  # ...
+}
 ```
-modules/iam/
-  main.tf        # пусто
-  variables.tf   # пусто
-  outputs.tf     # пусто
-```
-
-## Важно для разработки
-
-При реализации модуля опираться на принцип минимальных прав: каждый SA получает только те роли, которые необходимы для его задач.
