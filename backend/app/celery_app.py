@@ -25,6 +25,10 @@ celery_app.conf.update(
         "cleanup-refresh-tokens-daily": {
             "task": "tasks.cleanup_refresh_tokens",
             "schedule": 86400,
-        }
+        },
+        "cleanup-uploads-hourly": {
+            "task": "tasks.cleanup_uploads",
+            "schedule": 3600,
+        },
     },
 )

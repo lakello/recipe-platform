@@ -1,9 +1,10 @@
 import uuid
+from datetime import datetime
 
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.models.photo import RecipePhoto
+from app.models.photo import RecipePhoto, UploadIntent
 
 
 class PhotoRepository:
@@ -35,3 +36,36 @@ class PhotoRepository:
     async def delete(self, photo: RecipePhoto) -> None:
         await self.session.delete(photo)
         await self.session.commit()
+
+    async def create_intent(self, intent: UploadIntent) -> UploadIntent:
+        self.session.add(intent)
+        await self.session.commit()
+        await self.session.refresh(intent)
+        return intent
+
+    async def get_intent(self, upload_id: uuid.UUID) -> UploadIntent | None:
+        result = await self.session.execute(
+            select(UploadIntent).where(UploadIntent.id == upload_id)
+        )
+        return result.scalar_one_or_none()
+
+    async def set_intent_status(self, intent: UploadIntent, status: str) -> None:
+        intent.status = status
+        await self.session.commit()
+
+    async def delete_stale_intents(self, before: datetime) -> list[UploadIntent]:
+        result = await self.session.execute(
+            select(UploadIntent).where(
+                UploadIntent.expires_at < before,
+                UploadIntent.status.in_(("pending", "validating", "failed")),
+            )
+        )
+        intents = list(result.scalars().all())
+        if intents:
+            await self.session.execute(
+                delete(UploadIntent).where(
+                    UploadIntent.id.in_(intent.id for intent in intents)
+                )
+            )
+            await self.session.commit()
+        return intents
