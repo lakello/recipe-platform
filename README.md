@@ -34,6 +34,7 @@
 | Backend + Frontend: OAuth Google и Яндекс | ✅ Готово |
 | Backend + Frontend: модерация и админ-панель | ✅ Готово |
 | Backend + Frontend: уведомления и email-доставка | ✅ Готово |
+| Frontend: автоматические тесты | ⏳ Не настроены |
 | Android | ⏳ Планируется |
 | Desktop | ⏳ Планируется |
 | Инфраструктура: Terraform базовая структура | ✅ Готово |
@@ -45,11 +46,12 @@
 | Инфраструктура: Terraform модуль compute (bastion / self-hosted runner, static IP) | ✅ Готово |
 | Инфраструктура: Terraform модуль dns (публичная зона, A-записи, wildcard) | ✅ Готово |
 | Инфраструктура: Terraform окружение dev (все модули подключены, Makefile) | ✅ Готово |
-| Инфраструктура: Terraform окружения staging / prod (базовая структура) | 🚧 В работе |
-| Инфраструктура: Terraform модуль iam (service accounts, IAM-права) | ⏳ Планируется |
-| Инфраструктура: Ansible (настройка Linux VM, hardening, runner) | ⏳ Планируется |
-| Инфраструктура: Helm charts (деплой в Kubernetes) | ⏳ Планируется |
-| CI/CD (GitHub Actions workflows) | ⏳ Планируется |
+| Инфраструктура: Terraform окружения staging / prod | ⏳ Только заготовки, ресурсы не подключены |
+| Инфраструктура: Terraform модуль iam (service accounts, IAM-права) | ✅ Готово |
+| Инфраструктура: Ansible (настройка Linux VM, hardening, runner) | ⏳ Не начато |
+| Инфраструктура: Kubernetes manifests | ⏳ Не начато |
+| Инфраструктура: Helm charts (деплой в Kubernetes) | ⏳ Не начато |
+| CI/CD (GitHub Actions workflows) | ⏳ Не начато |
 
 ## Цели проекта
 
@@ -390,7 +392,7 @@ Backend предоставляет REST API.
 
 ## CI/CD
 
-CI/CD реализуется через GitHub Actions.
+CI/CD планируется реализовать через GitHub Actions; workflow-файлы пока не созданы.
 
 Пайплайны должны выполнять:
 
