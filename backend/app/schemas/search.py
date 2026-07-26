@@ -18,6 +18,7 @@ class SearchParams(BaseModel):
     sort: Literal["relevance", "newest", "popular"] = "relevance"
     page: int = Field(1, ge=1)
     size: int = Field(20, ge=1, le=100)
+    search_after: list[str | int | float] | None = None
 
 
 class SearchResult(BaseModel):
@@ -25,3 +26,4 @@ class SearchResult(BaseModel):
     page: int
     size: int
     items: list[RecipeRead]
+    next_cursor: str | None = None

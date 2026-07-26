@@ -46,7 +46,9 @@ def make_recipe(**kwargs) -> Recipe:
 
 @pytest.fixture
 def repo() -> AsyncMock:
-    return AsyncMock(spec=RecipeRepository)
+    repository = AsyncMock(spec=RecipeRepository)
+    repository.session = AsyncMock()
+    return repository
 
 
 @pytest.fixture

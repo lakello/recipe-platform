@@ -25,13 +25,12 @@ class FollowRepository:
     async def create(self, follower_id: uuid.UUID, following_id: uuid.UUID) -> Follow:
         follow = Follow(follower_id=follower_id, following_id=following_id)
         self.session.add(follow)
-        await self.session.commit()
-        await self.session.refresh(follow)
+        await self.session.flush()
         return follow
 
     async def delete(self, follow: Follow) -> None:
         await self.session.delete(follow)
-        await self.session.commit()
+        await self.session.flush()
 
     async def count_followers(self, user_id: uuid.UUID) -> int:
         result = await self.session.execute(

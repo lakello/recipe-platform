@@ -12,8 +12,7 @@ class CommentRepository:
 
     async def create(self, comment: Comment) -> Comment:
         self.session.add(comment)
-        await self.session.commit()
-        await self.session.refresh(comment)
+        await self.session.flush()
         return comment
 
     async def get_by_id(self, comment_id: uuid.UUID) -> Comment | None:
@@ -84,8 +83,7 @@ class CommentRepository:
     async def update(self, comment: Comment, data: dict[str, object]) -> Comment:
         for key, value in data.items():
             setattr(comment, key, value)
-        await self.session.commit()
-        await self.session.refresh(comment)
+        await self.session.flush()
         return comment
 
     async def count_by_recipe_batch(

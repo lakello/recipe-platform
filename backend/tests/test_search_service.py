@@ -2,7 +2,14 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from fastapi import HTTPException
+from opensearchpy.exceptions import ConnectionError as OpenSearchConnectionError
 
+from app.core.opensearch import (
+    RECIPE_INDEX,
+    RECIPE_INDEX_VERSION,
+    ensure_index_exists,
+)
 from app.models.recipe import Difficulty, RecipeStatus, RecipeVisibility
 from app.schemas.search import SearchParams
 from app.services.search import SearchService
@@ -11,6 +18,20 @@ from app.services.search import SearchService
 def make_service():
     client = AsyncMock()
     return SearchService(client), client
+
+
+@pytest.mark.asyncio
+async def test_index_bootstrap_creates_version_and_alias():
+    client = AsyncMock()
+    client.indices.exists_alias.return_value = False
+    client.indices.exists.side_effect = [False, False]
+
+    await ensure_index_exists(client)
+
+    client.indices.create.assert_awaited_once()
+    client.indices.put_alias.assert_awaited_once_with(
+        index=RECIPE_INDEX_VERSION, name=RECIPE_INDEX
+    )
 
 
 def make_recipe(
@@ -88,12 +109,13 @@ async def test_remove_recipe_ignores_not_found():
 
 
 @pytest.mark.asyncio
-async def test_index_recipe_swallows_os_error():
+async def test_index_recipe_does_not_mask_unexpected_error():
     service, client = make_service()
     client.index.side_effect = Exception("connection refused")
     recipe = make_recipe()
 
-    await service.index_recipe(recipe)  # should not raise
+    with pytest.raises(Exception, match="connection refused"):
+        await service.index_recipe(recipe)
 
 
 @pytest.mark.asyncio
@@ -107,10 +129,11 @@ async def test_search_returns_ids():
         }
     }
 
-    ids, total = await service.search(SearchParams(q="pasta"))
+    ids, total, cursor = await service.search(SearchParams(q="pasta"))
 
     assert total == 2
     assert ids == [rid1, rid2]
+    assert cursor is None
 
 
 @pytest.mark.asyncio
@@ -134,7 +157,7 @@ async def test_search_with_filters_builds_correct_query():
     filter_keys = [list(f.keys())[0] for f in filters]
     assert "term" in filter_keys
     assert "range" in filter_keys
-    assert body["sort"] == [{"created_at": "desc"}]
+    assert body["sort"] == [{"created_at": "desc"}, {"_id": "asc"}]
 
 
 @pytest.mark.asyncio
@@ -150,11 +173,39 @@ async def test_search_with_exclude_ingredients():
 
 
 @pytest.mark.asyncio
-async def test_search_returns_empty_on_exception():
+async def test_search_returns_503_after_transient_retries(monkeypatch):
     service, client = make_service()
-    client.search.side_effect = Exception("opensearch down")
+    client.search.side_effect = OpenSearchConnectionError(503, "opensearch down", {})
+    monkeypatch.setattr("app.services.search.asyncio.sleep", AsyncMock())
 
-    ids, total = await service.search(SearchParams(q="anything"))
+    with pytest.raises(HTTPException) as exc:
+        await service.search(SearchParams(q="anything"))
 
-    assert ids == []
-    assert total == 0
+    assert exc.value.status_code == 503
+    assert client.search.await_count == 3
+
+
+@pytest.mark.asyncio
+async def test_search_after_cursor_is_forwarded():
+    service, client = make_service()
+    recipe_id = uuid.uuid4()
+    client.search.return_value = {
+        "hits": {
+            "total": {"value": 2},
+            "hits": [
+                {
+                    "_id": str(recipe_id),
+                    "sort": ["2026-01-01T00:00:00", str(recipe_id)],
+                }
+            ],
+        }
+    }
+    cursor_values = ["2025-01-01T00:00:00", str(uuid.uuid4())]
+
+    await service.search(
+        SearchParams(sort="newest", size=1, search_after=cursor_values)
+    )
+
+    body = client.search.call_args.kwargs["body"]
+    assert body["search_after"] == cursor_values
+    assert "from" not in body

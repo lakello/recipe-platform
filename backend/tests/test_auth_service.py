@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock
 import bcrypt
 import pytest
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.security import hash_refresh_token
@@ -47,12 +48,16 @@ def make_refresh_token(user_id: uuid.UUID) -> RefreshToken:
 
 @pytest.fixture
 def user_repo() -> AsyncMock:
-    return AsyncMock(spec=UserRepository)
+    repo = AsyncMock(spec=UserRepository)
+    repo.session = AsyncMock()
+    return repo
 
 
 @pytest.fixture
 def token_repo() -> AsyncMock:
-    return AsyncMock(spec=RefreshTokenRepository)
+    repo = AsyncMock(spec=RefreshTokenRepository)
+    repo.session = AsyncMock()
+    return repo
 
 
 @pytest.fixture
@@ -79,6 +84,7 @@ async def test_register_success(
     stored = token_repo.create.call_args.args[0]
     assert stored.token_hash == hash_refresh_token(result.refresh_token)
     assert stored.token_hash != result.refresh_token
+    user_repo.session.commit.assert_awaited_once()
 
 
 async def test_refresh_ttl_uses_settings(
@@ -129,6 +135,26 @@ async def test_register_duplicate_username(
         await service.register(data)
 
     assert exc.value.status_code == 409
+
+
+async def test_register_rolls_back_on_unique_constraint(
+    service: AuthService, user_repo: AsyncMock
+) -> None:
+    user_repo.get_by_email.return_value = None
+    user_repo.get_by_username.return_value = None
+    user_repo.create.side_effect = IntegrityError("insert", {}, Exception())
+
+    with pytest.raises(HTTPException) as exc:
+        await service.register(
+            RegisterRequest(
+                email="test@example.com",
+                username="testuser",
+                password="password123",
+            )
+        )
+
+    assert exc.value.status_code == 409
+    user_repo.session.rollback.assert_awaited_once()
 
 
 async def test_login_success(
@@ -182,8 +208,7 @@ async def test_refresh_success(service: AuthService, token_repo: AsyncMock) -> N
 
 @pytest.mark.parametrize("token", ["expired-token", "revoked-token", "reused-token"])
 async def test_refresh_rejects_invalid_token(
-    token: str,
-    service: AuthService, token_repo: AsyncMock
+    token: str, service: AuthService, token_repo: AsyncMock
 ) -> None:
     token_repo.rotate.return_value = None
 

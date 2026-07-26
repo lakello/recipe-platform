@@ -12,8 +12,7 @@ class ReportRepository:
 
     async def create(self, report: Report) -> Report:
         self.session.add(report)
-        await self.session.commit()
-        await self.session.refresh(report)
+        await self.session.flush()
         return report
 
     async def get_by_id(self, report_id: uuid.UUID) -> Report | None:
@@ -40,6 +39,5 @@ class ReportRepository:
     async def update(self, report: Report, data: dict[str, object]) -> Report:
         for key, value in data.items():
             setattr(report, key, value)
-        await self.session.commit()
-        await self.session.refresh(report)
+        await self.session.flush()
         return report
