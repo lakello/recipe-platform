@@ -74,7 +74,8 @@ frontend/
     app/
       providers/        — QueryProvider (TanStack Query)
       router/           — ProtectedRoute, AdminRoute
-      App.tsx           — BrowserRouter + маршруты + GlobalBell
+      App.tsx           — BrowserRouter + lazy-маршруты + GlobalBell
+      ErrorBoundary.tsx — глобальная обработка ошибок React
     pages/              — страницы (каждая: index.ts + ui/<PageName>.tsx)
       login-page/
       register-page/
@@ -118,7 +119,8 @@ frontend/
       admin/
     entities/           — зарезервировано (пусто)
     shared/
-      api/client.ts     — базовый fetch-клиент с auto-refresh на 401
+      api/client.ts     — fetch-клиент с общим refresh Promise, нормализованными ошибками и безопасным retry
+      lib/reportWebVitals.ts — сбор CLS, INP и LCP
       config/env.ts     — VITE_API_BASE_URL
       ui/               — Button, Input, UserLink
   Dockerfile
@@ -500,13 +502,15 @@ Frontend должен скрывать или блокировать интер�
 
 ## Тестирование
 
-Тестовый фреймворк (Vitest / Testing Library) пока не подключён.
+Подключены Vitest, Testing Library, jsdom и axe-core.
 
-Планируется в следующих этапах разработки.
+- `npm test` запускает unit- и accessibility-тесты;
+- API-клиент проверяется на параллельные 401, единственный refresh и защиту от refresh loop;
+- критические страницы входа и регистрации проходят автоматическую axe-проверку.
 
 ## Accessibility
 
-Frontend должен учитывать базовые требования доступности:
+Frontend учитывает базовые требования доступности:
 
 - корректная семантика HTML;
 - label для form controls;
@@ -522,13 +526,12 @@ Frontend должен учитывать базовые требования д�
 Требования к производительности:
 
 - главная страница открывается до 2 секунд;
-- использовать code splitting;
-- lazy loading страниц;
+- route-level code splitting и lazy loading страниц, включая отдельные admin-чанки;
 - оптимизация изображений;
-- cache-control для static assets;
+- `no-cache` для `index.html` и долгий immutable cache для hashed assets;
 - минимизация bundle size;
 - избегать лишних rerender;
-- использовать TanStack Query cache;
+- использовать TanStack Query cache с настроенными `staleTime`, `gcTime` и retry временных ошибок;
 - отображать skeleton loading.
 
 ## Observability
@@ -743,7 +746,7 @@ Backend API:
 ### Docker (feat/docker-compose-local)
 
 - `Dockerfile` — multi-stage: Node 22 сборка → Nginx 1.25 раздача статики
-- `nginx.conf` — SPA fallback (`try_files`), cache headers для статических ассетов
+- `nginx.conf` — SPA fallback (`try_files`), `no-cache` для `index.html`, immutable cache для hashed assets
 - `.dockerignore` — исключены `node_modules`, `dist`, `.env`, `.git`
 
 ### Загрузка фото (feat/uploads)
@@ -988,9 +991,9 @@ npm run lint       # ESLint
 17. ~~Moderation UI (reports, hide/show).~~ ✓
 18. ~~Admin UI (users, categories, comments).~~ ✓
 19. ~~Уведомления (колокольчик, список, email-настройки).~~ ✓
+20. ~~Надёжность API-клиента, lazy routes, Web Vitals и accessibility-тесты.~~ ✓
 
 Планируется в следующих этапах:
 
-- Тесты (Vitest, Testing Library).
-- UI polish, accessibility, performance.
-- Мобильная адаптация.
+- Расширение тестового покрытия остальных страниц.
+- Дальнейший UI polish и мобильная адаптация.
