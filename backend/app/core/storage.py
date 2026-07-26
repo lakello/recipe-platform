@@ -37,11 +37,22 @@ def _get_presign_client() -> Any:
     )
 
 
-def presign_put(bucket: str, key: str, content_type: str, expires_in: int = 600) -> str:
-    return str(
-        _get_presign_client().generate_presigned_url(
-            "put_object",
-            Params={"Bucket": bucket, "Key": key, "ContentType": content_type},
+def presign_post(
+    bucket: str,
+    key: str,
+    content_type: str,
+    max_bytes: int,
+    expires_in: int = 600,
+) -> dict[str, Any]:
+    return dict(
+        _get_presign_client().generate_presigned_post(
+            Bucket=bucket,
+            Key=key,
+            Fields={"Content-Type": content_type},
+            Conditions=[
+                {"Content-Type": content_type},
+                ["content-length-range", 1, max_bytes],
+            ],
             ExpiresIn=expires_in,
         )
     )
@@ -55,6 +66,27 @@ def presign_get(bucket: str, key: str, expires_in: int = 3600) -> str:
             ExpiresIn=expires_in,
         )
     )
+
+
+def head_object(bucket: str, key: str) -> dict[str, Any]:
+    return dict(get_s3_client().head_object(Bucket=bucket, Key=key))
+
+
+def get_object_bytes(bucket: str, key: str) -> bytes:
+    return bytes(get_s3_client().get_object(Bucket=bucket, Key=key)["Body"].read())
+
+
+def put_object(bucket: str, key: str, body: bytes, content_type: str) -> None:
+    get_s3_client().put_object(
+        Bucket=bucket,
+        Key=key,
+        Body=body,
+        ContentType=content_type,
+    )
+
+
+def delete_object(bucket: str, key: str) -> None:
+    get_s3_client().delete_object(Bucket=bucket, Key=key)
 
 
 def public_url(bucket: str, key: str) -> str:

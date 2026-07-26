@@ -26,6 +26,9 @@ class Settings(BaseSettings):
     s3_secret_key: str = Field(default="minioadmin", repr=False)
     s3_bucket_photos: str = "recipe-photos"
     s3_bucket_avatars: str = "avatars"
+    upload_max_bytes: int = 10 * 1024 * 1024
+    upload_max_pixels: int = 40_000_000
+    upload_intent_ttl_minutes: int = 15
 
     jwt_secret: str = Field(default="change-me-in-production", repr=False)
     jwt_access_token_expire_minutes: int = 15
