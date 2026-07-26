@@ -110,8 +110,7 @@ HTTP API слой.
 
 Содержит роутеры и endpoints:
 
-- `/api/auth` — регистрация, логин, refresh, logout
-- `/api/oauth` — Google и Яндекс OAuth callback
+- `/api/auth` — cookie-auth, Bearer auth, Google и Яндекс OAuth
 - `/api/users` — профили пользователей, подписки
 - `/api/recipes` — CRUD рецептов, лента
 - `/api/categories` — категории рецептов
@@ -573,16 +572,18 @@ Backend должен поддерживать:
 
 ## Security
 
-Backend должен соблюдать следующие требования безопасности:
+Backend реализует следующие требования безопасности:
 
 - пароли хранятся только в виде хэшей;
 - использовать Argon2 или bcrypt;
 - JWT access token короткоживущий;
-- refresh token должен ротироваться;
-- refresh token хранится безопасно;
+- refresh token ротируется и хранится только в виде SHA-256 hash;
 - CORS ограничен whitelist-ом;
-- rate limiting для auth endpoints;
-- защита от brute force;
+- Redis rate limiting защищает auth, OAuth и presign endpoints;
+- login ограничивается одновременно по IP и идентификатору аккаунта;
+- cookie-auth мутации требуют double-submit CSRF token;
+- OAuth state одноразово извлекается из Redis;
+- Bearer auth выделен для Android и Desktop;
 - email verification;
 - валидация всех входных данных;
 - проверка прав доступа на уровне сервисов;
@@ -939,8 +940,10 @@ UPDATE users SET role = 'superadmin' WHERE email = 'your@email.com';
 - `app/models/oauth_account.py` — модель `UserOAuthAccount`: `provider`, `provider_user_id`, FK на `users` с CASCADE; уникальное ограничение `(provider, provider_user_id)`
 - `app/models/user.py` — `password_hash` сделан nullable для поддержки OAuth-only пользователей
 - `app/repositories/oauth_account.py` — `OAuthAccountRepository`: поиск по провайдеру и `provider_user_id`, создание
-- `app/services/oauth.py` — `OAuthService`: обмен authorization code на access token (aiohttp), получение профиля, поиск существующего OAuth-аккаунта, привязка по email или автосоздание нового пользователя, выдача JWT; CSRF-защита через state-параметр
-- `app/api/oauth.py` — OAuth endpoints; state хранится в short-lived httpOnly cookie (5 мин); при ошибке — редирект на `/login?error=oauth_error`; при успехе — установка auth cookies и редирект на `FRONTEND_URL`
+- `app/services/oauth.py` — `OAuthService`: обмен authorization code на access token через общую lifespan HTTP-сессию с connect/read/total timeout, получение профиля, привязка по email или создание пользователя и выдача JWT
+- `app/api/oauth.py` — OAuth endpoints; state сопоставляется с short-lived httpOnly cookie и атомарно удаляется из Redis; редирект ошибки не содержит внутренний текст исключения
+- `app/core/rate_limit.py` — Redis rate limiting для auth, OAuth и presign; login учитывает IP и SHA-256 идентификатора аккаунта
+- `app/core/auth_cookies.py` и `CSRFMiddleware` — единые параметры cookies и double-submit CSRF-защита
 - `alembic/versions/m1e2f3a4b5c6` — создаёт таблицу `user_oauth_accounts`; делает `password_hash` nullable
 - `app/core/config.py` — добавлены OAuth credentials и `FRONTEND_URL`
 - `docker-compose.yml` — OAuth переменные и `FRONTEND_URL` передаются в контейнер backend
@@ -969,6 +972,7 @@ Endpoints:
 | `YANDEX_CLIENT_ID` / `YANDEX_CLIENT_SECRET` | Яндекс OAuth credentials |
 | `YANDEX_REDIRECT_URI` | Callback URI (по умолчанию `http://localhost:8000/api/auth/yandex/callback`) |
 | `FRONTEND_URL` | URL фронтенда для редиректа после OAuth (по умолчанию `http://localhost:5173`) |
+| `OAUTH_CONNECT_TIMEOUT_SECONDS` / `OAUTH_READ_TIMEOUT_SECONDS` / `OAUTH_TOTAL_TIMEOUT_SECONDS` | Таймауты внешних OAuth-запросов |
 
 ### Роли, модерация и админка (feat/admin-moderation)
 
@@ -1172,7 +1176,7 @@ Endpoints:
 - `app/services/auth.py` — register, login, атомарный refresh и logout
 - `app/tasks/auth.py` — ежедневная очистка истёкших refresh tokens через Celery Beat
 - `app/api/deps.py` — dependency `get_current_user` для защищённых endpoints
-- `app/api/auth.py` — роутер с prefix `/api/auth`
+- `app/api/auth.py` — cookie-auth endpoints для web и отдельные `/token/*` endpoints для Bearer-клиентов
 - `app/api/users.py` — роутер с prefix `/api/users`
 - `tests/test_auth_service.py`, `tests/test_refresh_token_repository.py` — тесты выпуска, TTL, ротации, reuse, конкурентного refresh и logout
 
@@ -1180,16 +1184,21 @@ Endpoints:
 
 | Метод | Путь | Описание |
 |---|---|---|
-| `POST` | `/api/auth/register` | Регистрация, возвращает токены |
-| `POST` | `/api/auth/login` | Вход по email/паролю |
-| `POST` | `/api/auth/refresh` | Обновление токенов с ротацией |
-| `POST` | `/api/auth/logout` | Инвалидация refresh token |
+| `POST` | `/api/auth/register` | Web-регистрация, устанавливает auth и CSRF cookies |
+| `POST` | `/api/auth/login` | Web-вход, устанавливает auth и CSRF cookies |
+| `POST` | `/api/auth/refresh` | Cookie refresh с CSRF и ротацией |
+| `POST` | `/api/auth/logout` | Cookie logout с CSRF |
+| `POST` | `/api/auth/token/register` | Bearer-регистрация для Android/Desktop |
+| `POST` | `/api/auth/token/login` | Bearer-вход, возвращает токены |
+| `POST` | `/api/auth/token/refresh` | Bearer refresh с ротацией |
+| `POST` | `/api/auth/token/logout` | Bearer logout |
 | `GET` | `/api/users/me` | Данные текущего пользователя 🔒 |
 | `PATCH` | `/api/users/me` | Обновление username 🔒 |
 
-**Обновлено в feat/frontend-auth:**
-- Токены устанавливаются в httpOnly cookies (`access_token`, `refresh_token`)
-- `get_current_user` читает токен из cookie ИЛИ `Authorization: Bearer`
+**Web и native-клиенты:**
+- Web получает токены только в httpOnly cookies; изменяющие запросы передают `X-CSRF-Token`
+- Android и Desktop используют отдельные Bearer endpoints и получают токены в JSON
+- При наличии Bearer header `get_current_user` не использует auth cookie
 - CORS: `allow_credentials=True`
 
 ### Модель пользователей (feat/backend-user-model)
@@ -1238,6 +1247,9 @@ alembic current               # текущая ревизия
 | `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | `15` | Время жизни access token |
 | `JWT_REFRESH_TOKEN_EXPIRE_DAYS` | `30` | Время жизни refresh token |
 | `CORS_ORIGINS` | localhost:3000, localhost:5173 | Разрешённые CORS-источники (JSON-массив) |
+| `COOKIE_SECURE` | `false` | Передавать auth cookies только по HTTPS |
+| `COOKIE_SAMESITE` | `lax` | SameSite для auth и CSRF cookies |
+| `COOKIE_DOMAIN` | — | Необязательный общий домен cookies; без значения cookies host-only |
 
 ### Инициализация проекта (feat/backend-fastapi-init)
 
@@ -1299,5 +1311,5 @@ tests/
 Планируется в следующих этапах:
 
 - Observability (Prometheus metrics, OpenTelemetry, Loki).
-- Security hardening (rate limiting, email verification).
+- Email verification.
 - CI/CD и деплой в Kubernetes.
