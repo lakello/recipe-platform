@@ -1027,14 +1027,14 @@ docker compose exec backend sh -c "ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=
 - `app/models/ingredient_category.py` — модель `IngredientCategory`: `name` (unique), `created_at`
 - `app/models/shopping_list.py` — модели `ShoppingList` (один на пользователя, unique FK) и `ShoppingListItem` (`name`, `amount`, `unit`, `is_bought`, `is_manual`, `ingredient_id` nullable FK)
 - `app/repositories/ingredient_category.py` / `app/services/ingredient_category.py` — CRUD категорий ингредиентов (409 при дубликате)
-- `app/repositories/shopping_list.py` — `get_or_create_list`, `get_item`, `get_item_by_ingredient`, `add_item`, `update_item`, `delete_item`, `get_meal_plan_items_for_dates` (группирует даты по неделям для эффективного OR-запроса)
-- `app/services/shopping_list.py` — умный merge: нормализация единиц (kg↔g, l↔ml), `max(existing, generated)` — добавляет только разницу; генерация из 3 режимов (today, week, custom); CRUD элементов
+- `app/repositories/shopping_list.py` — конкурентно-безопасный `get_or_create_list`, блокировка списка на время генерации, batch-загрузка существующих позиций, CRUD элементов и загрузка плана питания
+- `app/services/shopping_list.py` — умный merge: нормализация единиц (kg↔g, l↔ml), `max(existing, generated)` — добавляет только разницу; генерация из 3 режимов (today, week, custom) выполняется одной транзакцией с полным rollback при ошибке
 - `app/tasks/shopping_list.py` — Celery-таск `tasks.generate_shopping_list`: запускает async-сервис через `asyncio.run()` внутри синхронного воркера
 - `app/models/__init__.py` — импортирует все модули моделей, чтобы SQLAlchemy резолвил все relationship-ссылки до маппинга (нужно для Celery-воркера)
 - `app/api/ingredient_categories.py` — роутер `/api/ingredient-categories`
 - `app/api/shopping_list.py` — роутер `/api/shopping-list`; генерация асинхронная (202 + task_id); polling статуса через Celery result backend (Redis DB 2)
 - `app/celery_app.py` — включён result backend (`CELERY_RESULT_BACKEND_URL`); результаты хранятся 1 час
-- `tests/test_shopping_list_service.py` — 21 тест: unit (нормализация единиц, режимы дат) + integration (merge-алгоритм)
+- `tests/test_shopping_list_service.py` — unit-тесты нормализации, режимов дат, merge-алгоритма, единственного commit и rollback генерации
 - Миграции: `k9c0d1e2f3a4` (ingredient_categories + FK в ingredients), `l0d1e2f3a4b5` (shopping_lists, shopping_list_items)
 
 Endpoints:
@@ -1079,13 +1079,13 @@ Endpoints:
 
 ### Поиск рецептов (feat/search)
 
-- `app/core/opensearch.py` — `AsyncOpenSearch`-клиент, маппинг индекса `recipes` (title, description, ingredient_names, category, cooking_time_minutes, difficulty, status, visibility, likes_count)
-- `app/services/search.py` — `SearchService`: `index_recipe` (пропускает непубличные/не-published → удаляет из индекса), `remove_recipe`, `search` с построением `bool`-запроса
-- `app/api/search.py` — `GET /api/search/recipes`: полнотекстовый поиск, фильтры, исключение ингредиентов, сортировка, пагинация; возвращает полные `RecipeRead` из БД по ids из OpenSearch
+- `app/core/opensearch.py` — `AsyncOpenSearch`-клиент, versioned-индекс `recipes-v1` и alias `recipes-current`; при старте создаёт индекс и переносит данные из прежнего `recipes`
+- `app/services/search.py` — `SearchService`: индексация публичных рецептов, удаление, `bool`-поиск, `search_after`-пагинация и ограниченный retry только временных ошибок OpenSearch; недоступность поиска возвращается как 503
+- `app/api/search.py` — `GET /api/search/recipes`: полнотекстовый поиск, фильтры, исключение ингредиентов, сортировка и cursor-пагинация; возвращает полные `RecipeRead` из БД по ids из OpenSearch
 - `app/schemas/search.py` — `SearchParams`, `SearchResult`
 - `app/api/recipes.py` — хуки: `index_recipe` при create/update, `remove_recipe` при delete
 - `app/main.py` — `os_client` инициализируется в lifespan, создаёт индекс при старте
-- `tests/test_search_service.py` — 9 unit-тестов
+- `tests/test_search_service.py` — unit-тесты запросов, alias, cursor-пагинации, retry и обработки отказа OpenSearch
 - `scripts/reindex_opensearch.py` — разовый скрипт переиндексации всех существующих рецептов
 
 Endpoint:
@@ -1094,7 +1094,7 @@ Endpoint:
 |---|---|---|---|
 | `GET` | `/api/search/recipes` | опц. | Поиск рецептов по названию, ингредиентам, категории, сложности, времени; исключение ингредиентов; сортировка; пагинация |
 
-Параметры поиска: `q`, `category_id`, `min_time`, `max_time`, `difficulty`, `include_ingredients[]`, `exclude_ingredients[]`, `sort` (relevance/newest/popular), `page`, `size`.
+Параметры поиска: `q`, `category_id`, `min_time`, `max_time`, `difficulty`, `include_ingredients[]`, `exclude_ingredients[]`, `sort` (relevance/newest/popular), `size`, `cursor`. Ответ содержит `next_cursor` для следующей страницы.
 
 ### Уведомления (feat/notifications)
 
