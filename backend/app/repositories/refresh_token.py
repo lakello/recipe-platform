@@ -13,8 +13,7 @@ class RefreshTokenRepository:
 
     async def create(self, token: RefreshToken) -> RefreshToken:
         self.session.add(token)
-        await self.session.commit()
-        await self.session.refresh(token)
+        await self.session.flush()
         return token
 
     async def rotate(
@@ -56,7 +55,7 @@ class RefreshTokenRepository:
             .where(RefreshToken.token_hash == token_hash)
             .values(is_revoked=True)
         )
-        await self.session.commit()
+        await self.session.flush()
 
     async def revoke_all_for_user(self, user_id: uuid.UUID) -> None:
         await self.session.execute(
@@ -64,13 +63,11 @@ class RefreshTokenRepository:
             .where(RefreshToken.user_id == user_id, RefreshToken.is_revoked == False)  # noqa: E712
             .values(is_revoked=True)
         )
-        await self.session.commit()
+        await self.session.flush()
 
     async def delete_expired_or_revoked(self) -> int:
         result = await self.session.execute(
-            delete(RefreshToken).where(
-                RefreshToken.expires_at < datetime.now(UTC)
-            )
+            delete(RefreshToken).where(RefreshToken.expires_at < datetime.now(UTC))
         )
-        await self.session.commit()
+        await self.session.flush()
         return int(result.rowcount)  # type: ignore[attr-defined]

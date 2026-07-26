@@ -33,6 +33,7 @@ class UserService:
             password_hash=_hash_password(data.password),
         )
         user = await self.repository.create(user)
+        await self.repository.session.commit()
         return UserRead.model_validate(user)
 
     async def get_by_id(self, user_id: uuid.UUID) -> UserRead | None:
@@ -57,4 +58,5 @@ class UserService:
             if existing and existing.id != user_id:
                 raise HTTPException(status_code=409, detail="Username already taken")
         user = await self.repository.update(user, updates)
+        await self.repository.session.commit()
         return UserRead.model_validate(user)

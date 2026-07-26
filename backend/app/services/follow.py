@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.repositories.follow import FollowRepository
 from app.repositories.user import UserRepository
@@ -25,13 +26,19 @@ class FollowService:
         existing = await self.follow_repo.get(follower_id, following_id)
         if existing:
             raise HTTPException(status_code=409, detail="Already following")
-        await self.follow_repo.create(follower_id, following_id)
+        try:
+            await self.follow_repo.create(follower_id, following_id)
+            await self.follow_repo.session.commit()
+        except IntegrityError as exc:
+            await self.follow_repo.session.rollback()
+            raise HTTPException(status_code=409, detail="Already following") from exc
 
     async def unfollow(self, follower_id: uuid.UUID, following_id: uuid.UUID) -> None:
         follow = await self.follow_repo.get(follower_id, following_id)
         if not follow:
             raise HTTPException(status_code=404, detail="Not following")
         await self.follow_repo.delete(follow)
+        await self.follow_repo.session.commit()
 
     async def list_followers(
         self,

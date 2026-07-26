@@ -2,6 +2,7 @@ import uuid
 from datetime import date, timedelta
 
 from sqlalchemy import and_, or_, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -24,10 +25,23 @@ class ShoppingListRepository:
         if sl:
             return sl
         sl = ShoppingList(user_id=user_id)
-        self.session.add(sl)
-        await self.session.commit()
-        await self.session.refresh(sl)
-        return sl
+        try:
+            async with self.session.begin_nested():
+                self.session.add(sl)
+                await self.session.flush()
+            return sl
+        except IntegrityError:
+            existing = await self.get_list(user_id)
+            if existing is None:
+                raise
+            return existing
+
+    async def lock_list(self, shopping_list_id: uuid.UUID) -> None:
+        await self.session.execute(
+            select(ShoppingList.id)
+            .where(ShoppingList.id == shopping_list_id)
+            .with_for_update()
+        )
 
     async def get_item(self, item_id: uuid.UUID) -> ShoppingListItem | None:
         result = await self.session.execute(
@@ -48,6 +62,25 @@ class ShoppingListRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_items_by_ingredients(
+        self, shopping_list_id: uuid.UUID, ingredient_ids: set[uuid.UUID]
+    ) -> dict[uuid.UUID, ShoppingListItem]:
+        if not ingredient_ids:
+            return {}
+        result = await self.session.execute(
+            select(ShoppingListItem)
+            .where(
+                ShoppingListItem.shopping_list_id == shopping_list_id,
+                ShoppingListItem.ingredient_id.in_(ingredient_ids),
+            )
+            .order_by(ShoppingListItem.created_at)
+        )
+        items: dict[uuid.UUID, ShoppingListItem] = {}
+        for item in result.scalars():
+            if item.ingredient_id is not None:
+                items.setdefault(item.ingredient_id, item)
+        return items
+
     async def add_item(
         self,
         shopping_list_id: uuid.UUID,
@@ -66,8 +99,7 @@ class ShoppingListRepository:
             is_manual=is_manual,
         )
         self.session.add(item)
-        await self.session.commit()
-        await self.session.refresh(item)
+        await self.session.flush()
         return item
 
     async def update_item(
@@ -75,19 +107,18 @@ class ShoppingListRepository:
     ) -> ShoppingListItem:
         for key, value in data.items():
             setattr(item, key, value)
-        await self.session.commit()
-        await self.session.refresh(item)
+        await self.session.flush()
         return item
 
     async def delete_item(self, item: ShoppingListItem) -> None:
         await self.session.delete(item)
-        await self.session.commit()
+        await self.session.flush()
 
     async def update_generated_at(self, sl: ShoppingList) -> None:
         from datetime import UTC, datetime
 
         sl.last_generated_at = datetime.now(UTC)
-        await self.session.commit()
+        await self.session.flush()
 
     async def get_meal_plan_items_for_dates(
         self, user_id: uuid.UUID, dates: list[date]

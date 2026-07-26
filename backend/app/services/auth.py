@@ -2,6 +2,7 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.security import (
@@ -47,14 +48,22 @@ class AuthService:
             raise HTTPException(status_code=409, detail="Email already registered")
         if await self.user_repo.get_by_username(data.username):
             raise HTTPException(status_code=409, detail="Username already taken")
-        user = await self.user_repo.create(
-            User(
-                email=data.email,
-                username=data.username,
-                password_hash=_hash_password(data.password),
+        try:
+            user = await self.user_repo.create(
+                User(
+                    email=data.email,
+                    username=data.username,
+                    password_hash=_hash_password(data.password),
+                )
             )
-        )
-        return await self._issue_tokens(user.id)
+            tokens = await self._issue_tokens(user.id)
+            await self.user_repo.session.commit()
+            return tokens
+        except IntegrityError as exc:
+            await self.user_repo.session.rollback()
+            raise HTTPException(
+                status_code=409, detail="Email or username already registered"
+            ) from exc
 
     async def login(self, data: LoginRequest) -> TokenResponse:
         user = await self.user_repo.get_by_email(data.email)
@@ -62,15 +71,16 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Invalid credentials")
         if not user.is_active:
             raise HTTPException(status_code=403, detail="Account is disabled")
-        return await self._issue_tokens(user.id)
+        tokens = await self._issue_tokens(user.id)
+        await self.user_repo.session.commit()
+        return tokens
 
     async def refresh(self, refresh_token: str) -> TokenResponse:
         replacement_token = create_refresh_token()
         rotated = await self.token_repo.rotate(
             hash_refresh_token(refresh_token),
             hash_refresh_token(replacement_token),
-            datetime.now(UTC)
-            + timedelta(days=settings.jwt_refresh_token_expire_days),
+            datetime.now(UTC) + timedelta(days=settings.jwt_refresh_token_expire_days),
         )
         if not rotated:
             raise HTTPException(
@@ -83,3 +93,4 @@ class AuthService:
 
     async def logout(self, refresh_token: str) -> None:
         await self.token_repo.revoke(hash_refresh_token(refresh_token))
+        await self.token_repo.session.commit()

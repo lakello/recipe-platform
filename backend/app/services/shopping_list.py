@@ -62,13 +62,26 @@ class ShoppingListService:
 
     async def get_list(self, user_id: uuid.UUID) -> ShoppingListRead:
         sl = await self.repo.get_or_create_list(user_id)
+        await self.repo.session.commit()
         return ShoppingListRead.model_validate(sl)
 
     async def generate(
         self, user_id: uuid.UUID, request: GenerateRequest
     ) -> ShoppingListRead:
         dates = _dates_for_mode(request.mode, request.dates)
+        try:
+            result = await self._generate_atomic(user_id, dates)
+            await self.repo.session.commit()
+            return result
+        except Exception:
+            await self.repo.session.rollback()
+            raise
 
+    async def _generate_atomic(
+        self, user_id: uuid.UUID, dates: list[date]
+    ) -> ShoppingListRead:
+        sl = await self.repo.get_or_create_list(user_id)
+        await self.repo.lock_list(sl.id)
         meal_items = await self.repo.get_meal_plan_items_for_dates(user_id, dates)
 
         # Aggregate ingredient amounts from the meal plan
@@ -96,13 +109,14 @@ class ShoppingListService:
                         "name": ri.ingredient.name,
                     }
 
-        sl = await self.repo.get_or_create_list(user_id)
+        ingredient_ids = set(aggregated) | set(no_amount_ids)
+        existing_items = await self.repo.get_items_by_ingredients(sl.id, ingredient_ids)
 
         # Smart merge: ingredients with amounts
         for ingredient_id, gen in aggregated.items():
             gen_amount = gen["amount"]
             base_unit = gen["base_unit"]
-            existing = await self.repo.get_item_by_ingredient(sl.id, ingredient_id)
+            existing = existing_items.get(ingredient_id)
 
             if existing and existing.amount is not None and existing.unit:
                 ex_norm, ex_base = normalize_amount(
@@ -141,7 +155,7 @@ class ShoppingListService:
         # Ingredients with no amount (to_taste, pinch) — add if not already present
         for ingredient_id, name in no_amount_ids.items():
             if ingredient_id not in aggregated:
-                existing = await self.repo.get_item_by_ingredient(sl.id, ingredient_id)
+                existing = existing_items.get(ingredient_id)
                 if not existing:
                     await self.repo.add_item(sl.id, name, ingredient_id=ingredient_id)
 
@@ -162,6 +176,7 @@ class ShoppingListService:
             unit=data.unit,
             is_manual=True,
         )
+        await self.repo.session.commit()
         return ShoppingListItemRead.model_validate(item)
 
     async def update_item(
@@ -170,11 +185,13 @@ class ShoppingListService:
         item = await self._get_owned_item(user_id, item_id)
         updates = data.model_dump(exclude_unset=True)
         item = await self.repo.update_item(item, updates)
+        await self.repo.session.commit()
         return ShoppingListItemRead.model_validate(item)
 
     async def delete_item(self, user_id: uuid.UUID, item_id: uuid.UUID) -> None:
         item = await self._get_owned_item(user_id, item_id)
         await self.repo.delete_item(item)
+        await self.repo.session.commit()
 
     async def _get_owned_item(
         self, user_id: uuid.UUID, item_id: uuid.UUID

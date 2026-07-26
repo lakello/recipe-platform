@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.models.like import Favorite, Like
 from app.models.recipe import Recipe, RecipeStatus, RecipeVisibility
@@ -66,12 +67,16 @@ def make_favorite(user_id: uuid.UUID, recipe_id: uuid.UUID) -> Favorite:
 
 @pytest.fixture
 def like_repo() -> AsyncMock:
-    return AsyncMock(spec=LikeRepository)
+    repo = AsyncMock(spec=LikeRepository)
+    repo.session = AsyncMock()
+    return repo
 
 
 @pytest.fixture
 def favorite_repo() -> AsyncMock:
-    return AsyncMock(spec=FavoriteRepository)
+    repo = AsyncMock(spec=FavoriteRepository)
+    repo.session = AsyncMock()
+    return repo
 
 
 @pytest.fixture
@@ -121,6 +126,21 @@ async def test_like_recipe_already_liked(
         await like_service.like(recipe.id, user_id)
 
     assert exc.value.status_code == 409
+
+
+async def test_like_recipe_handles_concurrent_insert(
+    like_service: LikeService, like_repo: AsyncMock, recipe_repo: AsyncMock
+) -> None:
+    recipe = make_recipe()
+    recipe_repo.get_by_id.return_value = recipe
+    like_repo.get.return_value = None
+    like_repo.add.side_effect = IntegrityError("insert", {}, Exception())
+
+    with pytest.raises(HTTPException) as exc:
+        await like_service.like(recipe.id, uuid.uuid4())
+
+    assert exc.value.status_code == 409
+    like_repo.session.rollback.assert_awaited_once()
 
 
 async def test_like_recipe_not_found(
@@ -227,6 +247,23 @@ async def test_add_favorite_already_favorited(
     assert exc.value.status_code == 409
 
 
+async def test_add_favorite_handles_concurrent_insert(
+    favorite_service: FavoriteService,
+    favorite_repo: AsyncMock,
+    recipe_repo: AsyncMock,
+) -> None:
+    recipe = make_recipe()
+    recipe_repo.get_by_id.return_value = recipe
+    favorite_repo.get.return_value = None
+    favorite_repo.add.side_effect = IntegrityError("insert", {}, Exception())
+
+    with pytest.raises(HTTPException) as exc:
+        await favorite_service.add_favorite(recipe.id, uuid.uuid4())
+
+    assert exc.value.status_code == 409
+    favorite_repo.session.rollback.assert_awaited_once()
+
+
 async def test_remove_favorite_success(
     favorite_service: FavoriteService,
     favorite_repo: AsyncMock,
@@ -281,7 +318,7 @@ async def test_list_favorites_returns_recipes(
     favorite_repo.list_by_user.return_value = [recipe.id]
     like_repo.count_batch.return_value = {recipe.id: 2}
     like_repo.user_liked_batch.return_value = {recipe.id}
-    recipe_repo.get_by_id.return_value = recipe
+    recipe_repo.get_by_ids.return_value = [recipe]
 
     result = await favorite_service.list_favorites(user_id)
 
@@ -289,3 +326,15 @@ async def test_list_favorites_returns_recipes(
     assert result[0].likes_count == 2
     assert result[0].is_liked is True
     assert result[0].is_favorited is True
+    recipe_repo.get_by_ids.assert_awaited_once_with([recipe.id])
+    recipe_repo.get_by_id.assert_not_called()
+    query_count = sum(
+        call.await_count
+        for call in (
+            favorite_repo.list_by_user,
+            like_repo.count_batch,
+            like_repo.user_liked_batch,
+            recipe_repo.get_by_ids,
+        )
+    )
+    assert query_count == 4

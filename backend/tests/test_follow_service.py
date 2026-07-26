@@ -2,6 +2,8 @@ import uuid
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
+from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.services.follow import FollowService
 
@@ -52,6 +54,18 @@ async def test_follow_already_following():
     with pytest.raises(Exception) as exc:
         await service.follow(uuid.uuid4(), uuid.uuid4())
     assert exc.value.status_code == 409
+
+
+@pytest.mark.asyncio
+async def test_follow_handles_concurrent_insert():
+    service, follow_repo, _ = make_service(follow=None, user=MagicMock())
+    follow_repo.create.side_effect = IntegrityError("insert", {}, Exception())
+
+    with pytest.raises(HTTPException) as exc:
+        await service.follow(uuid.uuid4(), uuid.uuid4())
+
+    assert exc.value.status_code == 409
+    follow_repo.session.rollback.assert_awaited_once()
 
 
 @pytest.mark.asyncio
