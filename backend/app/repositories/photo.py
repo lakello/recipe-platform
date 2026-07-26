@@ -29,18 +29,16 @@ class PhotoRepository:
                 recipe_id=recipe_id, key=key, content_type=content_type
             )
             self.session.add(existing)
-        await self.session.commit()
-        await self.session.refresh(existing)
+        await self.session.flush()
         return existing
 
     async def delete(self, photo: RecipePhoto) -> None:
         await self.session.delete(photo)
-        await self.session.commit()
+        await self.session.flush()
 
     async def create_intent(self, intent: UploadIntent) -> UploadIntent:
         self.session.add(intent)
-        await self.session.commit()
-        await self.session.refresh(intent)
+        await self.session.flush()
         return intent
 
     async def get_intent(self, upload_id: uuid.UUID) -> UploadIntent | None:
@@ -51,7 +49,7 @@ class PhotoRepository:
 
     async def set_intent_status(self, intent: UploadIntent, status: str) -> None:
         intent.status = status
-        await self.session.commit()
+        await self.session.flush()
 
     async def delete_stale_intents(self, before: datetime) -> list[UploadIntent]:
         result = await self.session.execute(
@@ -67,5 +65,5 @@ class PhotoRepository:
                     UploadIntent.id.in_(intent.id for intent in intents)
                 )
             )
-            await self.session.commit()
+            await self.session.flush()
         return intents

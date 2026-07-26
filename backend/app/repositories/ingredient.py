@@ -1,6 +1,7 @@
 import uuid
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models.ingredient import Ingredient, RecipeIngredient, RecipeStep
@@ -18,8 +19,15 @@ class IngredientRepository:
         ingredient = result.scalar_one_or_none()
         if not ingredient:
             ingredient = Ingredient(name=name)
-            self.session.add(ingredient)
-            await self.session.flush()
+            try:
+                async with self.session.begin_nested():
+                    self.session.add(ingredient)
+                    await self.session.flush()
+            except IntegrityError:
+                result = await self.session.execute(
+                    select(Ingredient).where(Ingredient.name == name)
+                )
+                ingredient = result.scalar_one()
         return ingredient
 
     async def search(self, query: str, limit: int = 20) -> list[Ingredient]:

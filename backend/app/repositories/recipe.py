@@ -12,8 +12,7 @@ class RecipeRepository:
 
     async def create(self, recipe: Recipe) -> Recipe:
         self.session.add(recipe)
-        await self.session.commit()
-        await self.session.refresh(recipe)
+        await self.session.flush()
         return recipe
 
     async def get_by_id(self, recipe_id: uuid.UUID) -> Recipe | None:
@@ -126,10 +125,9 @@ class RecipeRepository:
     async def update(self, recipe: Recipe, data: dict[str, object]) -> Recipe:
         for key, value in data.items():
             setattr(recipe, key, value)
-        await self.session.commit()
-        await self.session.refresh(recipe)
+        await self.session.flush()
         return recipe
 
     async def delete(self, recipe: Recipe) -> None:
         recipe.status = RecipeStatus.deleted
-        await self.session.commit()
+        await self.session.flush()

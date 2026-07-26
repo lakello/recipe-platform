@@ -72,6 +72,7 @@ class UploadService:
                 + timedelta(minutes=settings.upload_intent_ttl_minutes),
             )
         )
+        await self.photo_repo.session.commit()
         post = presign_post(
             bucket,
             key,
@@ -106,9 +107,11 @@ class UploadService:
         ):
             delete_object(intent.bucket, intent.object_key)
             await self.photo_repo.set_intent_status(intent, "failed")
+            await self.photo_repo.session.commit()
             raise HTTPException(status_code=422, detail="Uploaded object is invalid")
 
         await self.photo_repo.set_intent_status(intent, "validating")
+        await self.photo_repo.session.commit()
         validate_upload.delay(str(intent.id))
         return UploadStatusRead(upload_id=intent.id, status="validating")
 
@@ -146,6 +149,7 @@ class UploadService:
             recipe_id, intent.object_key, intent.expected_content_type
         )
         await self.photo_repo.set_intent_status(intent, "attached")
+        await self.photo_repo.session.commit()
 
         await self.recipe_repo.session.refresh(recipe)
         return RecipeRead.model_validate(recipe)
@@ -161,6 +165,7 @@ class UploadService:
         photo = await self.photo_repo.get_by_recipe(recipe_id)
         if photo:
             await self.photo_repo.delete(photo)
+            await self.photo_repo.session.commit()
 
     async def set_avatar(
         self, data: AttachPhotoRequest, current_user_id: uuid.UUID
@@ -174,9 +179,9 @@ class UploadService:
         self._validate_prefix(intent)
         avatar = public_url(settings.s3_bucket_avatars, intent.object_key)
         user.avatar_url = avatar
+        await self.photo_repo.set_intent_status(intent, "attached")
         await self.user_repo.session.commit()
         await self.user_repo.session.refresh(user)
-        await self.photo_repo.set_intent_status(intent, "attached")
         return UserRead.model_validate(user)
 
     async def _owned_intent(
@@ -191,9 +196,7 @@ class UploadService:
 
     def _validate_prefix(self, intent: UploadIntent) -> None:
         owner = (
-            intent.recipe_id
-            if intent.upload_type == "recipe_photo"
-            else intent.user_id
+            intent.recipe_id if intent.upload_type == "recipe_photo" else intent.user_id
         )
         prefix = (
             f"recipe-photos/{owner}/"

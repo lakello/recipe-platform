@@ -5,6 +5,7 @@ from datetime import UTC, datetime, timedelta
 
 import aiohttp
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.core.config import settings
 from app.core.security import (
@@ -146,31 +147,51 @@ class OAuthService:
             user = await self.user_repo.get_by_id(oauth_account.user_id)
             if not user or not user.is_active:
                 raise HTTPException(status_code=403, detail="Account is disabled")
-            return await self._issue_tokens(user.id)
+            tokens = await self._issue_tokens(user.id)
+            await self.user_repo.session.commit()
+            return tokens
 
-        # Link to existing account by email, or create new user
-        user = await self.user_repo.get_by_email(user_info.email)
-        if not user:
-            username = await self._generate_unique_username(
-                user_info.name, user_info.email
-            )
-            user = await self.user_repo.create(
-                User(
-                    email=user_info.email,
-                    username=username,
-                    password_hash=None,
-                    is_email_verified=True,
+        try:
+            # Link to existing account by email, or create new user
+            user = await self.user_repo.get_by_email(user_info.email)
+            if not user:
+                username = await self._generate_unique_username(
+                    user_info.name, user_info.email
+                )
+                user = await self.user_repo.create(
+                    User(
+                        email=user_info.email,
+                        username=username,
+                        password_hash=None,
+                        is_email_verified=True,
+                    )
+                )
+
+            await self.oauth_repo.create(
+                UserOAuthAccount(
+                    user_id=user.id,
+                    provider=provider,
+                    provider_user_id=user_info.provider_user_id,
                 )
             )
-
-        await self.oauth_repo.create(
-            UserOAuthAccount(
-                user_id=user.id,
-                provider=provider,
-                provider_user_id=user_info.provider_user_id,
+            tokens = await self._issue_tokens(user.id)
+            await self.user_repo.session.commit()
+            return tokens
+        except IntegrityError as exc:
+            await self.user_repo.session.rollback()
+            oauth_account = await self.oauth_repo.get_by_provider(
+                provider, user_info.provider_user_id
             )
-        )
-        return await self._issue_tokens(user.id)
+            if not oauth_account:
+                raise HTTPException(
+                    status_code=409, detail="OAuth account conflict"
+                ) from exc
+            user = await self.user_repo.get_by_id(oauth_account.user_id)
+            if not user or not user.is_active:
+                raise HTTPException(status_code=403, detail="Account is disabled")
+            tokens = await self._issue_tokens(user.id)
+            await self.user_repo.session.commit()
+            return tokens
 
     async def _generate_unique_username(self, name: str, email: str) -> str:
         base = re.sub(r"[^a-z0-9]", "", name.lower()) or email.split("@")[0]

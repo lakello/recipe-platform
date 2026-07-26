@@ -2,6 +2,7 @@ import uuid
 from datetime import date
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
@@ -30,10 +31,16 @@ class MealPlanRepository:
         if plan:
             return plan
         plan = MealPlan(user_id=user_id, week_start=week_start)
-        self.session.add(plan)
-        await self.session.commit()
-        await self.session.refresh(plan)
-        return plan
+        try:
+            async with self.session.begin_nested():
+                self.session.add(plan)
+                await self.session.flush()
+            return plan
+        except IntegrityError:
+            existing = await self.get_week_plan(user_id, week_start)
+            if existing is None:
+                raise
+            return existing
 
     async def get_item(self, item_id: uuid.UUID) -> MealPlanItem | None:
         result = await self.session.execute(

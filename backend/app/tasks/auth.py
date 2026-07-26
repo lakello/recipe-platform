@@ -11,5 +11,6 @@ def cleanup_refresh_tokens() -> None:
     async def _run() -> None:
         async with async_session_factory() as session:
             await RefreshTokenRepository(session).delete_expired_or_revoked()
+            await session.commit()
 
     asyncio.run(_run())

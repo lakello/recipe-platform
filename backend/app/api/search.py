@@ -40,6 +40,7 @@ async def search_recipes(
     sort: Annotated[str, Query()] = "relevance",
     page: Annotated[int, Query(ge=1)] = 1,
     size: Annotated[int, Query(ge=1, le=100)] = 20,
+    cursor: Annotated[str | None, Query()] = None,
     recipe_service: RecipeService = Depends(_recipe_service),
     current_user: User | None = Depends(get_optional_user),
 ) -> SearchResult:
@@ -54,15 +55,28 @@ async def search_recipes(
         sort=sort,  # type: ignore[arg-type]
         page=page,
         size=size,
+        search_after=SearchService.decode_cursor(cursor) if cursor else None,
     )
 
     search_service = SearchService(request.app.state.os_client)
-    ids, total = await search_service.search(params)
+    ids, total, next_cursor = await search_service.search(params)
 
     if not ids:
-        return SearchResult(total=total, page=page, size=size, items=[])
+        return SearchResult(
+            total=total,
+            page=page,
+            size=size,
+            items=[],
+            next_cursor=next_cursor,
+        )
 
     user_id = current_user.id if current_user else None
     items = await recipe_service.get_by_ids(ids, user_id)
 
-    return SearchResult(total=total, page=page, size=size, items=items)
+    return SearchResult(
+        total=total,
+        page=page,
+        size=size,
+        items=items,
+        next_cursor=next_cursor,
+    )

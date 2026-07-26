@@ -1,6 +1,7 @@
 import uuid
 
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
 from app.repositories.like import FavoriteRepository, LikeRepository
 from app.repositories.recipe import RecipeRepository
@@ -20,7 +21,12 @@ class LikeService:
         existing = await self.like_repo.get(user_id, recipe_id)
         if existing:
             raise HTTPException(status_code=409, detail="Already liked")
-        await self.like_repo.add(user_id, recipe_id)
+        try:
+            await self.like_repo.add(user_id, recipe_id)
+            await self.like_repo.session.commit()
+        except IntegrityError as exc:
+            await self.like_repo.session.rollback()
+            raise HTTPException(status_code=409, detail="Already liked") from exc
         count = await self.like_repo.count(recipe_id)
         return LikeStatus(likes_count=count, is_liked=True)
 
@@ -30,6 +36,7 @@ class LikeService:
         if not existing:
             raise HTTPException(status_code=404, detail="Like not found")
         await self.like_repo.remove(existing)
+        await self.like_repo.session.commit()
         count = await self.like_repo.count(recipe_id)
         return LikeStatus(likes_count=count, is_liked=False)
 
@@ -67,7 +74,12 @@ class FavoriteService:
         existing = await self.favorite_repo.get(user_id, recipe_id)
         if existing:
             raise HTTPException(status_code=409, detail="Already in favorites")
-        await self.favorite_repo.add(user_id, recipe_id)
+        try:
+            await self.favorite_repo.add(user_id, recipe_id)
+            await self.favorite_repo.session.commit()
+        except IntegrityError as exc:
+            await self.favorite_repo.session.rollback()
+            raise HTTPException(status_code=409, detail="Already in favorites") from exc
         return FavoriteStatus(is_favorited=True)
 
     async def remove_favorite(
@@ -78,6 +90,7 @@ class FavoriteService:
         if not existing:
             raise HTTPException(status_code=404, detail="Favorite not found")
         await self.favorite_repo.remove(existing)
+        await self.favorite_repo.session.commit()
         return FavoriteStatus(is_favorited=False)
 
     async def list_favorites(self, user_id: uuid.UUID) -> list[RecipeRead]:
@@ -89,15 +102,12 @@ class FavoriteService:
         liked_set = await self.like_repo.user_liked_batch(user_id, recipe_ids)
 
         recipes = []
-        for recipe_id in recipe_ids:
-            recipe = await self.recipe_repo.get_by_id(recipe_id)
-            if not recipe:
-                continue
+        for recipe in await self.recipe_repo.get_by_ids(recipe_ids):
             recipe_read = RecipeRead.model_validate(recipe)
             recipe_read = recipe_read.model_copy(
                 update={
-                    "likes_count": count_map.get(recipe_id, 0),
-                    "is_liked": recipe_id in liked_set,
+                    "likes_count": count_map.get(recipe.id, 0),
+                    "is_liked": recipe.id in liked_set,
                     "is_favorited": True,
                 }
             )

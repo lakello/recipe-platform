@@ -45,6 +45,7 @@ class CommentService:
                 body=data.body,
             )
         )
+        await self.comment_repo.session.commit()
         return CommentRead.model_validate(comment)
 
     async def edit_comment(
@@ -55,20 +56,24 @@ class CommentService:
     ) -> CommentRead:
         comment = await self._get_owned(comment_id, author_id)
         comment = await self.comment_repo.update(comment, {"body": data.body})
+        await self.comment_repo.session.commit()
         return CommentRead.model_validate(comment)
 
     async def delete_comment(self, comment_id: uuid.UUID, author_id: uuid.UUID) -> None:
         comment = await self._get_owned(comment_id, author_id)
         await self.comment_repo.update(comment, {"is_deleted": True})
+        await self.comment_repo.session.commit()
 
     async def hide_comment(self, comment_id: uuid.UUID) -> CommentRead:
         comment = await self._get_existing(comment_id)
         comment = await self.comment_repo.update(comment, {"is_hidden": True})
+        await self.comment_repo.session.commit()
         return CommentRead.model_validate(comment)
 
     async def unhide_comment(self, comment_id: uuid.UUID) -> CommentRead:
         comment = await self._get_existing(comment_id)
         comment = await self.comment_repo.update(comment, {"is_hidden": False})
+        await self.comment_repo.session.commit()
         return CommentRead.model_validate(comment)
 
     async def list_comments(

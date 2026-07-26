@@ -33,7 +33,9 @@ def make_user(**kwargs) -> User:
 
 @pytest.fixture
 def mock_repo() -> AsyncMock:
-    return AsyncMock(spec=UserRepository)
+    repository = AsyncMock(spec=UserRepository)
+    repository.session = AsyncMock()
+    return repository
 
 
 @pytest.fixture

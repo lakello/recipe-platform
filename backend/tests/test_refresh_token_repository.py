@@ -75,4 +75,4 @@ async def test_cleanup_deletes_records_after_their_ttl() -> None:
     repository = RefreshTokenRepository(session)
 
     assert await repository.delete_expired_or_revoked() == 2
-    session.commit.assert_awaited_once()
+    session.flush.assert_awaited_once()
