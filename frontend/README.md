@@ -430,11 +430,11 @@ Frontend не загружает файлы через backend напрямую.
    - тип файла;
    - расширение.
 
-3. 3.Frontend запрашивает у backend pre-signed upload URL.
-4. 4.Frontend загружает файл напрямую в Object Storage.
-5. 5.Frontend сообщает backend metadata загруженного файла.
-6. 6.Backend сохраняет запись в БД.
-7. 7.Worker создаёт thumbnail.
+3. Frontend запрашивает у backend presigned POST и `upload_id`.
+4. Frontend загружает multipart-форму напрямую в Object Storage.
+5. Frontend подтверждает загрузку и опрашивает статус серверной проверки.
+6. После статуса `validated` frontend прикрепляет загрузку по `upload_id`.
+7. Backend отклоняет и удаляет невалидные или просроченные загрузки.
 
 Поддерживаемые форматы:
 
@@ -748,15 +748,17 @@ Backend API:
 
 ### Загрузка фото (feat/uploads)
 
-- `src/features/uploads/api/uploadsApi.ts` — методы: `presign`, `uploadToS3`, `attachRecipePhoto`, `deleteRecipePhoto`, `setAvatar`, `getViewUrl`
-- `src/features/uploads/hooks/useUpload.ts` — хук `useRecipePhotoUpload` (presign → PUT в MinIO → attach)
+- `src/features/uploads/api/uploadsApi.ts` — методы: `presign`, `uploadToS3`, `confirm`, `status`, `attachRecipePhoto`, `deleteRecipePhoto`, `setAvatar`, `getViewUrl`
+- `src/features/uploads/hooks/useUpload.ts` — хуки загрузки фото и аватара (presign → POST в MinIO/S3 → confirm → polling → attach)
 - `src/features/uploads/ui/PhotoUpload.tsx` — компонент выбора и предпросмотра фото с кнопками «Добавить» / «Удалить»
 - `RecipePage` — интегрирован `PhotoUpload` с отображением текущего фото рецепта
 
-Сценарий загрузки (3 шага):
-1. `POST /api/uploads/presign` — получить presigned PUT URL
-2. `PUT <presigned_url>` — загрузить файл напрямую в MinIO (без прокси через бэкенд)
-3. `POST /api/uploads/recipes/{id}/photo` — сообщить бэкенду ключ загруженного файла
+Сценарий загрузки:
+1. `POST /api/uploads/presign` — получить `upload_id`, presigned POST URL и поля формы
+2. `POST <presigned_url>` — загрузить multipart-форму напрямую в MinIO/S3
+3. `POST /api/uploads/{upload_id}/confirm` — запустить серверную проверку
+4. `GET /api/uploads/status/{upload_id}` — дождаться статуса `validated`
+5. `POST /api/uploads/recipes/{id}/photo` — прикрепить проверенную загрузку по `upload_id`
 
 ### Ингредиенты и шаги (feat/ingredients-steps)
 
@@ -974,7 +976,7 @@ npm run lint       # ESLint
 5. ~~Recipes CRUD + список + детали.~~ ✓
 6. ~~Категории + фильтрация + admin UI.~~ ✓
 7. ~~Ингредиенты и шаги (DnD-сортировка).~~ ✓
-8. ~~Загрузка фото (presign → MinIO → attach).~~ ✓
+8. ~~Доверенная загрузка фото (presign → Object Storage → validate → attach).~~ ✓
 9. ~~Likes, favorites.~~ ✓
 10. ~~Comments (ответы, модерация).~~ ✓
 11. ~~Public user profiles, redesigned recipe cards.~~ ✓
