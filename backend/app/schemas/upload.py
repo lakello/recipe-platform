@@ -12,12 +12,19 @@ class PresignRequest(BaseModel):
 
 
 class PresignResponse(BaseModel):
+    upload_id: uuid.UUID
     upload_url: str
+    fields: dict[str, str]
     key: str
 
 
 class AttachPhotoRequest(BaseModel):
-    key: str
+    upload_id: uuid.UUID
+
+
+class UploadStatusRead(BaseModel):
+    upload_id: uuid.UUID
+    status: Literal["pending", "validating", "validated", "failed", "attached"]
 
 
 class RecipePhotoRead(BaseModel):
