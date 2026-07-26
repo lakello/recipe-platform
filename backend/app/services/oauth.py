@@ -7,7 +7,11 @@ import aiohttp
 from fastapi import HTTPException
 
 from app.core.config import settings
-from app.core.security import create_access_token, create_refresh_token
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    hash_refresh_token,
+)
 from app.models.oauth_account import UserOAuthAccount
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
@@ -199,7 +203,8 @@ class OAuthService:
         await self.token_repo.create(
             RefreshToken(
                 user_id=user_id,
-                token=refresh_token,
+                token_hash=hash_refresh_token(refresh_token),
+                family_id=uuid.uuid4(),
                 expires_at=expires_at,
             )
         )

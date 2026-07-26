@@ -1,5 +1,7 @@
 import uuid
 from datetime import UTC, datetime, timedelta
+from hashlib import sha256
+from secrets import token_urlsafe
 
 import jwt
 from fastapi import HTTPException
@@ -28,4 +30,8 @@ def decode_access_token(token: str) -> uuid.UUID:
 
 
 def create_refresh_token() -> str:
-    return str(uuid.uuid4())
+    return token_urlsafe(48)
+
+
+def hash_refresh_token(token: str) -> str:
+    return sha256(token.encode()).hexdigest()
