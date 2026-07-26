@@ -54,10 +54,21 @@ export function RecipeCard({ recipe, isAuthenticated }: RecipeCardProps) {
     e.stopPropagation()
   }
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      handleCardClick()
+    }
+  }
+
   return (
     <div
+      role="link"
+      tabIndex={0}
+      aria-label={`Открыть рецепт «${recipe.title}»`}
       onClick={handleCardClick}
-      className="rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden"
+      onKeyDown={handleKeyDown}
+      className="rounded-2xl bg-white shadow-sm hover:shadow-md transition-shadow cursor-pointer overflow-hidden focus:outline-none focus:ring-2 focus:ring-blue-500"
     >
       {/* Фото */}
       <div className="aspect-[16/9] w-full overflow-hidden">
@@ -65,6 +76,9 @@ export function RecipeCard({ recipe, isAuthenticated }: RecipeCardProps) {
           <img
             src={uploadsApi.getViewUrl(recipe.photo.key)}
             alt={recipe.title}
+            loading="lazy"
+            decoding="async"
+            sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
             className="w-full h-full object-cover"
           />
         ) : (
