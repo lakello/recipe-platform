@@ -123,7 +123,7 @@ HTTP API слой.
 - `/api/meal-plans` — недельный план питания
 - `/api/shopping-list` — список покупок
 - `/api/notifications` — уведомления
-- `/api/uploads` — presigned URL, привязка фото
+- `/api/uploads` — presigned POST, проверка и привязка фото
 - `/api/search` — полнотекстовый поиск (OpenSearch)
 - `/api/admin` — модерация и административные функции
 - `GET /health` — liveness probe
@@ -625,11 +625,11 @@ Backend не должен сохранять пользовательские ф
 
 Подход:
 
-1. 1.Backend валидирует запрос на загрузку.
-2. 2.Backend выдаёт pre-signed URL.
-3. 3.Клиент загружает файл напрямую в Object Storage.
-4. 4.Backend сохраняет metadata файла.
-5. 5.Worker генерирует thumbnail.
+1. Backend создаёт ограниченное по времени разрешение на загрузку.
+2. Клиент загружает файл напрямую в Object Storage через presigned POST.
+3. Backend проверяет наличие, размер и заявленный MIME-тип объекта.
+4. Worker декодирует изображение, проверяет фактический формат и число пикселей, затем перекодирует его без metadata.
+5. Только проверенный объект можно привязать к рецепту или профилю; невалидные и устаревшие загрузки удаляются.
 
 Для local-окружения используется MinIO.
 
@@ -848,28 +848,31 @@ Endpoints:
 
 ### Загрузка фото (feat/uploads)
 
-- `app/models/photo.py` — модель `RecipePhoto`: `key` (путь в Object Storage), `content_type`, FK на `recipes`
-- `app/repositories/photo.py` — `upsert` (одно фото на рецепт), `get_by_recipe`, `delete`
-- `app/services/upload.py` — `presign_upload`, `attach_recipe_photo`, `delete_recipe_photo`, `set_avatar`
-- `app/core/storage.py` — boto3-клиент для MinIO/S3; presigned URL подписываются с `s3_public_url` (иначе подпись не совпадёт с хостом браузера)
-- `app/schemas/upload.py` — `PresignRequest`, `PresignResponse`, `AttachPhotoRequest`
-- `app/tasks/thumbnails.py` — заглушка Celery-задачи `generate_thumbnail` (будет реализована позже)
+- `app/models/photo.py` — модели `RecipePhoto` и `UploadIntent`, связывающая загрузку с пользователем, назначением, ожидаемым MIME-типом, сроком и статусом
+- `app/repositories/photo.py` — операции с фотографиями и разрешениями на загрузку
+- `app/services/upload.py` — выдача presigned POST, подтверждение, проверка статуса и привязка только валидированных файлов
+- `app/core/storage.py` — boto3-клиент для MinIO/S3, presigned POST с ограничением размера 10 МБ и служебные операции с объектами
+- `app/schemas/upload.py` — запросы и ответы для разрешения, подтверждения, статуса и привязки загрузки
+- `app/tasks/thumbnails.py` — Celery-проверка изображения с декодированием и перекодированием без metadata, а также очистка устаревших загрузок
 
 Endpoints:
 
 | Метод | Путь | Auth | Описание |
 |---|---|---|---|
-| `POST` | `/api/uploads/presign` | 🔒 | Получить presigned PUT URL для загрузки файла |
-| `POST` | `/api/uploads/recipes/{id}/photo` | 🔒 автор | Привязать загруженное фото к рецепту |
+| `POST` | `/api/uploads/presign` | 🔒 | Создать разрешение и получить presigned POST для загрузки |
+| `POST` | `/api/uploads/{upload_id}/confirm` | 🔒 | Подтвердить загрузку и запустить проверку |
+| `GET` | `/api/uploads/status/{upload_id}` | 🔒 | Получить статус проверки |
+| `POST` | `/api/uploads/recipes/{id}/photo` | 🔒 автор | Привязать валидированную загрузку к рецепту |
 | `DELETE` | `/api/uploads/recipes/{id}/photo` | 🔒 автор | Удалить фото рецепта |
 | `POST` | `/api/uploads/avatar` | 🔒 | Установить аватар пользователя |
 | `GET` | `/api/uploads/view?key=` | — | Редирект на presigned GET URL фото |
 
 Сценарий загрузки:
-1. Клиент запрашивает presigned URL (`POST /api/uploads/presign`)
-2. Клиент загружает файл напрямую в MinIO (`PUT <presigned_url>`)
-3. Клиент сообщает бэкенду ключ файла (`POST /api/uploads/recipes/{id}/photo`)
-4. Бэкенд сохраняет metadata и ставит задачу на генерацию thumbnail
+1. Клиент получает `upload_id`, URL и поля формы (`POST /api/uploads/presign`)
+2. Клиент отправляет multipart-форму напрямую в MinIO/S3
+3. Клиент подтверждает загрузку (`POST /api/uploads/{upload_id}/confirm`)
+4. Worker проверяет и безопасно перекодирует изображение
+5. Клиент дожидается статуса `validated` и прикрепляет файл по `upload_id`
 
 Переменные окружения:
 
