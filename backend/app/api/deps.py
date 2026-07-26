@@ -16,9 +16,9 @@ async def get_current_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_bearer),
     session: AsyncSession = Depends(get_db),
 ) -> User:
-    token = request.cookies.get("access_token")
-    if not token and credentials:
-        token = credentials.credentials
+    token = (
+        credentials.credentials if credentials else request.cookies.get("access_token")
+    )
     if not token:
         raise HTTPException(status_code=401, detail="Not authenticated")
     user_id = decode_access_token(token)
@@ -59,9 +59,9 @@ async def get_optional_user(
     credentials: HTTPAuthorizationCredentials | None = Depends(_optional_bearer),
     session: AsyncSession = Depends(get_db),
 ) -> User | None:
-    token = request.cookies.get("access_token")
-    if not token and credentials:
-        token = credentials.credentials
+    token = (
+        credentials.credentials if credentials else request.cookies.get("access_token")
+    )
     if not token:
         return None
     try:

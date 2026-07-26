@@ -39,6 +39,11 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["http://localhost:3000", "http://localhost:5173"]
     cookie_secure: bool = False
     cookie_samesite: Literal["lax", "strict", "none"] = "lax"
+    cookie_domain: str | None = None
+
+    oauth_connect_timeout_seconds: float = 3.0
+    oauth_read_timeout_seconds: float = 5.0
+    oauth_total_timeout_seconds: float = 10.0
 
     google_client_id: str = ""
     google_client_secret: str = Field(default="", repr=False)
@@ -64,6 +69,11 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return [origin.strip() for origin in v.split(",")]
         return v
+
+    @field_validator("cookie_domain", mode="before")
+    @classmethod
+    def empty_cookie_domain(cls, value: object) -> object:
+        return None if value == "" else value
 
     @model_validator(mode="after")
     def validate_runtime_security(self) -> "Settings":

@@ -1,9 +1,7 @@
-import { apiJson } from '@/shared/api/client'
+import { apiFetch, apiJson } from '@/shared/api/client'
 
-export interface TokenResponse {
-  access_token: string
-  refresh_token: string
-  token_type: string
+export interface WebAuthResponse {
+  csrf_token: string
 }
 
 export interface RegisterData {
@@ -19,17 +17,19 @@ export interface LoginData {
 
 export const authApi = {
   register: (data: RegisterData) =>
-    apiJson<TokenResponse>('/api/auth/register', {
+    apiJson<WebAuthResponse>('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
   login: (data: LoginData) =>
-    apiJson<TokenResponse>('/api/auth/login', {
+    apiJson<WebAuthResponse>('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify(data),
     }),
 
-  logout: () =>
-    apiJson<void>('/api/auth/logout', { method: 'POST' }),
+  logout: async () => {
+    const response = await apiFetch('/api/auth/logout', { method: 'POST' })
+    if (!response.ok) throw new Error('Не удалось выйти')
+  },
 }
