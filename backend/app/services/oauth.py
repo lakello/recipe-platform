@@ -34,59 +34,55 @@ class OAuthService:
         user_repo: UserRepository,
         token_repo: RefreshTokenRepository,
         oauth_repo: OAuthAccountRepository,
+        http_session: aiohttp.ClientSession,
     ) -> None:
         self.user_repo = user_repo
         self.token_repo = token_repo
         self.oauth_repo = oauth_repo
+        self.http_session = http_session
 
     # --- Google ---
 
     async def _exchange_google_code(self, code: str) -> str:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "https://oauth2.googleapis.com/token",
-                data={
-                    "code": code,
-                    "client_id": settings.google_client_id,
-                    "client_secret": settings.google_client_secret,
-                    "redirect_uri": settings.google_redirect_uri,
-                    "grant_type": "authorization_code",
-                },
-            ) as resp:
-                if resp.status != 200:
-                    raise HTTPException(
-                        status_code=502, detail="Google token exchange failed"
-                    )
-                data = await resp.json()
-                return str(data["access_token"])
+        async with self.http_session.post(
+            "https://oauth2.googleapis.com/token",
+            data={
+                "code": code,
+                "client_id": settings.google_client_id,
+                "client_secret": settings.google_client_secret,
+                "redirect_uri": settings.google_redirect_uri,
+                "grant_type": "authorization_code",
+            },
+        ) as resp:
+            if resp.status != 200:
+                raise HTTPException(
+                    status_code=502, detail="Google token exchange failed"
+                )
+            data = await resp.json()
+            return str(data["access_token"])
 
     async def _get_google_user_info(self, access_token: str) -> OAuthUserInfo:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://www.googleapis.com/oauth2/v2/userinfo",
-                headers={"Authorization": f"Bearer {access_token}"},
-            ) as resp:
-                if resp.status != 200:
-                    raise HTTPException(
-                        status_code=502, detail="Google userinfo request failed"
-                    )
-                data = await resp.json()
-                email = data.get("email")
-                if not email:
-                    raise HTTPException(
-                        status_code=400, detail="Google account has no email"
-                    )
-                return OAuthUserInfo(
-                    provider_user_id=data["id"],
-                    email=email,
-                    name=data.get("name", ""),
+        async with self.http_session.get(
+            "https://www.googleapis.com/oauth2/v2/userinfo",
+            headers={"Authorization": f"Bearer {access_token}"},
+        ) as resp:
+            if resp.status != 200:
+                raise HTTPException(
+                    status_code=502, detail="Google userinfo request failed"
                 )
+            data = await resp.json()
+            email = data.get("email")
+            if not email:
+                raise HTTPException(
+                    status_code=400, detail="Google account has no email"
+                )
+            return OAuthUserInfo(
+                provider_user_id=data["id"],
+                email=email,
+                name=data.get("name", ""),
+            )
 
-    async def handle_google_callback(
-        self, code: str, state: str, stored_state: str | None
-    ) -> TokenResponse:
-        if not stored_state or state != stored_state:
-            raise HTTPException(status_code=400, detail="Invalid OAuth state")
+    async def handle_google_callback(self, code: str) -> TokenResponse:
         access_token = await self._exchange_google_code(code)
         user_info = await self._get_google_user_info(access_token)
         return await self._get_or_create_user(user_info, provider="google")
@@ -94,52 +90,46 @@ class OAuthService:
     # --- Yandex ---
 
     async def _exchange_yandex_code(self, code: str) -> str:
-        async with aiohttp.ClientSession() as session:
-            async with session.post(
-                "https://oauth.yandex.ru/token",
-                data={
-                    "code": code,
-                    "client_id": settings.yandex_client_id,
-                    "client_secret": settings.yandex_client_secret,
-                    "redirect_uri": settings.yandex_redirect_uri,
-                    "grant_type": "authorization_code",
-                },
-            ) as resp:
-                if resp.status != 200:
-                    raise HTTPException(
-                        status_code=502, detail="Yandex token exchange failed"
-                    )
-                data = await resp.json()
-                return str(data["access_token"])
+        async with self.http_session.post(
+            "https://oauth.yandex.ru/token",
+            data={
+                "code": code,
+                "client_id": settings.yandex_client_id,
+                "client_secret": settings.yandex_client_secret,
+                "redirect_uri": settings.yandex_redirect_uri,
+                "grant_type": "authorization_code",
+            },
+        ) as resp:
+            if resp.status != 200:
+                raise HTTPException(
+                    status_code=502, detail="Yandex token exchange failed"
+                )
+            data = await resp.json()
+            return str(data["access_token"])
 
     async def _get_yandex_user_info(self, access_token: str) -> OAuthUserInfo:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                "https://login.yandex.ru/info?format=json",
-                headers={"Authorization": f"OAuth {access_token}"},
-            ) as resp:
-                if resp.status != 200:
-                    raise HTTPException(
-                        status_code=502, detail="Yandex userinfo request failed"
-                    )
-                data = await resp.json()
-                email = data.get("default_email") or (data.get("emails") or [None])[0]
-                if not email:
-                    raise HTTPException(
-                        status_code=400, detail="Yandex account has no email"
-                    )
-                name = data.get("real_name") or data.get("display_name") or ""
-                return OAuthUserInfo(
-                    provider_user_id=str(data["id"]),
-                    email=email,
-                    name=name,
+        async with self.http_session.get(
+            "https://login.yandex.ru/info?format=json",
+            headers={"Authorization": f"OAuth {access_token}"},
+        ) as resp:
+            if resp.status != 200:
+                raise HTTPException(
+                    status_code=502, detail="Yandex userinfo request failed"
                 )
+            data = await resp.json()
+            email = data.get("default_email") or (data.get("emails") or [None])[0]
+            if not email:
+                raise HTTPException(
+                    status_code=400, detail="Yandex account has no email"
+                )
+            name = data.get("real_name") or data.get("display_name") or ""
+            return OAuthUserInfo(
+                provider_user_id=str(data["id"]),
+                email=email,
+                name=name,
+            )
 
-    async def handle_yandex_callback(
-        self, code: str, state: str, stored_state: str | None
-    ) -> TokenResponse:
-        if not stored_state or state != stored_state:
-            raise HTTPException(status_code=400, detail="Invalid OAuth state")
+    async def handle_yandex_callback(self, code: str) -> TokenResponse:
         access_token = await self._exchange_yandex_code(code)
         user_info = await self._get_yandex_user_info(access_token)
         return await self._get_or_create_user(user_info, provider="yandex")

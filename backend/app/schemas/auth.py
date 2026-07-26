@@ -18,5 +18,9 @@ class TokenResponse(BaseModel):
     token_type: str = "bearer"
 
 
+class WebAuthResponse(BaseModel):
+    csrf_token: str
+
+
 class RefreshRequest(BaseModel):
     refresh_token: str
