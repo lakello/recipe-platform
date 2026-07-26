@@ -1,6 +1,14 @@
 import { API_BASE_URL } from '@/shared/config/env'
 
 let isRefreshing = false
+const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
+
+function csrfToken(): string | undefined {
+  const cookie = document.cookie
+    .split('; ')
+    .find((item) => item.startsWith('csrf_token='))
+  return cookie ? decodeURIComponent(cookie.slice('csrf_token='.length)) : undefined
+}
 
 export class ApiError extends Error {
   status: number
@@ -14,10 +22,15 @@ async function fetchWithCredentials(
   path: string,
   init?: RequestInit,
 ): Promise<Response> {
+  const headers = new Headers(init?.headers)
+  headers.set('Content-Type', 'application/json')
+  const method = (init?.method ?? 'GET').toUpperCase()
+  const csrf = csrfToken()
+  if (csrf && !SAFE_METHODS.has(method)) headers.set('X-CSRF-Token', csrf)
   return fetch(`${API_BASE_URL}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
-    credentials: 'include',
     ...init,
+    headers,
+    credentials: 'include',
   })
 }
 

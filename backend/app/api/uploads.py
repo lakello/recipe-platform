@@ -1,11 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.config import settings
+from app.core.rate_limit import client_ip, enforce
 from app.core.storage import presign_get
 from app.db.session import get_db
 from app.models.user import User
@@ -33,9 +34,14 @@ def _upload_service(session: AsyncSession = Depends(get_db)) -> UploadService:
     )
 
 
+async def _limit_presign(request: Request) -> None:
+    await enforce(request, "presign", client_ip(request), 30)
+
+
 @router.post("/presign", response_model=PresignResponse)
 async def presign(
     request: PresignRequest,
+    _: None = Depends(_limit_presign),
     service: UploadService = Depends(_upload_service),
     current_user: User = Depends(get_current_user),
 ) -> PresignResponse:
