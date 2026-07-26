@@ -2,8 +2,10 @@ import logging
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
+import aiohttp
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from redis.asyncio import Redis
 from sqlalchemy import text
 
 from app.api.admin import router as admin_router
@@ -25,7 +27,7 @@ from app.api.users import router as users_router
 from app.core.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.logging import setup_logging
-from app.core.middleware import CorrelationIdMiddleware
+from app.core.middleware import CorrelationIdMiddleware, CSRFMiddleware
 from app.core.opensearch import create_opensearch_client, ensure_index_exists
 from app.db.session import engine
 
@@ -36,12 +38,24 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     client = create_opensearch_client()
+    redis = Redis.from_url(settings.redis_url, decode_responses=True)
+    oauth_session = aiohttp.ClientSession(
+        timeout=aiohttp.ClientTimeout(
+            total=settings.oauth_total_timeout_seconds,
+            connect=settings.oauth_connect_timeout_seconds,
+            sock_read=settings.oauth_read_timeout_seconds,
+        )
+    )
     try:
         await ensure_index_exists(client)
     except Exception as exc:
         logger.warning("OpenSearch not available at startup: %s", exc)
     app.state.os_client = client
+    app.state.redis = redis
+    app.state.oauth_session = oauth_session
     yield
+    await oauth_session.close()
+    await redis.aclose()
     await client.close()
 
 
@@ -62,6 +76,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.add_middleware(CorrelationIdMiddleware)
+app.add_middleware(CSRFMiddleware)
 
 register_exception_handlers(app)
 
