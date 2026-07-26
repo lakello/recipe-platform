@@ -31,7 +31,7 @@
 | Backend + Frontend: поиск рецептов (OpenSearch) | ✅ Готово |
 | Backend + Frontend: план питания на неделю | ✅ Готово |
 | Backend + Frontend: список покупок (async Celery + polling) | ✅ Готово |
-| Backend + Frontend: OAuth Google и Яндекс | ✅ Готово |
+| Backend + Frontend: защищённые Auth и OAuth Google/Яндекс | ✅ Готово |
 | Backend + Frontend: модерация и админ-панель | ✅ Готово |
 | Backend + Frontend: уведомления и email-доставка | ✅ Готово |
 | Frontend: автоматические тесты | ⏳ Не настроены |
@@ -513,6 +513,9 @@ infra/helm/
 - refresh token rotation;
 - CORS whitelist;
 - rate limiting;
+- CSRF-защита cookie-auth запросов;
+- одноразовый OAuth state;
+- отдельный Bearer-сценарий для мобильных и desktop-клиентов;
 - email verification;
 - проверка прав доступа;
 - валидация входных данных;
