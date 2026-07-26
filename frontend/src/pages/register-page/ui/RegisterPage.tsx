@@ -50,7 +50,7 @@ export function RegisterPage() {
             error={errors.password?.message}
             {...formRegister('password')}
           />
-          {error && <p className="text-sm text-red-500">{error.message}</p>}
+          {error && <p role="alert" className="text-sm text-red-500">{error.message}</p>}
           <Button type="submit" loading={isPending} className="mt-2 w-full">
             Зарегистрироваться
           </Button>

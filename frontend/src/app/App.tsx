@@ -1,31 +1,33 @@
+import { lazy, Suspense } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { ProtectedRoute } from './router/ProtectedRoute'
 import { AdminRoute } from './router/AdminRoute'
 import { QueryProvider } from './providers/QueryProvider'
 import { NotificationBell } from '@/features/notifications/ui/NotificationBell'
 import { useCurrentUser } from '@/features/profile/hooks/useCurrentUser'
-import { LoginPage } from '@/pages/login-page'
-import { ProfilePage } from '@/pages/profile-page'
-import { RegisterPage } from '@/pages/register-page'
-import { RecipesListPage } from '@/pages/recipes-list-page'
-import { RecipePage } from '@/pages/recipe-page'
-import { RecipeCreatePage } from '@/pages/recipe-create-page'
-import { RecipeEditPage } from '@/pages/recipe-edit-page'
-import { DraftsPage } from '@/pages/drafts-page'
-import { FavoritesPage } from '@/pages/favorites-page'
-import { AdminCategoriesPage } from '@/pages/admin-categories-page'
-import { AdminUsersPage } from '@/pages/admin-users-page'
-import { AdminRecipesPage } from '@/pages/admin-recipes-page'
-import { AdminCommentsPage } from '@/pages/admin-comments-page'
-import { AdminReportsPage } from '@/pages/admin-reports-page'
-import { PublicProfilePage } from '@/pages/user-profile-page'
-import { FollowersPage } from '@/pages/followers-page'
-import { FollowingPage } from '@/pages/following-page'
-import { FeedPage } from '@/pages/feed-page'
-import { SearchPage } from '@/pages/search-page'
-import { MealPlanPage } from '@/pages/meal-plan-page'
-import { ShoppingListPage } from '@/pages/shopping-list-page'
-import { NotificationsPage } from '@/pages/notifications-page'
+
+const LoginPage = lazy(() => import('@/pages/login-page').then((m) => ({ default: m.LoginPage })))
+const RegisterPage = lazy(() => import('@/pages/register-page').then((m) => ({ default: m.RegisterPage })))
+const RecipesListPage = lazy(() => import('@/pages/recipes-list-page').then((m) => ({ default: m.RecipesListPage })))
+const RecipePage = lazy(() => import('@/pages/recipe-page').then((m) => ({ default: m.RecipePage })))
+const RecipeCreatePage = lazy(() => import('@/pages/recipe-create-page').then((m) => ({ default: m.RecipeCreatePage })))
+const RecipeEditPage = lazy(() => import('@/pages/recipe-edit-page').then((m) => ({ default: m.RecipeEditPage })))
+const DraftsPage = lazy(() => import('@/pages/drafts-page').then((m) => ({ default: m.DraftsPage })))
+const FavoritesPage = lazy(() => import('@/pages/favorites-page').then((m) => ({ default: m.FavoritesPage })))
+const ProfilePage = lazy(() => import('@/pages/profile-page').then((m) => ({ default: m.ProfilePage })))
+const PublicProfilePage = lazy(() => import('@/pages/user-profile-page').then((m) => ({ default: m.PublicProfilePage })))
+const FollowersPage = lazy(() => import('@/pages/followers-page').then((m) => ({ default: m.FollowersPage })))
+const FollowingPage = lazy(() => import('@/pages/following-page').then((m) => ({ default: m.FollowingPage })))
+const FeedPage = lazy(() => import('@/pages/feed-page').then((m) => ({ default: m.FeedPage })))
+const SearchPage = lazy(() => import('@/pages/search-page').then((m) => ({ default: m.SearchPage })))
+const MealPlanPage = lazy(() => import('@/pages/meal-plan-page').then((m) => ({ default: m.MealPlanPage })))
+const ShoppingListPage = lazy(() => import('@/pages/shopping-list-page').then((m) => ({ default: m.ShoppingListPage })))
+const NotificationsPage = lazy(() => import('@/pages/notifications-page').then((m) => ({ default: m.NotificationsPage })))
+const AdminCategoriesPage = lazy(() => import('@/pages/admin-categories-page').then((m) => ({ default: m.AdminCategoriesPage })))
+const AdminUsersPage = lazy(() => import('@/pages/admin-users-page').then((m) => ({ default: m.AdminUsersPage })))
+const AdminRecipesPage = lazy(() => import('@/pages/admin-recipes-page').then((m) => ({ default: m.AdminRecipesPage })))
+const AdminCommentsPage = lazy(() => import('@/pages/admin-comments-page').then((m) => ({ default: m.AdminCommentsPage })))
+const AdminReportsPage = lazy(() => import('@/pages/admin-reports-page').then((m) => ({ default: m.AdminReportsPage })))
 
 function GlobalBell() {
   const { data: user } = useCurrentUser()
@@ -42,7 +44,14 @@ export function App() {
     <QueryProvider>
       <BrowserRouter>
         <GlobalBell />
-        <Routes>
+        <Suspense
+          fallback={
+            <div className="grid min-h-screen place-items-center" role="status">
+              Загрузка…
+            </div>
+          }
+        >
+          <Routes>
           <Route path="/" element={<Navigate to="/recipes" replace />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/register" element={<RegisterPage />} />
@@ -164,7 +173,8 @@ export function App() {
               </ProtectedRoute>
             }
           />
-        </Routes>
+          </Routes>
+        </Suspense>
       </BrowserRouter>
     </QueryProvider>
   )
