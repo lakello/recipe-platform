@@ -44,8 +44,8 @@ Frontend отвечает за:
 - поиск и фильтрацию рецептов;
 - регистрацию и авторизацию;
 - OAuth login через Google и Яндекс;
-- хранение и обновление access token;
-- работу с refresh token через backend;
+- cookie-auth без доступа JavaScript к access/refresh token;
+- CSRF-защиту изменяющих запросов;
 - отображение профиля пользователя;
 - редактирование профиля;
 - загрузку аватара;
@@ -246,44 +246,44 @@ export async function getRecipes() {
 
 ## Аутентификация
 
-Frontend работает с JWT-токенами, которые выдаёт backend.
+Web frontend работает с JWT в `HttpOnly` cookies и не получает access/refresh token в JSON.
 
 Общий сценарий:
 
-1. 1.Пользователь выполняет login.
-2. 2.Backend возвращает access token и refresh token или устанавливает refresh token в cookie.
-3. 3.Frontend использует access token для запросов к API.
-4. 4.При истечении access token выполняется refresh.
-5. 5.При logout токены удаляются, backend инвалидирует refresh session.
+1. Пользователь выполняет login.
+2. Backend устанавливает `HttpOnly` auth cookies и доступную JavaScript CSRF cookie.
+3. Frontend добавляет `X-CSRF-Token` к изменяющим запросам.
+4. При истечении access token выполняется cookie refresh с ротацией.
+5. При logout cookies удаляются, backend инвалидирует refresh session.
 
-Рекомендуемый подход:
+Реализованный подход:
 
-- access token хранить в памяти приложения или в безопасном state-слое;
-- refresh token по возможности хранить в `HttpOnly Secure SameSite` cookie;
-- не хранить чувствительные токены в localStorage для production;
+- access и refresh token хранятся только в `HttpOnly Secure SameSite` cookies;
+- токены не сохраняются в localStorage и не возвращаются web-клиенту в JSON;
+- double-submit CSRF token передаётся заголовком `X-CSRF-Token`;
 - обрабатывать `401 Unauthorized` централизованно;
 - использовать route guards для защищённых страниц.
 
 ## OAuth
 
-Frontend должен поддерживать вход через:
+Frontend поддерживает вход через:
 
 - Google OAuth;
 - Яндекс OAuth.
 
 Сценарий:
 
-1. 1.Пользователь нажимает кнопку входа через провайдера.
-2. 2.Frontend перенаправляет пользователя на backend endpoint:
+1. Пользователь нажимает кнопку входа через провайдера.
+2. Frontend перенаправляет пользователя на backend endpoint:
 
 ```
 /api/auth/google/login
 /api/auth/yandex/login
 ```
 
-1. 1.Backend выполняет OAuth flow.
-2. 2.После успешного входа пользователь возвращается на frontend callback page.
-3. 3.Frontend обновляет состояние авторизации.
+3. Backend проверяет и одноразово удаляет OAuth state, затем выполняет OAuth flow.
+4. После успешного входа backend устанавливает auth/CSRF cookies и возвращает пользователя на frontend.
+5. Frontend обновляет состояние авторизации.
 
 ## Переменные окружения
 
@@ -697,18 +697,18 @@ Backend API:
 
 ### OAuth Google и Яндекс (feat/oauth-google-yandex)
 
-- `src/pages/login-page/ui/LoginPage.tsx` — кнопки «Войти через Google» и «Войти через Яндекс» с SVG-иконками провайдеров; клик перенаправляет браузер на backend login endpoint (`/api/auth/google/login`, `/api/auth/yandex/login`); OAuth-ошибки из query-параметра `?error=oauth_error&message=...` отображаются на форме
+- `src/pages/login-page/ui/LoginPage.tsx` — кнопки «Войти через Google» и «Войти через Яндекс» перенаправляют браузер на backend login endpoint; OAuth-ошибка передаётся только безопасным кодом `?error=oauth_error`
 
 Поведение:
 - Клик по кнопке выполняет `window.location.href` на backend endpoint (не AJAX-запрос)
 - Backend выполняет OAuth flow, устанавливает auth cookies и редиректит на `FRONTEND_URL`
 - Frontend подхватывает авторизацию через существующий `useCurrentUser` (куки установлены)
-- При ошибке OAuth backend редиректит на `/login?error=oauth_error&message=...`
+- При ошибке OAuth backend редиректит на `/login?error=oauth_error` без внутреннего текста исключения
 
 ### Авторизация (feat/frontend-auth)
 
 - **Зависимости:** react-hook-form, zod, @hookform/resolvers
-- `src/shared/api/client.ts` — `credentials: 'include'`, автоматический refresh при 401
+- `src/shared/api/client.ts` — `credentials: 'include'`, CSRF header для мутаций и автоматический refresh при 401
 - `src/features/auth/` — API и хуки: `useLogin`, `useRegister`, `useLogout`
 - `src/features/profile/` — API и хуки: `useCurrentUser`, `useUpdateProfile`
 - `src/app/router/ProtectedRoute.tsx` — защищённые маршруты (редирект на `/login`)
