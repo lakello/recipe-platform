@@ -1,7 +1,9 @@
 import { API_BASE_URL } from '@/shared/config/env'
 
-let isRefreshing = false
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS'])
+const TRANSIENT_STATUSES = new Set([429, 502, 503, 504])
+let refreshPromise: Promise<boolean> | null = null
+let logoutPromise: Promise<void> | null = null
 
 function csrfToken(): string | undefined {
   const cookie = document.cookie
@@ -12,10 +14,34 @@ function csrfToken(): string | undefined {
 
 export class ApiError extends Error {
   status: number
-  constructor(status: number, message: string) {
+  kind: ApiErrorKind
+  details?: unknown
+
+  constructor(status: number, message: string, details?: unknown) {
     super(message)
     this.status = status
+    this.kind = errorKind(status)
+    this.details = details
   }
+}
+
+export type ApiErrorKind =
+  | 'validation'
+  | 'unauthorized'
+  | 'forbidden'
+  | 'rate_limit'
+  | 'unavailable'
+  | 'offline'
+  | 'unknown'
+
+function errorKind(status: number): ApiErrorKind {
+  if (status === 0) return 'offline'
+  if (status === 401) return 'unauthorized'
+  if (status === 403) return 'forbidden'
+  if (status === 422) return 'validation'
+  if (status === 429) return 'rate_limit'
+  if ([502, 503, 504].includes(status)) return 'unavailable'
+  return 'unknown'
 }
 
 async function fetchWithCredentials(
@@ -34,22 +60,49 @@ async function fetchWithCredentials(
   })
 }
 
-export async function apiFetch(path: string, init?: RequestInit): Promise<Response> {
-  const response = await fetchWithCredentials(path, init)
+function refresh(): Promise<boolean> {
+  refreshPromise ??= fetchWithCredentials('/api/auth/refresh', {
+    method: 'POST',
+  })
+    .then((response) => response.ok)
+    .finally(() => {
+      refreshPromise = null
+    })
+  return refreshPromise
+}
 
-  if (response.status === 401 && !path.includes('/auth/refresh') && !isRefreshing) {
-    isRefreshing = true
-    try {
-      const refreshed = await fetchWithCredentials('/api/auth/refresh', {
-        method: 'POST',
-      })
-      if (refreshed.ok) {
-        return fetchWithCredentials(path, init)
-      }
-      window.location.href = '/login'
-    } finally {
-      isRefreshing = false
+function logoutOnce(): Promise<void> {
+  logoutPromise ??= Promise.resolve().then(() => {
+    window.location.assign('/login')
+  })
+  return logoutPromise
+}
+
+export async function apiFetch(
+  path: string,
+  init?: RequestInit,
+  retried = false,
+): Promise<Response> {
+  const method = (init?.method ?? 'GET').toUpperCase()
+  let response: Response
+  try {
+    response = await fetchWithCredentials(path, init)
+  } catch {
+    if (!retried && SAFE_METHODS.has(method)) {
+      return apiFetch(path, init, true)
     }
+    throw new ApiError(0, 'Нет подключения к сети')
+  }
+
+  if (response.status === 401 && !path.includes('/auth/refresh') && !retried) {
+    if (await refresh()) return apiFetch(path, init, true)
+    await logoutOnce()
+  } else if (
+    !retried &&
+    SAFE_METHODS.has(method) &&
+    TRANSIENT_STATUSES.has(response.status)
+  ) {
+    return apiFetch(path, init, true)
   }
 
   return response
@@ -59,7 +112,13 @@ export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await apiFetch(path, init)
   if (!res.ok) {
     const body = await res.json().catch(() => ({ detail: 'Unknown error' }))
-    throw new ApiError(res.status, body.detail ?? body.message ?? 'Request failed')
+    throw new ApiError(
+      res.status,
+      typeof body.detail === 'string'
+        ? body.detail
+        : (body.message ?? 'Request failed'),
+      body.detail,
+    )
   }
   return res.json() as Promise<T>
 }

@@ -105,12 +105,17 @@ function RecipePicker({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="select-recipe-title"
         className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 flex flex-col gap-4"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Выбрать рецепт</h2>
+          <h2 id="select-recipe-title" className="text-lg font-semibold">Выбрать рецепт</h2>
           <button
+            autoFocus
+            aria-label="Закрыть"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-xl leading-none"
           >
@@ -207,12 +212,17 @@ function CopyWeekModal({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="copy-meal-plan-title"
         className="bg-white rounded-xl shadow-xl w-full max-w-sm mx-4 p-6 flex flex-col gap-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Копировать план из недели</h2>
+          <h2 id="copy-meal-plan-title" className="text-lg font-semibold">Копировать план из недели</h2>
           <button
+            autoFocus
+            aria-label="Закрыть"
             onClick={onClose}
             className="text-gray-400 hover:text-gray-600 text-xl leading-none"
           >
