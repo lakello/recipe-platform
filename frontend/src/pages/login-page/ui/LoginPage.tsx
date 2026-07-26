@@ -44,8 +44,8 @@ export function LoginPage() {
             error={errors.password?.message}
             {...register('password')}
           />
-          {error && <p className="text-sm text-red-500">{error.message}</p>}
-          {oauthError && <p className="text-sm text-red-500">{oauthError}</p>}
+          {error && <p role="alert" className="text-sm text-red-500">{error.message}</p>}
+          {oauthError && <p role="alert" className="text-sm text-red-500">{oauthError}</p>}
           <Button type="submit" loading={isPending} className="mt-2 w-full">
             Войти
           </Button>

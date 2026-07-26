@@ -106,12 +106,15 @@ function GenerateModal({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="generate-shopping-list-title"
         className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 flex flex-col gap-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold">Генерация списка покупок</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+          <h2 id="generate-shopping-list-title" className="text-lg font-semibold">Генерация списка покупок</h2>
+          <button autoFocus aria-label="Закрыть" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
         </div>
 
         {/* Mode selector */}
@@ -374,15 +377,18 @@ function EditItemModal({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="edit-shopping-item-title"
         className="bg-white rounded-xl shadow-xl w-full max-w-md mx-4 p-6 flex flex-col gap-5"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
           <div>
             <p className="text-xs text-gray-400 uppercase tracking-wide mb-0.5">Редактирование</p>
-            <h2 className="text-lg font-semibold text-gray-900">{item.name}</h2>
+            <h2 id="edit-shopping-item-title" className="text-lg font-semibold text-gray-900">{item.name}</h2>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
+          <button autoFocus aria-label="Закрыть" onClick={onClose} className="text-gray-400 hover:text-gray-600 text-xl leading-none">×</button>
         </div>
 
         <div className="flex gap-3">
