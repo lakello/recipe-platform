@@ -1161,15 +1161,17 @@ Endpoints:
 
 ### Регистрация и логин (feat/backend-auth)
 
-- `app/core/security.py` — создание/валидация JWT access token, генерация refresh token
-- `app/models/refresh_token.py` — модель `RefreshToken` с FK на users, `expires_at`, `is_revoked`
+- `app/core/security.py` — создание/валидация JWT access token, криптографически стойкая генерация и SHA-256 hash refresh token
+- `app/models/refresh_token.py` — модель `RefreshToken` с `token_hash`, `family_id`, `expires_at`, `is_revoked` и FK на users
 - `alembic/versions/be4c1adff2ba` — миграция создаёт таблицу `refresh_tokens`
-- `app/repositories/refresh_token.py` — create, get_by_token, revoke, is_valid
-- `app/services/auth.py` — register, login, refresh (ротация), logout
+- `alembic/versions/r6j7k8l9m0n1` — миграция удаляет старые raw-токены и добавляет hash-хранение и token families
+- `app/repositories/refresh_token.py` — создание, атомарная ротация через `FOR UPDATE`, отзыв family при reuse и очистка после TTL
+- `app/services/auth.py` — register, login, атомарный refresh и logout
+- `app/tasks/auth.py` — ежедневная очистка истёкших refresh tokens через Celery Beat
 - `app/api/deps.py` — dependency `get_current_user` для защищённых endpoints
 - `app/api/auth.py` — роутер с prefix `/api/auth`
 - `app/api/users.py` — роутер с prefix `/api/users`
-- `tests/test_auth_service.py` — 9 unit-тестов
+- `tests/test_auth_service.py`, `tests/test_refresh_token_repository.py` — тесты выпуска, TTL, ротации, reuse, конкурентного refresh и logout
 
 Endpoints:
 
