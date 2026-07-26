@@ -2,7 +2,7 @@
 
 GitHub Actions workflows для Recipe Platform.
 
-Директория `.github/workflows/` содержит CI/CD pipeline-файлы, которые автоматизируют проверку кода, тестирование, security scanning, сборку Docker-образов, публикацию в GitHub Container Registry и деплой в Kubernetes через Helm.
+Директория `.github/workflows/` пока содержит только этот README. CI/CD workflow-файлы ещё не созданы.
 
 ## Назначение директории
 
@@ -316,12 +316,9 @@ name: Pull Request
         working-directory: frontend
         run: npm run typecheck
 
-      - name: Tests
-        working-directory: frontend
-        run: npm run test
 ```
 
-Это пример, реальный workflow будет расширен.
+Это пример для существующих npm-скриптов. Шаг тестов нужно добавить после подключения тестового фреймворка и появления скрипта `test` в `frontend/package.json`.
 
 ## Deploy workflow
 
