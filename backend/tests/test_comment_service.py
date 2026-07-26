@@ -56,7 +56,9 @@ def make_comment(**kwargs) -> Comment:
 
 @pytest.fixture
 def comment_repo() -> AsyncMock:
-    return AsyncMock(spec=CommentRepository)
+    repo = AsyncMock(spec=CommentRepository)
+    repo.session = AsyncMock()
+    return repo
 
 
 @pytest.fixture

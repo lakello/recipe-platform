@@ -42,7 +42,9 @@ def make_intent(user_id: uuid.UUID, **kwargs: object) -> UploadIntent:
 
 @pytest.fixture
 def photo_repo() -> AsyncMock:
-    return AsyncMock(spec=PhotoRepository)
+    repo = AsyncMock(spec=PhotoRepository)
+    repo.session = AsyncMock()
+    return repo
 
 
 @pytest.fixture

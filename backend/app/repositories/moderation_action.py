@@ -10,8 +10,7 @@ class ModerationActionRepository:
 
     async def create(self, action: ModerationAction) -> ModerationAction:
         self.session.add(action)
-        await self.session.commit()
-        await self.session.refresh(action)
+        await self.session.flush()
         return action
 
     async def list_all(

@@ -65,10 +65,12 @@ def validate_upload(upload_id: str) -> None:
                     intent.expected_content_type,
                 )
                 await repository.set_intent_status(intent, "validated")
+                await session.commit()
             except Exception:
                 logger.exception("Upload validation failed for %s", upload_id)
                 delete_object(intent.bucket, intent.object_key)
                 await repository.set_intent_status(intent, "failed")
+                await session.commit()
 
     asyncio.run(_run())
 
@@ -83,6 +85,7 @@ def cleanup_uploads() -> None:
             intents = await PhotoRepository(session).delete_stale_intents(
                 datetime.now(UTC)
             )
+            await session.commit()
             for intent in intents:
                 delete_object(intent.bucket, intent.object_key)
 

@@ -105,6 +105,7 @@ class AdminService:
             user_id,
             meta={"old_role": str(old_role), "new_role": str(role)},
         )
+        await self.user_repo.session.commit()
         return UserRead.model_validate(user)
 
     async def block_user(
@@ -119,6 +120,7 @@ class AdminService:
             raise HTTPException(status_code=409, detail="User is already blocked")
         user = await self.user_repo.update(user, {"is_active": False})
         await self._log(actor, ActionType.block_user, "user", user_id, reason=reason)
+        await self.user_repo.session.commit()
         return UserRead.model_validate(user)
 
     async def unblock_user(self, user_id: uuid.UUID, actor: User) -> UserRead:
@@ -127,6 +129,7 @@ class AdminService:
             raise HTTPException(status_code=409, detail="User is not blocked")
         user = await self.user_repo.update(user, {"is_active": True})
         await self._log(actor, ActionType.unblock_user, "user", user_id)
+        await self.user_repo.session.commit()
         return UserRead.model_validate(user)
 
     # ── reports ───────────────────────────────────────────────────────────
@@ -143,6 +146,7 @@ class AdminService:
                 description=data.description,
             )
         )
+        await self.report_repo.session.commit()
         return ReportRead.model_validate(report)
 
     async def list_reports(
@@ -172,6 +176,7 @@ class AdminService:
             },
         )
         await self._log(reviewer, ActionType.resolve_report, "report", report_id)
+        await self.report_repo.session.commit()
         return ReportRead.model_validate(report)
 
     async def dismiss_report(self, report_id: uuid.UUID, reviewer: User) -> ReportRead:
@@ -187,6 +192,7 @@ class AdminService:
             },
         )
         await self._log(reviewer, ActionType.dismiss_report, "report", report_id)
+        await self.report_repo.session.commit()
         return ReportRead.model_validate(report)
 
     # ── recipes ───────────────────────────────────────────────────────────
@@ -223,6 +229,7 @@ class AdminService:
         await self._log(
             actor, ActionType.hide_recipe, "recipe", recipe_id, reason=reason
         )
+        await self.recipe_repo.session.commit()
         return AdminRecipeRead.model_validate(recipe)
 
     async def unhide_recipe(self, recipe_id: uuid.UUID, actor: User) -> AdminRecipeRead:
@@ -233,6 +240,7 @@ class AdminService:
             raise HTTPException(status_code=409, detail="Recipe is not hidden")
         recipe = await self.recipe_repo.update(recipe, {"is_hidden": False})
         await self._log(actor, ActionType.unhide_recipe, "recipe", recipe_id)
+        await self.recipe_repo.session.commit()
         return AdminRecipeRead.model_validate(recipe)
 
     # ── comments ──────────────────────────────────────────────────────────
@@ -266,6 +274,7 @@ class AdminService:
             raise HTTPException(status_code=404, detail="Comment not found")
         comment = await self.comment_repo.update(comment, {"is_deleted": True})
         await self._log(actor, ActionType.hide_comment, "comment", comment_id)
+        await self.comment_repo.session.commit()
         return AdminCommentRead.model_validate(comment)
 
     # ── helpers ───────────────────────────────────────────────────────────
