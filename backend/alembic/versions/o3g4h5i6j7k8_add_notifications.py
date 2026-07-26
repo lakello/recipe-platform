@@ -9,8 +9,9 @@ Create Date: 2026-06-09 01:00:00.000000
 from collections.abc import Sequence
 
 import sqlalchemy as sa
-from alembic import op
 from sqlalchemy.dialects import postgresql
+
+from alembic import op
 
 revision: str = "o3g4h5i6j7k8"
 down_revision: str | None = "n2f3a4b5c6d7"
@@ -28,7 +29,9 @@ def upgrade() -> None:
     op.execute(
         """
         DO $$ BEGIN
-            CREATE TYPE notificationtype AS ENUM ('like', 'comment', 'reply', 'follow', 'moderation');
+            CREATE TYPE notificationtype AS ENUM (
+                'like', 'comment', 'reply', 'follow', 'moderation'
+            );
         EXCEPTION
             WHEN duplicate_object THEN null;
         END $$;

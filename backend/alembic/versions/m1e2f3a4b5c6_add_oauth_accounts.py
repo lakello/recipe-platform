@@ -20,7 +20,9 @@ depends_on: str | Sequence[str] | None = None
 
 
 def upgrade() -> None:
-    op.alter_column("users", "password_hash", existing_type=sa.String(255), nullable=True)
+    op.alter_column(
+        "users", "password_hash", existing_type=sa.String(255), nullable=True
+    )
 
     op.create_table(
         "user_oauth_accounts",
@@ -39,12 +41,18 @@ def upgrade() -> None:
             server_default=sa.func.now(),
             nullable=False,
         ),
-        sa.UniqueConstraint("provider", "provider_user_id", name="uq_oauth_provider_user"),
+        sa.UniqueConstraint(
+            "provider", "provider_user_id", name="uq_oauth_provider_user"
+        ),
     )
-    op.create_index("ix_user_oauth_accounts_user_id", "user_oauth_accounts", ["user_id"])
+    op.create_index(
+        "ix_user_oauth_accounts_user_id", "user_oauth_accounts", ["user_id"]
+    )
 
 
 def downgrade() -> None:
     op.drop_index("ix_user_oauth_accounts_user_id", table_name="user_oauth_accounts")
     op.drop_table("user_oauth_accounts")
-    op.alter_column("users", "password_hash", existing_type=sa.String(255), nullable=False)
+    op.alter_column(
+        "users", "password_hash", existing_type=sa.String(255), nullable=False
+    )
