@@ -3,3 +3,13 @@ dist
 build
 .git
 .env
+coverage
+.env.*
+!.env.example
+**/*.test.ts
+**/*.test.tsx
+src/test
+.idea
+.vscode
+.DS_Store
+Thumbs.db
