@@ -69,6 +69,8 @@ services:
         condition: service_healthy
       alembic:
         condition: service_completed_successfully
+      minio-init:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s
@@ -141,6 +143,12 @@ services:
         condition: service_started
       alembic:
         condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "celery", "-A", "app.celery_app", "inspect", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
     networks:
       - app_network
 
