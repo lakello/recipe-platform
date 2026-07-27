@@ -25,7 +25,7 @@ class RecipeService:
     async def create_recipe(
         self, data: RecipeCreate, author_id: uuid.UUID
     ) -> RecipeRead:
-        recipe = await self.repository.create(
+        created_recipe = await self.repository.create(
             Recipe(
                 author_id=author_id,
                 title=data.title,
@@ -38,6 +38,9 @@ class RecipeService:
             )
         )
         await self.repository.session.commit()
+        recipe = await self.repository.get_by_id(created_recipe.id)
+        if recipe is None:
+            raise RuntimeError("Created recipe not found")
         return RecipeRead.model_validate(recipe)
 
     async def get_recipe(
