@@ -108,7 +108,7 @@ services:
       backend:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost/"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1/"]
       interval: 10s
       timeout: 5s
       retries: 3
@@ -159,7 +159,7 @@ services:
 
   beat:
     image: recipe-platform-backend:local
-    command: sh -c "celery -A app.celery_app beat --loglevel=info"
+    command: sh -c "celery -A app.celery_app beat --loglevel=info --schedule=/tmp/celerybeat-schedule --pidfile=/tmp/celerybeat.pid"
     environment:
       - DATABASE_URL=postgresql+psycopg://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
       - REDIS_URL=redis://:${REDIS_PASSWORD}@redis:6379/0
