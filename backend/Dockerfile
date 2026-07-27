@@ -28,7 +28,9 @@ RUN groupadd --system --gid 10001 app \
 
 COPY --from=builder /install /install
 
-COPY --chown=app:app . .
+COPY --chown=app:app /app /app/app
+COPY --chown=app:app /alembic /app/alembic
+COPY --chown=app:app alembic.ini /app/alembic.ini
 
 USER app
 
