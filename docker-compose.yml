@@ -66,12 +66,27 @@ services:
         condition: service_healthy
       opensearch:
         condition: service_healthy
+      alembic:
+        condition: service_completed_successfully
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
       interval: 10s
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks:
+      - app_network
+
+  alembic:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    command: sh -c "alembic upgrade head"
+    environment:
+      - DATABASE_URL=postgresql+psycopg://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
+    depends_on:
+      postgres:
+        condition: service_healthy
     networks:
       - app_network
 
@@ -127,6 +142,8 @@ services:
         condition: service_healthy
       mailhog:
         condition: service_started
+      alembic:
+        condition: service_completed_successfully
     networks:
       - app_network
 
@@ -152,6 +169,8 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      alembic:
+        condition: service_completed_successfully
     networks:
       - app_network
 
