@@ -35,6 +35,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: recipe-platform-backend:local
     environment:
       - APP_ENV=${APP_ENV}
       - DATABASE_URL=postgresql+psycopg://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
@@ -78,9 +79,7 @@ services:
       - app_network
 
   alembic:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: recipe-platform-backend:local
     command: sh -c "alembic upgrade head"
     environment:
       - DATABASE_URL=postgresql+psycopg://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
@@ -117,9 +116,7 @@ services:
       - app_network
 
   celery-worker:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: recipe-platform-backend:local
     command: sh -c "celery -A app.celery_app worker --loglevel=info"
     environment:
       - DATABASE_URL=postgresql+psycopg://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
@@ -148,9 +145,7 @@ services:
       - app_network
 
   beat:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
+    image: recipe-platform-backend:local
     command: sh -c "celery -A app.celery_app beat --loglevel=info"
     environment:
       - DATABASE_URL=postgresql+psycopg://${DB_USER}:${DB_PASSWORD}@postgres:5432/${DB_NAME}
