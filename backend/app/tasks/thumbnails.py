@@ -50,7 +50,7 @@ def validate_upload(upload_id: str) -> None:
     async def _run() -> None:
         async with async_session_factory() as session:
             repository = PhotoRepository(session)
-            intent = await repository.get_intent(uuid.UUID(upload_id))
+            intent = await repository.get_intent_for_update(uuid.UUID(upload_id))
             if not intent or intent.status != "validating":
                 return
             try:

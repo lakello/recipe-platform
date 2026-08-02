@@ -15,24 +15,24 @@ output "private_subnet_id" {
   description = "Идентификатор созданной приватной подсети"
 }
 
-output "public_sg_id" {
-  value       = module.network.public_sg_id
-  description = "Идентификатор созданной публичной группы безопасности"
+output "ingress_sg_id" {
+  value = module.network.ingress_sg_id
 }
 
-output "private_sg_id" {
-  value       = module.network.private_sg_id
-  description = "Идентификатор созданной приватной группы безопасности"
+output "postgresql_sg_id" {
+  value = module.network.postgresql_sg_id
 }
 
-output "database_sg_id" {
-  value       = module.network.database_sg_id
-  description = "Идентификатор созданной группы безопасности базы данных"
+output "redis_sg_id" {
+  value = module.network.redis_sg_id
 }
 
-output "kubernetes_sg_id" {
-  value       = module.network.kubernetes_sg_id
-  description = "Идентификатор созданной группы безопасности для Kubernetes узлов"
+output "control_plane_sg_id" {
+  value = module.network.control_plane_sg_id
+}
+
+output "nodes_sg_id" {
+  value = module.network.nodes_sg_id
 }
 
 #kubernetes module
@@ -133,6 +133,10 @@ output "object_storage_secret_access_key" {
   sensitive   = true
 }
 
-output "cicd_sa_id" {
-  value = module.iam.cicd_sa_id
+output "image_pusher_sa_id" {
+  value = module.iam.image_pusher_sa_id
+}
+
+output "deployer_sa_id" {
+  value = module.iam.deployer_sa_id
 }

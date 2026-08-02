@@ -38,6 +38,9 @@ class Notification(Base):
     entity_type: Mapped[str | None] = mapped_column(String(20), nullable=True)
     body: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_read: Mapped[bool] = mapped_column(Boolean, default=False, server_default="f")
+    email_sent_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )

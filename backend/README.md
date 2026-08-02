@@ -1105,11 +1105,12 @@ Endpoint:
 - `app/services/notification.py` — `NotificationService`: list, mark_read, mark_all_read, count_unread, create_like_notification (без уведомления себе), create_comment_notification (comment или reply в зависимости от parent_id), create_follow_notification, create_moderation_notification
 - `app/api/notifications.py` — роутер уведомлений
 - `app/api/likes.py`, `app/api/comments.py`, `app/api/follows.py`, `app/api/admin.py` — вызов `create_*_notification` + `send_notification_email.delay()` после успешного действия
-- `app/tasks/email.py` — Celery-задача `tasks.send_notification_email`: загружает уведомление из БД, проверяет email-настройки пользователя, отправляет письмо через SMTP; retry до 5 раз с exponential backoff (max 600s)
+- `app/tasks/email.py` — Celery-задача `tasks.send_notification_email`: блокирует уведомление на время доставки, пропускает уже отправленное письмо, проверяет email-настройки пользователя и выполняет retry до 5 раз с exponential backoff (max 600s)
 - `app/core/config.py` — добавлены SMTP-настройки (`smtp_host`, `smtp_port`, `smtp_tls`, `smtp_user`, `smtp_password`, `smtp_from`) и `email_notifications_enabled`
 - `docker-compose.yml` — добавлен сервис `mailhog` (SMTP :1025, Web UI :8025); добавлены `SMTP_HOST`/`SMTP_PORT` в окружение `celery-worker`
 - `alembic/versions/o3g4h5i6j7k8` — создаёт таблицу `notifications` с enum `notification_type`
 - `alembic/versions/p4h5i6j7k8l9` — создаёт таблицу `notification_preferences`
+- `alembic/versions/t9l0m1n2o3p4` — добавляет маркер успешной email-доставки для идемпотентных повторных запусков
 
 Endpoints:
 
