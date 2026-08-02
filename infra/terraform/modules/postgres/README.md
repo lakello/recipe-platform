@@ -20,7 +20,7 @@ Terraform-модуль для создания Yandex Managed PostgreSQL кла�
 
 ## Безопасность
 
-Кластер принимает подключения только от ресурсов, входящих в переданную security group (`database_sg` — порт 5432 разрешён только из приватной подсети Kubernetes).
+Кластер принимает подключения только от Kubernetes nodes через отдельную security group `postgresql_sg` на порту 5432.
 
 ## Переменные
 

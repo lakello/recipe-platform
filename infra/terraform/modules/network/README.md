@@ -10,10 +10,11 @@ Terraform-модуль для создания сетевой инфрастру
 - **Egress gateway** — NAT-шлюз для выхода приватных ресурсов в интернет
 - **Route table** — маршрут `0.0.0.0/0` через egress gateway, привязан к private subnet
 - **Security groups**:
-  - `public_sg` — разрешает входящий HTTP (80) и HTTPS (443) из интернета
-  - `private_sg` — разрешает внутренний трафик внутри VPC
-  - `database_sg` — разрешает доступ к PostgreSQL (5432) и Redis (6379) только из `private_sg`
-  - `kubernetes_sg` — правила для Kubernetes нод: API server (443), kubelet (10250), NodePort (30000–32767), ICMP, node-to-node трафик
+  - `ingress_sg` — разрешает входящий HTTP (80) и HTTPS (443) из интернета
+  - `control_plane_sg` — ограничивает доступ к Kubernetes API значением `admin_cidr`
+  - `nodes_sg` — разрешает kubelet и внутренний обмен между нодами без публичного NodePort
+  - `postgresql_sg` — разрешает PostgreSQL (5432) только из `nodes_sg`
+  - `redis_sg` — разрешает Redis (6379) только из `nodes_sg`
 
 ## Переменные
 
@@ -24,6 +25,8 @@ Terraform-модуль для создания сетевой инфрастру
 | `availability_zones` | list(string) | Зоны доступности                  |
 | `public_subnet_cidr` | string       | CIDR публичной подсети            |
 | `private_subnet_cidr`| string       | CIDR приватной подсети            |
+| `admin_cidr`         | string       | CIDR для административного доступа|
+| `cluster_ipv4_range` | string       | CIDR pod-сети Kubernetes          |
 
 ## Outputs
 
@@ -32,10 +35,11 @@ Terraform-модуль для создания сетевой инфрастру
 | `vpc_id`          | ID VPC сети                     |
 | `public_subnet_id`| ID публичной подсети            |
 | `private_subnet_id`| ID приватной подсети           |
-| `public_sg_id`    | ID публичной security group     |
-| `private_sg_id`   | ID приватной security group     |
-| `database_sg_id`  | ID security group для БД        |
-| `kubernetes_sg_id`| ID security group для Kubernetes|
+| `ingress_sg_id`   | ID security group для ingress   |
+| `control_plane_sg_id` | ID security group control plane |
+| `nodes_sg_id`     | ID security group worker nodes  |
+| `postgresql_sg_id`| ID security group PostgreSQL    |
+| `redis_sg_id`     | ID security group Redis         |
 
 ## Использование
 
@@ -48,5 +52,7 @@ module "network" {
   availability_zones    = var.availability_zones
   public_subnet_cidr    = var.public_subnet_cidr
   private_subnet_cidr   = var.private_subnet_cidr
+  admin_cidr            = var.admin_cidr
+  cluster_ipv4_range    = var.cluster_ipv4_range
 }
 ```

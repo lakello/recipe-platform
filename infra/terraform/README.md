@@ -117,7 +117,7 @@ Production-like окружение для проверки релизов.
 - нагрузочные smoke tests;
 - деплой из `release/*`.
 
-Текущий статус: есть backend.tf, providers.tf и Makefile. `main.tf` с подключением модулей не создан — конфигурация требует доработки.
+Текущий статус: подключены те же модули, что и в dev; конфигурация проходит `terraform validate`, но окружение не развёрнуто.
 
 ### Production 🚧 В работе
 
@@ -135,7 +135,7 @@ Production-like окружение для проверки релизов.
 - ограниченный доступ;
 - осторожное применение Terraform изменений.
 
-Текущий статус: есть backend.tf, providers.tf и Makefile. `main.tf` с подключением модулей не создан — конфигурация требует доработки.
+Текущий статус: подключены те же модули, что и в dev; конфигурация проходит `terraform validate`, но окружение не развёрнуто.
 
 ## Структура
 
@@ -152,9 +152,9 @@ infra/terraform/
       terraform.tfvars.example
       Makefile                    # init/plan/apply/destroy/fmt/validate
     staging/
-      backend.tf, backend.hcl.example, providers.tf, Makefile  # main.tf не создан
+      backend.tf, backend.hcl.example, providers.tf, data.tf, main.tf, variables.tf, outputs.tf, Makefile
     prod/
-      backend.tf, backend.hcl.example, providers.tf, Makefile  # main.tf не создан
+      backend.tf, backend.hcl.example, providers.tf, data.tf, main.tf, variables.tf, outputs.tf, Makefile
   modules/
     network/        # VPC, subnets, route tables, NAT, security groups ✅
     kubernetes/     # Managed Kubernetes cluster и node groups ✅
@@ -757,11 +757,11 @@ Terraform outputs должны отдавать только несекретн�
 - Добавлен `Makefile` с полным набором команд для каждого окружения.
 - Созданы заготовки всех 8 модулей (`network`, `kubernetes`, `postgres`, `redis`, `object-storage`, `compute`, `dns`, `iam`).
 - Реализован модуль `network`: VPC, public/private subnets, NAT gateway, route table, security groups.
-- Реализован модуль `kubernetes`: Managed Kubernetes cluster, node groups system и app, autoscaling, kubernetes_sg.
+- Реализован модуль `kubernetes`: Managed Kubernetes cluster, node groups system и app, autoscaling, отдельные security groups control plane и nodes.
 - Оба модуля подключены в `envs/dev`. Кластер запущен, ноды в статусе Ready.
-- Реализован модуль `postgres`: Managed PostgreSQL кластер, БД и пользователь приложения, backup window, retention 7 дней, доступ ограничен `database_sg`.
-- Реализован модуль `redis`: Managed Redis кластер с паролем, persistence ON для prod, доступ ограничен `database_sg` (порт 6379 из приватной подсети).
-- Реализован модуль `object-storage`: bucket с versioning, lifecycle rules, CORS policy, service account с ролью `storage.editor`, статические ключи доступа.
+- Реализован модуль `postgres`: Managed PostgreSQL кластер, БД и пользователь приложения, backup window, retention 7 дней, доступ ограничен `postgresql_sg`.
+- Реализован модуль `redis`: Managed Redis кластер с паролем, persistence ON вне dev, доступ ограничен `redis_sg`.
+- Реализован модуль `object-storage`: bucket с versioning, lifecycle rules, CORS policy и bucket-scoped `storage.editor` для runtime service account.
 - Реализован модуль `compute`: статический публичный IP, security group с SSH-доступом только с разрешённого CIDR, Compute instance (Ubuntu 24.04 LTS, standard-v3); образ находится через data source по family-имени.
 - Реализован модуль `dns`: публичная DNS-зона, A-записи через `for_each` для apex и поддоменов (dev, staging, api, grafana), опциональный wildcard; output `name_servers` возвращает NS Yandex Cloud для делегирования домена.
 
