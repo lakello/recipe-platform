@@ -48,8 +48,9 @@
 | Инфраструктура: Terraform окружение dev (все модули подключены, Makefile) | ✅ Готово |
 | Инфраструктура: Terraform окружения staging / prod | 🚧 Конфигурации подготовлены и валидируются, развёртывание отложено |
 | Инфраструктура: Terraform модуль iam (service accounts, IAM-права) | ✅ Готово |
+| Инфраструктура: dev Managed Kubernetes (кластер и node groups) | ✅ Развёрнуто |
 | Инфраструктура: Ansible (настройка Linux VM, hardening, runner) | ⏳ Не начато |
-| Инфраструктура: Kubernetes manifests | ⏳ Не начато |
+| Инфраструктура: Kubernetes namespaces, quotas и default limits | ✅ Готово |
 | Инфраструктура: Helm chart (базовая структура и Job миграций) | 🚧 Частично |
 | CI/CD (GitHub Actions workflows) | ⏳ Не начато |
 

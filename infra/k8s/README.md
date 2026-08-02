@@ -4,12 +4,15 @@ Kubernetes-манифесты и шаблоны секретов для Recipe P
 
 ## Назначение
 
-Директория `infra/k8s/` содержит вспомогательные Kubernetes-манифесты, которые не входят в Helm chart: ручные секреты, примеры конфигурации и заготовки для начального деплоя.
+Директория `infra/k8s/` содержит вспомогательные Kubernetes-манифесты, которые не входят в Helm chart: пространства имён, общие ресурсные политики и шаблоны секретов.
 
 Основной деплой в Kubernetes выполняется через Helm chart из `infra/helm/`.
 
 ## Состав
 
+- `namespaces.yaml` — namespaces приложений (`recipe-dev`, `recipe-staging`, `recipe-prod`) и общих платформенных компонентов с labels окружений.
+- `resource-quotas.yaml` — суммарные квоты CPU, памяти и pod для application namespaces.
+- `limit-ranges.yaml` — requests и limits по умолчанию для контейнеров в application namespaces.
 - `oauth-secrets.example.yaml` — шаблон Kubernetes Secret для OAuth-credentials (Google и Яндекс); значения пустые, файл предназначен для заполнения и применения вручную.
 - `secrets/` — директория для реальных секретов; **не коммитить заполненные файлы в Git**.
   - `oauth.yaml` — Kubernetes Secret для OAuth (значения пусты, используется как шаблон).
@@ -31,14 +34,16 @@ Backend использует их в `app/services/oauth.py` и `app/api/oauth.p
 
 ## Текущий статус
 
-Kubernetes-инфраструктура не развёрнута. Файлы — заготовки для будущего деплоя.
+Dev-кластер Yandex Managed Kubernetes развёрнут. Namespaces, ResourceQuota и LimitRange применены и проверены; полный деплой приложения ещё не выполнен.
 
 Реализовано:
+- Namespaces и labels для окружений и общих компонентов.
+- ResourceQuota и LimitRange для `recipe-dev`, `recipe-staging` и `recipe-prod`.
 - Шаблон Secret для OAuth credentials.
 
 Планируется:
 - Полный деплой через Helm chart (`infra/helm/`).
-- Namespace, Deployment, Service, Ingress, ConfigMap, HPA, NetworkPolicy.
+- Deployment, Service, Ingress, ConfigMap, HPA и NetworkPolicy.
 - Secrets через External Secrets Operator (Yandex Lockbox).
 - Kubernetes Job для Alembic-миграций.
 

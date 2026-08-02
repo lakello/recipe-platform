@@ -11,7 +11,7 @@
 - `terraform/` — Infrastructure as Code для Yandex Cloud. Создаёт сети, Kubernetes-кластер, базы данных, Object Storage, DNS и вспомогательные VM.
 - `ansible/` — Configuration management для Linux VM. Настраивает bastion host, hardening, Docker, GitHub Actions runner, node exporter.
 - `helm/` — Helm charts для развёртывания приложения в Kubernetes.
-- `k8s/` — Вспомогательные Kubernetes-манифесты, не входящие в Helm chart (шаблоны секретов, заготовки для ручного применения).
+- `k8s/` — Вспомогательные Kubernetes-манифесты, не входящие в Helm chart: namespaces, resource policies и шаблоны секретов.
 
 ## Связи с проектом
 
@@ -33,7 +33,7 @@
 | `terraform/` — окружения staging и prod | 🚧 Конфигурации подготовлены и валидируются, развёртывание отложено |
 | `ansible/` | ⏳ Планируется |
 | `helm/` | 🚧 Базовый chart и pre-install/pre-upgrade Job миграций |
-| `k8s/` | 🚧 Частично (шаблоны секретов) |
+| `k8s/` | 🚧 Частично (namespaces, ResourceQuota, LimitRange и шаблоны секретов) |
 
 ## Важно для разработки
 
