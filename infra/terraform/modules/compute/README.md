@@ -27,7 +27,7 @@ module "compute" {
   network_id       = module.network.vpc_id
   image_id         = data.yandex_compute_image.ubuntu.id
   ssh_public_key   = var.ssh_public_key
-  allowed_ssh_cidr = var.allowed_ssh_cidr
+  admin_cidr       = var.admin_cidr
 }
 ```
 
@@ -41,7 +41,7 @@ module "compute" {
 | `image_id`        | string | —                 | ID образа ОС (рекомендуется из data source)   |
 | `ssh_user`        | string | `ubuntu`          | Имя пользователя для SSH                      |
 | `ssh_public_key`  | string | —                 | Публичный SSH-ключ                            |
-| `allowed_ssh_cidr`| string | —                 | CIDR разрешённого IP для SSH (`x.x.x.x/32`)  |
+| `admin_cidr`     | string | —                 | CIDR административной точки для SSH (`x.x.x.x/32`) |
 
 ## Outputs
 

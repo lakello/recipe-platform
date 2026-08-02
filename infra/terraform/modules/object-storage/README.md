@@ -5,16 +5,16 @@ Terraform-модуль для создания Yandex Object Storage bucket с �
 ## Что создаёт
 
 - `yandex_storage_bucket` — bucket с versioning, lifecycle rules и CORS policy
+- `yandex_storage_bucket_iam_binding` — bucket-scoped доступ runtime service account
 
-Сервисный аккаунт, IAM-роль и статический ключ доступа создаются в модуле `modules/iam` и передаются сюда через переменные `access_key` и `secret_key`.
+Сервисный аккаунт создаётся в `modules/iam`; модуль получает его ID и назначает `storage.editor` только созданному bucket.
 
 ## Переменные
 
 | Переменная        | Тип                    | Описание                                              |
 |-------------------|------------------------|-------------------------------------------------------|
 | `bucket_config`   | `map(object({...}))`   | Конфигурация бакетов: ключ — имя, значение — настройки |
-| `access_key`      | `string`               | Access key ID для S3 API (из модуля iam)              |
-| `secret_key`      | `string` (sensitive)   | Secret key для S3 API (из модуля iam)                 |
+| `storage_sa_id`   | `string`               | ID runtime service account из модуля iam              |
 | `allowed_origins` | `list(string)`         | Разрешённые origins для CORS (default: localhost:3000) |
 
 ### Структура bucket_config
@@ -46,8 +46,7 @@ module "object_storage" {
     }
   }
 
-  access_key      = module.iam.access_key_id
-  secret_key      = module.iam.secret_access_key
+  storage_sa_id   = module.iam.storage_sa_id
   allowed_origins = ["https://app.example.com"]
 }
 ```

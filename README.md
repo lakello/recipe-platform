@@ -46,7 +46,7 @@
 | Инфраструктура: Terraform модуль compute (bastion / self-hosted runner, static IP) | ✅ Готово |
 | Инфраструктура: Terraform модуль dns (публичная зона, A-записи, wildcard) | ✅ Готово |
 | Инфраструктура: Terraform окружение dev (все модули подключены, Makefile) | ✅ Готово |
-| Инфраструктура: Terraform окружения staging / prod | ⏳ Только заготовки, ресурсы не подключены |
+| Инфраструктура: Terraform окружения staging / prod | 🚧 Конфигурации подготовлены и валидируются, развёртывание отложено |
 | Инфраструктура: Terraform модуль iam (service accounts, IAM-права) | ✅ Готово |
 | Инфраструктура: Ansible (настройка Linux VM, hardening, runner) | ⏳ Не начато |
 | Инфраструктура: Kubernetes manifests | ⏳ Не начато |
