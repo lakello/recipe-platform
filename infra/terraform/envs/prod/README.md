@@ -53,7 +53,9 @@ make validate # terraform validate
 
 ## Важно для разработки
 
-- Никогда не коммитить `terraform.tfvars`, `authorized_key.json`, `backend.hcl` — они в `.gitignore`.
+- Никогда не коммитить `terraform.tfvars`, `authorized_key.json`, `backend.hcl` — они в `.gitignore`; `backend.hcl` содержит секреты доступа к backend.
+- Для production должен использоваться отдельный ключ `prod/terraform.tfstate` в state bucket.
+- State и plan-файлы считаются секретами: их нельзя публиковать в Git, задачах или CI-логах.
 - `terraform apply` в production выполняется только после успешного staging-деплоя и manual approval.
 - `terraform destroy` в production недопустим без явного согласования.
 - БД и Redis должны иметь `deletion_protection = true`.
