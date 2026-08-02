@@ -44,19 +44,12 @@ resource "yandex_vpc_subnet" "private_subnet" {
   labels = var.instance_tags
 }
 
-resource "yandex_vpc_security_group" "public_sg" {
-  name        = "${var.environment}-public-sg"
-  description = "Публичная группа безопасности для окружения ${var.environment}"
+resource "yandex_vpc_security_group" "ingress_sg" {
+  name        = "${var.environment}-ingress-sg"
+  description = "HTTP/HTTPS из интернета и health checks"
   network_id  = yandex_vpc_network.this.id
 
   labels = var.instance_tags
-
-  egress {
-    protocol       = "ANY"
-    v4_cidr_blocks = ["0.0.0.0/0"]
-    from_port      = 0
-    to_port        = 65535
-  }
 
   ingress {
     protocol       = "TCP"
@@ -73,33 +66,9 @@ resource "yandex_vpc_security_group" "public_sg" {
   }
 }
 
-resource "yandex_vpc_security_group" "private_sg" {
-  name        = "${var.environment}-private-sg"
-  description = "Приватная группа безопасности для окружения ${var.environment}"
-  network_id  = yandex_vpc_network.this.id
-
-  labels = var.instance_tags
-
-  egress {
-    protocol       = "ANY"
-    description    = "Исходящий трафик"
-    v4_cidr_blocks = ["0.0.0.0/0"]
-    from_port      = 0
-    to_port        = 65535
-  }
-
-  ingress {
-    protocol       = "ANY"
-    description    = "Входящий трафик от любых ресурсов внутри этой VPC"
-    v4_cidr_blocks = [var.public_subnet_cidr, var.private_subnet_cidr]
-    from_port      = 0
-    to_port        = 65535
-  }
-}
-
-resource "yandex_vpc_security_group" "database_sg" {
-  name        = "${var.environment}-database-sg"
-  description = "Группа безопасности базы данных для окружения ${var.environment}"
+resource "yandex_vpc_security_group" "postgresql_sg" {
+  name        = "${var.environment}-postgresql-sg"
+  description = "Группа безопасности postgresql для окружения ${var.environment}"
   network_id  = yandex_vpc_network.this.id
 
   labels = var.instance_tags
@@ -113,22 +82,79 @@ resource "yandex_vpc_security_group" "database_sg" {
 
   ingress {
     protocol          = "TCP"
-    description       = "Доступ к PostgreSQL только для ресурсов из private-sg группы"
+    description       = "Доступ к PostgreSQL"
     port              = 5432
-    security_group_id = yandex_vpc_security_group.private_sg.id
+    security_group_id = yandex_vpc_security_group.nodes_sg.id
+  }
+}
+
+resource "yandex_vpc_security_group" "redis_sg" {
+  name        = "${var.environment}-redis-sg"
+  description = "Группа безопасности Redis для окружения ${var.environment}"
+  network_id  = yandex_vpc_network.this.id
+
+  labels = var.instance_tags
+
+  egress {
+    protocol       = "ANY"
+    v4_cidr_blocks = [var.private_subnet_cidr]
+    from_port      = 0
+    to_port        = 65535
   }
 
   ingress {
     protocol          = "TCP"
-    description       = "Доступ к Redis только для ресурсов из private-sg группы"
+    description       = "Доступ к Redis"
     port              = 6379
-    security_group_id = yandex_vpc_security_group.private_sg.id
+    security_group_id = yandex_vpc_security_group.nodes_sg.id
   }
 }
 
-resource "yandex_vpc_security_group" "kubernetes_sg" {
-  name        = "${var.environment}-kubernetes-sg"
-  description = "Группа безопасности для Kubernetes узлов в окружении ${var.environment}"
+resource "yandex_vpc_security_group" "control_plane_sg" {
+  name        = "${var.environment}-control_plane-sg"
+  description = "Kubernetes API только от административной точки ${var.environment}"
+  network_id  = yandex_vpc_network.this.id
+
+  labels = var.instance_tags
+
+  egress {
+    protocol       = "ANY"
+    description    = "Служебный трафик к worker nodes"
+    v4_cidr_blocks = [var.private_subnet_cidr]
+  }
+
+  egress {
+    protocol       = "TCP"
+    description    = "Доступ к metric-server"
+    port           = 4443
+    v4_cidr_blocks = [var.cluster_ipv4_range]
+  }
+
+  egress {
+    protocol       = "UDP"
+    description    = "Синхронизация времени"
+    port           = 123
+    v4_cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "Доступ к Kubernetes API серверу"
+    port           = 443
+    v4_cidr_blocks = [var.admin_cidr]
+  }
+
+  ingress {
+    protocol       = "TCP"
+    description    = "Доступ к Kubernetes API серверу"
+    port           = 6443
+    v4_cidr_blocks = [var.admin_cidr]
+  }
+}
+
+resource "yandex_vpc_security_group" "nodes_sg" {
+  name        = "${var.environment}-nodes_sg"
+  description = "Служебный трафик control plane, pod/service CIDR и health checks"
   network_id  = yandex_vpc_network.this.id
 
   labels = var.instance_tags
@@ -141,36 +167,21 @@ resource "yandex_vpc_security_group" "kubernetes_sg" {
   }
 
   ingress {
-    protocol       = "TCP"
-    description    = "Доступ к Kubernetes API серверу"
-    port           = 443
-    v4_cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    protocol       = "TCP"
-    description    = "kubelet API для управления узлами"
-    port           = 10250
-    v4_cidr_blocks = [var.public_subnet_cidr, var.private_subnet_cidr]
-  }
-
-  ingress {
-    protocol       = "TCP"
-    description    = "Доступ к узлам Kubernetes для приложений и сервисов внутри кластера"
-    from_port      = 30000
-    to_port        = 32767
-    v4_cidr_blocks = ["0.0.0.0/0"]
+    protocol          = "TCP"
+    description       = "kubelet API для управления узлами"
+    port              = 10250
+    security_group_id = yandex_vpc_security_group.control_plane_sg.id
   }
 
   ingress {
     protocol       = "ICMP"
     description    = "для healthcheck от балансировщика"
-    v4_cidr_blocks = ["0.0.0.0/0"]
+    v4_cidr_blocks = [var.public_subnet_cidr, var.private_subnet_cidr]
   }
 
   ingress {
-    protocol       = "ANY"
-    description    = "для обмена данными между узлами кластера"
-    v4_cidr_blocks = [var.public_subnet_cidr, var.private_subnet_cidr]
+    protocol          = "ANY"
+    description       = "для обмена данными между узлами кластера"
+    predefined_target = "self_security_group"
   }
 }

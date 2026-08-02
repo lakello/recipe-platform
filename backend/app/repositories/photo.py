@@ -47,6 +47,12 @@ class PhotoRepository:
         )
         return result.scalar_one_or_none()
 
+    async def get_intent_for_update(self, upload_id: uuid.UUID) -> UploadIntent | None:
+        result = await self.session.execute(
+            select(UploadIntent).where(UploadIntent.id == upload_id).with_for_update()
+        )
+        return result.scalar_one_or_none()
+
     async def set_intent_status(self, intent: UploadIntent, status: str) -> None:
         intent.status = status
         await self.session.flush()

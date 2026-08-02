@@ -45,6 +45,13 @@ make clean    # удалить .terraform/ и *.tfplan
 make help     # список команд
 ```
 
+## Terraform state
+
+- `backend.hcl` содержит секреты доступа к backend и не коммитится.
+- Для dev должен использоваться отдельный ключ `dev/terraform.tfstate` в state bucket.
+- State и plan-файлы считаются секретами: их нельзя публиковать в Git, задачах
+  или CI-логах.
+
 ## Переменные
 
 | Переменная            | Описание                            |

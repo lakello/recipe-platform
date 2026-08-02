@@ -22,9 +22,19 @@ variable "subnet_ids" {
   description = "Список ID подсетей для размещения узлов (нод) кластера"
 }
 
-variable "security_group_ids" {
+variable "control_plane_sg_ids" {
   type        = list(string)
-  description = "Список ID групп безопасности (включая internal и database SG)"
+  description = "Список ID групп безопасности для control plane"
+}
+
+variable "nodes_sg_ids" {
+  type        = list(string)
+  description = "Список ID групп безопасности для узлов кластера"
+}
+
+variable "cluster_ipv4_range" {
+  description = "CIDR блок для кластера Kubernetes"
+  type        = string
 }
 
 variable "node_platform_id" {

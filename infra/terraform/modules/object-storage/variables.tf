@@ -5,15 +5,9 @@ variable "bucket_config" {
   }))
 }
 
-variable "access_key" {
-  description = "Access key для доступа к Yandex Object Storage"
+variable "storage_sa_id" {
+  description = "ID сервисного аккаунта для доступа к Yandex Object Storage"
   type        = string
-}
-
-variable "secret_key" {
-  description = "Secret key для доступа к Yandex Object Storage"
-  type        = string
-  sensitive   = true
 }
 
 variable "allowed_origins" {

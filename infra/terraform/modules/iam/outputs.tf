@@ -21,6 +21,10 @@ output "secret_access_key" {
   sensitive   = true
 }
 
-output "cicd_sa_id" {
-  value = yandex_iam_service_account.cicd.id
+output "image_pusher_sa_id" {
+  value = yandex_iam_service_account.image_pusher.id
+}
+
+output "deployer_sa_id" {
+  value = yandex_iam_service_account.deployer.id
 }

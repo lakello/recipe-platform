@@ -3,8 +3,10 @@ import logging
 import smtplib
 import uuid
 from email.mime.text import MIMEText
+from typing import Any
 
 from app.celery_app import celery_app
+from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
@@ -62,6 +64,52 @@ def _send_smtp(
             smtp2.sendmail(from_addr, [to_addr], message)
 
 
+async def _deliver_notification_email(
+    notification_id: uuid.UUID,
+    notification_repo: Any,
+    user_repo: Any,
+    preferences_repo: Any,
+) -> bool:
+    notification = await notification_repo.get_for_email_delivery(notification_id)
+    if not notification or notification.email_sent_at is not None:
+        return False
+
+    recipient = await user_repo.get_by_id(notification.user_id)
+    if not recipient:
+        return False
+    preferences = await preferences_repo.get_or_default(notification.user_id)
+    notification_type = str(notification.type)
+    if notification_type == "like" and not preferences.email_like:
+        return False
+    if notification_type in ("comment", "reply") and not preferences.email_comment:
+        return False
+    if notification_type == "follow" and not preferences.email_follow:
+        return False
+
+    actor_name = notification.actor.username if notification.actor else None
+    subject, text = _build_message(notification_type, actor_name, notification.body)
+    message = MIMEText(text, "plain", "utf-8")
+    message["Subject"] = subject
+    message["From"] = settings.smtp_from
+    message["To"] = recipient.email
+
+    _send_smtp(
+        settings.smtp_host,
+        settings.smtp_port,
+        settings.smtp_tls,
+        settings.smtp_user,
+        settings.smtp_password,
+        settings.smtp_from,
+        recipient.email,
+        message.as_string(),
+    )
+    # ponytail: SMTP has no idempotency key; use an outbox/provider key if
+    # duplicates after a worker crash between send and commit become material.
+    await notification_repo.mark_email_sent(notification)
+    await notification_repo.session.commit()
+    return True
+
+
 @celery_app.task(  # type: ignore[misc]
     name="tasks.send_notification_email",
     bind=True,
@@ -72,7 +120,6 @@ def _send_smtp(
 )
 def send_notification_email(self: object, notification_id: str) -> None:
     import app.models  # noqa: F401
-    from app.core.config import settings
     from app.db.session import async_session_factory
     from app.repositories.notification import NotificationRepository
     from app.repositories.user import UserRepository
@@ -80,61 +127,25 @@ def send_notification_email(self: object, notification_id: str) -> None:
     if not settings.email_notifications_enabled:
         return
 
-    async def _fetch() -> tuple[str, str, str | None, str | None] | None:
+    async def _run() -> None:
         async with async_session_factory() as session:
             from app.repositories.notification_preferences import (
                 NotificationPreferencesRepository,
             )
 
-            n_repo = NotificationRepository(session)
-            u_repo = UserRepository(session)
-            prefs_repo = NotificationPreferencesRepository(session)
-            n = await n_repo.get_by_id(uuid.UUID(notification_id))
-            if not n:
-                return None
-            recipient = await u_repo.get_by_id(n.user_id)
-            if not recipient:
-                return None
-            prefs = await prefs_repo.get_or_default(n.user_id)
-            notif_type = str(n.type)
-            if notif_type == "like" and not prefs.email_like:
-                return None
-            if notif_type in ("comment", "reply") and not prefs.email_comment:
-                return None
-            if notif_type == "follow" and not prefs.email_follow:
-                return None
-            actor_name = n.actor.username if n.actor else None
-            return recipient.email, notif_type, actor_name, n.body
-
-    result = asyncio.run(_fetch())
-    if not result:
-        logger.warning("Notification %s not found, skipping email", notification_id)
-        return
-
-    to_email, notif_type, actor_name, body = result
-    subject, text = _build_message(notif_type, actor_name, body)
-
-    msg = MIMEText(text, "plain", "utf-8")
-    msg["Subject"] = subject
-    msg["From"] = settings.smtp_from
-    msg["To"] = to_email
+            await _deliver_notification_email(
+                uuid.UUID(notification_id),
+                NotificationRepository(session),
+                UserRepository(session),
+                NotificationPreferencesRepository(session),
+            )
 
     try:
-        _send_smtp(
-            settings.smtp_host,
-            settings.smtp_port,
-            settings.smtp_tls,
-            settings.smtp_user,
-            settings.smtp_password,
-            settings.smtp_from,
-            to_email,
-            msg.as_string(),
-        )
+        asyncio.run(_run())
     except Exception as exc:
         logger.error(
-            "Failed to send email for notification %s to %s: %s",
+            "Failed to send email for notification %s: %s",
             notification_id,
-            to_email,
             exc,
         )
         raise
