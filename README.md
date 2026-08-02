@@ -50,7 +50,7 @@
 | Инфраструктура: Terraform модуль iam (service accounts, IAM-права) | ✅ Готово |
 | Инфраструктура: Ansible (настройка Linux VM, hardening, runner) | ⏳ Не начато |
 | Инфраструктура: Kubernetes manifests | ⏳ Не начато |
-| Инфраструктура: Helm charts (деплой в Kubernetes) | ⏳ Не начато |
+| Инфраструктура: Helm chart (базовая структура и Job миграций) | 🚧 Частично |
 | CI/CD (GitHub Actions workflows) | ⏳ Не начато |
 
 ## Цели проекта
@@ -331,6 +331,11 @@ recipe-platform/
 - Mailhog (SMTP :1025, Web UI `http://localhost:8025`);
 - Celery worker;
 - Celery beat scheduler.
+
+Сервисы публикуют порты только на `127.0.0.1`. Перед запуском API
+одноразовый сервис `alembic` применяет миграции, а `minio-init` создаёт
+бакеты. Backend, worker и beat используют один локальный backend image;
+Compose дожидается healthcheck зависимостей.
 
 Запуск:
 

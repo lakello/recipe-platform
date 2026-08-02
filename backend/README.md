@@ -465,16 +465,15 @@ docker build -t recipe-backend:local .
 docker run --rm -p 8000:8000 --env-file .env recipe-backend:local
 ```
 
-В production image должны соблюдаться требования:
+В backend image реализованы:
 
 - multi-stage build;
-- non-root user;
-- минимальный base image;
+- запуск от системного non-root пользователя `app`;
+- runtime на `python:3.12-slim` без dev-зависимостей;
 - отсутствие секретов внутри image;
 - использование `.dockerignore`;
 - pinned dependencies;
-- healthcheck endpoint;
-- корректная обработка SIGTERM.
+- отдельный запуск миграций вне процесса API.
 
 ## Health checks
 
@@ -1137,8 +1136,11 @@ Endpoints:
 
 ### Docker (feat/docker-compose-local)
 
-- `Dockerfile` — `python:3.12-slim`, кэш зависимостей (requirements.txt отдельным слоем), применение миграций и запуск uvicorn в одной CMD через `sh -c`
-- `.dockerignore` — исключены `__pycache__`, `*.pyc`, `.pytest_cache`, `*.egg-info`, `.env`, `.git`
+- `Dockerfile` — multi-stage сборка на `python:3.12-slim`; runtime содержит
+  только production-зависимости и запускает Uvicorn от пользователя `app`
+- миграции выполняются отдельным одноразовым сервисом `alembic` в Compose;
+  backend, Celery worker и beat переиспользуют один backend image
+- `.dockerignore` — исключены локальные окружения, кэши, тесты, `.env`, `.git`
 
 Сборка и запуск через Docker Compose из корня проекта:
 

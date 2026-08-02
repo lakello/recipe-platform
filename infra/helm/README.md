@@ -6,7 +6,8 @@ Helm используется для шаблонизации Kubernetes-ман�
 
 ## Назначение директории
 
-В директории `infra/helm/` находятся Helm charts и values-файлы для Kubernetes-деплоя.
+В директории `infra/helm/` находится базовый Helm chart Recipe Platform.
+Сейчас он содержит метаданные chart, базовые values и Job для миграций БД.
 
 Helm отвечает за развёртывание:
 
@@ -153,7 +154,7 @@ README.md
 Основной chart:
 
 ```
-infra/helm/recipe-platform/
+infra/helm/
 ```
 
 ## Компоненты приложения
@@ -340,7 +341,7 @@ replicaCount: 1
 
 repository: ghcr.io/example/recipe-backend
 
-tag: latest
+tag: 1.0.0
 
 pullPolicy: IfNotPresent
 
@@ -374,7 +375,7 @@ replicaCount: 1
 
 repository: ghcr.io/example/recipe-frontend
 
-tag: latest
+tag: 1.0.0
 
 pullPolicy: IfNotPresent
 
@@ -394,7 +395,7 @@ replicaCount: 1
 
 repository: ghcr.io/example/recipe-worker
 
-tag: latest
+tag: 1.0.0
 
 pullPolicy: IfNotPresent
 
@@ -763,7 +764,7 @@ ServiceMonitor позволит Prometheus автоматически наход
 Перейти в директорию chart:
 
 ```
-cd infra/helm/recipe-platform
+cd infra/helm
 ```
 
 Установить dev-релиз:
@@ -891,15 +892,15 @@ GitHub Actions pipeline должен выполнять:
 Пример команды deploy:
 
 ``` bash
-helm upgrade --install recipe-platform-dev infra/helm/recipe-platform \
+helm upgrade --install recipe-platform-dev infra/helm \
 
 --namespace recipe-platform-dev \
 
 --create-namespace \
 
--f infra/helm/recipe-platform/values.yaml \
+-f infra/helm/values.yaml \
 
--f infra/helm/recipe-platform/values-dev.yaml \
+-f infra/helm/values-dev.yaml \
 
 --set backend.image.tag=${GITHUB_SHA} \
 
@@ -979,9 +980,9 @@ curl -f https://dev.example.com/api/ready
 
 ## Статус
 
-Не начато. Запланировано на следующий (DevOps) этап.
-
-После второго этапа разработки директория `infra/helm/` содержит только этот README.
+Базовый chart и pre-install/pre-upgrade Job миграций реализованы. Job использует
+тот же backend image, получает `DATABASE_URL` из Kubernetes Secret и выполняет
+`alembic upgrade head`. Остальные workload-шаблоны пока не реализованы.
 
 Приоритет реализации:
 
