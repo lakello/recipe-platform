@@ -6,7 +6,7 @@ Terraform-модуль для создания Managed Kubernetes кластер
 
 - **Kubernetes cluster** — Managed Kubernetes с публичным endpoint у master
 - **Node group `system`** — фиксированные 2 ноды для системных компонентов (Ingress, CoreDNS), taint `CriticalAddonsOnly=true:NoSchedule`
-- **Node group `app`** — автоскейлинг-группа для приложений (backend, frontend, workers), preemptible в non-prod
+- **Node group `app`** — автоскейлинг-группа для приложений (backend, frontend, workers), preemptible только в dev
 
 Сервисные аккаунты создаются вне модуля — в `modules/iam` — и передаются через переменные `cluster_sa_id` и `node_sa_id`.
 
@@ -24,7 +24,9 @@ Terraform-модуль для создания Managed Kubernetes кластер
 | `k8s_version`         | string       | Версия Kubernetes                               | `"1.33"`       |
 | `vpc_id`              | string       | ID VPC сети                                     | —              |
 | `subnet_ids`          | list(string) | IDs подсетей (index 0 — public, 1 — private)    | —              |
-| `security_group_ids`  | list(string) | IDs security groups                             | —              |
+| `control_plane_sg_ids`| list(string) | Security groups control plane                   | —              |
+| `nodes_sg_ids`        | list(string) | Security groups worker nodes                    | —              |
+| `cluster_ipv4_range`  | string       | CIDR pod-сети Kubernetes                        | —              |
 | `availability_zones`  | list(string) | Зоны доступности                                | —              |
 | `node_platform_id`    | string       | Тип платформы процессора                        | `"standard-v3"`|
 | `node_cores`          | number       | vCPU на ноду                                    | `4`            |
@@ -53,18 +55,15 @@ module "kubernetes" {
   vpc_id             = module.network.vpc_id
   cluster_sa_id      = module.iam.k8s_cluster_sa_id
   node_sa_id         = module.iam.k8s_node_sa_id
+  cluster_ipv4_range = var.cluster_ipv4_range
 
   subnet_ids = [
     module.network.public_subnet_id,
     module.network.private_subnet_id,
   ]
 
-  security_group_ids = [
-    module.network.public_sg_id,
-    module.network.private_sg_id,
-    module.network.database_sg_id,
-    module.network.kubernetes_sg_id,
-  ]
+  control_plane_sg_ids = [module.network.control_plane_sg_id]
+  nodes_sg_ids         = [module.network.nodes_sg_id]
 }
 ```
 

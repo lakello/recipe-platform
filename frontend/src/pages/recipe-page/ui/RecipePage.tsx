@@ -305,10 +305,13 @@ export function RecipePage() {
           onClick={() => setReportOpen(false)}
         >
           <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="report-recipe-title"
             className="bg-white rounded-xl shadow-lg w-full max-w-sm mx-4 p-6"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Пожаловаться на рецепт</h2>
+            <h2 id="report-recipe-title" className="text-lg font-semibold text-gray-900 mb-4">Пожаловаться на рецепт</h2>
             {reportSent ? (
               <p className="text-green-600 text-sm">Жалоба отправлена. Спасибо!</p>
             ) : (

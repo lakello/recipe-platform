@@ -1,11 +1,12 @@
 import uuid
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from fastapi.responses import RedirectResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.deps import get_current_user
 from app.core.config import settings
+from app.core.rate_limit import client_ip, enforce
 from app.core.storage import presign_get
 from app.db.session import get_db
 from app.models.user import User
@@ -13,7 +14,12 @@ from app.repositories.photo import PhotoRepository
 from app.repositories.recipe import RecipeRepository
 from app.repositories.user import UserRepository
 from app.schemas.recipe import RecipeRead
-from app.schemas.upload import AttachPhotoRequest, PresignRequest, PresignResponse
+from app.schemas.upload import (
+    AttachPhotoRequest,
+    PresignRequest,
+    PresignResponse,
+    UploadStatusRead,
+)
 from app.schemas.user import UserRead
 from app.services.upload import UploadService
 
@@ -28,9 +34,14 @@ def _upload_service(session: AsyncSession = Depends(get_db)) -> UploadService:
     )
 
 
+async def _limit_presign(request: Request) -> None:
+    await enforce(request, "presign", client_ip(request), 30)
+
+
 @router.post("/presign", response_model=PresignResponse)
 async def presign(
     request: PresignRequest,
+    _: None = Depends(_limit_presign),
     service: UploadService = Depends(_upload_service),
     current_user: User = Depends(get_current_user),
 ) -> PresignResponse:
@@ -45,6 +56,24 @@ async def attach_recipe_photo(
     current_user: User = Depends(get_current_user),
 ) -> RecipeRead:
     return await service.attach_recipe_photo(recipe_id, data, current_user.id)
+
+
+@router.post("/{upload_id}/confirm", response_model=UploadStatusRead)
+async def confirm_upload(
+    upload_id: uuid.UUID,
+    service: UploadService = Depends(_upload_service),
+    current_user: User = Depends(get_current_user),
+) -> UploadStatusRead:
+    return await service.confirm_upload(upload_id, current_user.id)
+
+
+@router.get("/status/{upload_id}", response_model=UploadStatusRead)
+async def get_upload_status(
+    upload_id: uuid.UUID,
+    service: UploadService = Depends(_upload_service),
+    current_user: User = Depends(get_current_user),
+) -> UploadStatusRead:
+    return await service.get_upload_status(upload_id, current_user.id)
 
 
 @router.delete("/recipes/{recipe_id}/photo", status_code=204)
@@ -62,7 +91,7 @@ async def set_avatar(
     service: UploadService = Depends(_upload_service),
     current_user: User = Depends(get_current_user),
 ) -> UserRead:
-    return await service.set_avatar(data.key, current_user.id)
+    return await service.set_avatar(data, current_user.id)
 
 
 @router.get("/view")

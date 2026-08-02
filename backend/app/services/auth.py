@@ -2,8 +2,14 @@ import uuid
 from datetime import UTC, datetime, timedelta
 
 from fastapi import HTTPException
+from sqlalchemy.exc import IntegrityError
 
-from app.core.security import create_access_token, create_refresh_token
+from app.core.config import settings
+from app.core.security import (
+    create_access_token,
+    create_refresh_token,
+    hash_refresh_token,
+)
 from app.models.refresh_token import RefreshToken
 from app.models.user import User
 from app.repositories.refresh_token import RefreshTokenRepository
@@ -24,11 +30,14 @@ class AuthService:
     async def _issue_tokens(self, user_id: uuid.UUID) -> TokenResponse:
         access_token = create_access_token(user_id)
         refresh_token = create_refresh_token()
-        expires_at = datetime.now(UTC) + timedelta(days=30)
+        expires_at = datetime.now(UTC) + timedelta(
+            days=settings.jwt_refresh_token_expire_days
+        )
         await self.token_repo.create(
             RefreshToken(
                 user_id=user_id,
-                token=refresh_token,
+                token_hash=hash_refresh_token(refresh_token),
+                family_id=uuid.uuid4(),
                 expires_at=expires_at,
             )
         )
@@ -39,14 +48,22 @@ class AuthService:
             raise HTTPException(status_code=409, detail="Email already registered")
         if await self.user_repo.get_by_username(data.username):
             raise HTTPException(status_code=409, detail="Username already taken")
-        user = await self.user_repo.create(
-            User(
-                email=data.email,
-                username=data.username,
-                password_hash=_hash_password(data.password),
+        try:
+            user = await self.user_repo.create(
+                User(
+                    email=data.email,
+                    username=data.username,
+                    password_hash=_hash_password(data.password),
+                )
             )
-        )
-        return await self._issue_tokens(user.id)
+            tokens = await self._issue_tokens(user.id)
+            await self.user_repo.session.commit()
+            return tokens
+        except IntegrityError as exc:
+            await self.user_repo.session.rollback()
+            raise HTTPException(
+                status_code=409, detail="Email or username already registered"
+            ) from exc
 
     async def login(self, data: LoginRequest) -> TokenResponse:
         user = await self.user_repo.get_by_email(data.email)
@@ -54,16 +71,26 @@ class AuthService:
             raise HTTPException(status_code=401, detail="Invalid credentials")
         if not user.is_active:
             raise HTTPException(status_code=403, detail="Account is disabled")
-        return await self._issue_tokens(user.id)
+        tokens = await self._issue_tokens(user.id)
+        await self.user_repo.session.commit()
+        return tokens
 
     async def refresh(self, refresh_token: str) -> TokenResponse:
-        if not await self.token_repo.is_valid(refresh_token):
+        replacement_token = create_refresh_token()
+        rotated = await self.token_repo.rotate(
+            hash_refresh_token(refresh_token),
+            hash_refresh_token(replacement_token),
+            datetime.now(UTC) + timedelta(days=settings.jwt_refresh_token_expire_days),
+        )
+        if not rotated:
             raise HTTPException(
                 status_code=401, detail="Invalid or expired refresh token"
             )
-        record = await self.token_repo.get_by_token(refresh_token)
-        await self.token_repo.revoke(refresh_token)
-        return await self._issue_tokens(record.user_id)  # type: ignore[union-attr]
+        return TokenResponse(
+            access_token=create_access_token(rotated.user_id),
+            refresh_token=replacement_token,
+        )
 
     async def logout(self, refresh_token: str) -> None:
-        await self.token_repo.revoke(refresh_token)
+        await self.token_repo.revoke(hash_refresh_token(refresh_token))
+        await self.token_repo.session.commit()

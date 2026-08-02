@@ -30,7 +30,7 @@ variable "ssh_public_key" {
   type        = string
 }
 
-variable "allowed_ssh_cidr" {
-  description = "CIDR-блок (ваш IP), которому разрешен доступ по SSH"
+variable "admin_cidr" {
+  description = "CIDR-блок, которому разрешен доступ по SSH и Kubernetes API"
   type        = string
 }

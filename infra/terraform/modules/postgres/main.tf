@@ -4,7 +4,7 @@ resource "yandex_mdb_postgresql_cluster" "postgres" {
   folder_id           = var.folder_id
   network_id          = var.network_id
   security_group_ids  = var.security_group_ids
-  deletion_protection = var.environment == "prod" ? true : false
+  deletion_protection = var.environment != "dev"
 
   config {
     version = "15"

@@ -1,7 +1,8 @@
-from fastapi import APIRouter, Depends, Request, Response
+from fastapi import APIRouter, Depends, HTTPException, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.config import settings
+from app.core.auth_cookies import clear_auth_cookies, set_auth_cookies
+from app.core.rate_limit import client_ip, enforce, opaque
 from app.db.session import get_db
 from app.repositories.refresh_token import RefreshTokenRepository
 from app.repositories.user import UserRepository
@@ -10,6 +11,7 @@ from app.schemas.auth import (
     RefreshRequest,
     RegisterRequest,
     TokenResponse,
+    WebAuthResponse,
 )
 from app.services.auth import AuthService
 
@@ -23,77 +25,100 @@ def _auth_service(session: AsyncSession = Depends(get_db)) -> AuthService:
     )
 
 
-def _set_auth_cookies(response: Response, tokens: TokenResponse) -> None:
-    response.set_cookie(
-        key="access_token",
-        value=tokens.access_token,
-        httponly=True,
-        secure=settings.cookie_secure,
-        samesite=settings.cookie_samesite,
-        max_age=settings.jwt_access_token_expire_minutes * 60,
-    )
-    response.set_cookie(
-        key="refresh_token",
-        value=tokens.refresh_token,
-        httponly=True,
-        secure=settings.cookie_secure,
-        samesite=settings.cookie_samesite,
-        max_age=settings.jwt_refresh_token_expire_days * 24 * 60 * 60,
-    )
+async def _limit_register(request: Request) -> None:
+    await enforce(request, "register", client_ip(request), 5)
 
 
-def _clear_auth_cookies(response: Response) -> None:
-    response.delete_cookie("access_token")
-    response.delete_cookie("refresh_token")
+async def _limit_login(request: Request, data: LoginRequest) -> None:
+    await enforce(request, "login-ip", client_ip(request), 10)
+    await enforce(request, "login-account", opaque(data.email), 5)
 
 
-@router.post("/register", response_model=TokenResponse, status_code=201)
+async def _limit_refresh(request: Request) -> None:
+    await enforce(request, "refresh", client_ip(request), 30)
+
+
+@router.post("/register", response_model=WebAuthResponse, status_code=201)
 async def register(
     data: RegisterRequest,
     response: Response,
+    _: None = Depends(_limit_register),
     service: AuthService = Depends(_auth_service),
-) -> TokenResponse:
+) -> WebAuthResponse:
     tokens = await service.register(data)
-    _set_auth_cookies(response, tokens)
-    return tokens
+    return WebAuthResponse(csrf_token=set_auth_cookies(response, tokens))
 
 
-@router.post("/login", response_model=TokenResponse)
+@router.post("/login", response_model=WebAuthResponse)
 async def login(
     data: LoginRequest,
     response: Response,
+    _: None = Depends(_limit_login),
     service: AuthService = Depends(_auth_service),
-) -> TokenResponse:
+) -> WebAuthResponse:
     tokens = await service.login(data)
-    _set_auth_cookies(response, tokens)
-    return tokens
+    return WebAuthResponse(csrf_token=set_auth_cookies(response, tokens))
 
 
-@router.post("/refresh", response_model=TokenResponse)
+@router.post("/refresh", response_model=WebAuthResponse)
 async def refresh(
     request: Request,
     response: Response,
-    data: RefreshRequest | None = None,
+    _: None = Depends(_limit_refresh),
     service: AuthService = Depends(_auth_service),
-) -> TokenResponse:
-    token = data.refresh_token if data else request.cookies.get("refresh_token")
+) -> WebAuthResponse:
+    token = request.cookies.get("refresh_token")
     if not token:
-        from fastapi import HTTPException
-
         raise HTTPException(status_code=401, detail="Refresh token not found")
     tokens = await service.refresh(token)
-    _set_auth_cookies(response, tokens)
-    return tokens
+    return WebAuthResponse(csrf_token=set_auth_cookies(response, tokens))
 
 
 @router.post("/logout", status_code=204)
 async def logout(
     request: Request,
     response: Response,
-    data: RefreshRequest | None = None,
     service: AuthService = Depends(_auth_service),
 ) -> None:
-    token = data.refresh_token if data else request.cookies.get("refresh_token")
+    token = request.cookies.get("refresh_token")
     if token:
         await service.logout(token)
-    _clear_auth_cookies(response)
+    clear_auth_cookies(response)
+
+
+@router.post("/token/register", response_model=TokenResponse, status_code=201)
+async def token_register(
+    data: RegisterRequest,
+    request: Request,
+    _: None = Depends(_limit_register),
+    service: AuthService = Depends(_auth_service),
+) -> TokenResponse:
+    return await service.register(data)
+
+
+@router.post("/token/login", response_model=TokenResponse)
+async def token_login(
+    data: LoginRequest,
+    request: Request,
+    _: None = Depends(_limit_login),
+    service: AuthService = Depends(_auth_service),
+) -> TokenResponse:
+    return await service.login(data)
+
+
+@router.post("/token/refresh", response_model=TokenResponse)
+async def token_refresh(
+    data: RefreshRequest,
+    request: Request,
+    _: None = Depends(_limit_refresh),
+    service: AuthService = Depends(_auth_service),
+) -> TokenResponse:
+    return await service.refresh(data.refresh_token)
+
+
+@router.post("/token/logout", status_code=204)
+async def token_logout(
+    data: RefreshRequest,
+    service: AuthService = Depends(_auth_service),
+) -> None:
+    await service.logout(data.refresh_token)

@@ -23,7 +23,7 @@
 | Docker Compose для локального запуска | ✅ Готово |
 | Backend + Frontend: категории, роли пользователей | ✅ Готово |
 | Backend + Frontend: ингредиенты и шаги приготовления | ✅ Готово |
-| Backend + Frontend: загрузка фото рецептов и аватаров | ✅ Готово |
+| Backend + Frontend: доверенная загрузка и проверка фото рецептов и аватаров | ✅ Готово |
 | Backend + Frontend: лайки и избранное | ✅ Готово |
 | Backend + Frontend: комментарии с ответами и модерацией | ✅ Готово |
 | Backend + Frontend: публичные профили пользователей и редизайн карточек рецептов | ✅ Готово |
@@ -31,9 +31,10 @@
 | Backend + Frontend: поиск рецептов (OpenSearch) | ✅ Готово |
 | Backend + Frontend: план питания на неделю | ✅ Готово |
 | Backend + Frontend: список покупок (async Celery + polling) | ✅ Готово |
-| Backend + Frontend: OAuth Google и Яндекс | ✅ Готово |
+| Backend + Frontend: защищённые Auth и OAuth Google/Яндекс | ✅ Готово |
 | Backend + Frontend: модерация и админ-панель | ✅ Готово |
 | Backend + Frontend: уведомления и email-доставка | ✅ Готово |
+| Frontend: автоматические тесты | ⏳ Не настроены |
 | Android | ⏳ Планируется |
 | Desktop | ⏳ Планируется |
 | Инфраструктура: Terraform базовая структура | ✅ Готово |
@@ -45,11 +46,12 @@
 | Инфраструктура: Terraform модуль compute (bastion / self-hosted runner, static IP) | ✅ Готово |
 | Инфраструктура: Terraform модуль dns (публичная зона, A-записи, wildcard) | ✅ Готово |
 | Инфраструктура: Terraform окружение dev (все модули подключены, Makefile) | ✅ Готово |
-| Инфраструктура: Terraform окружения staging / prod (базовая структура) | 🚧 В работе |
-| Инфраструктура: Terraform модуль iam (service accounts, IAM-права) | ⏳ Планируется |
-| Инфраструктура: Ansible (настройка Linux VM, hardening, runner) | ⏳ Планируется |
-| Инфраструктура: Helm charts (деплой в Kubernetes) | ⏳ Планируется |
-| CI/CD (GitHub Actions workflows) | ⏳ Планируется |
+| Инфраструктура: Terraform окружения staging / prod | 🚧 Конфигурации подготовлены и валидируются, развёртывание отложено |
+| Инфраструктура: Terraform модуль iam (service accounts, IAM-права) | ✅ Готово |
+| Инфраструктура: Ansible (настройка Linux VM, hardening, runner) | ⏳ Не начато |
+| Инфраструктура: Kubernetes manifests | ⏳ Не начато |
+| Инфраструктура: Helm chart (базовая структура и Job миграций) | 🚧 Частично |
+| CI/CD (GitHub Actions workflows) | ⏳ Не начато |
 
 ## Цели проекта
 
@@ -330,6 +332,11 @@ recipe-platform/
 - Celery worker;
 - Celery beat scheduler.
 
+Сервисы публикуют порты только на `127.0.0.1`. Перед запуском API
+одноразовый сервис `alembic` применяет миграции, а `minio-init` создаёт
+бакеты. Backend, worker и beat используют один локальный backend image;
+Compose дожидается healthcheck зависимостей.
+
 Запуск:
 
 ```
@@ -390,7 +397,7 @@ Backend предоставляет REST API.
 
 ## CI/CD
 
-CI/CD реализуется через GitHub Actions.
+CI/CD планируется реализовать через GitHub Actions; workflow-файлы пока не созданы.
 
 Пайплайны должны выполнять:
 
@@ -511,6 +518,9 @@ infra/helm/
 - refresh token rotation;
 - CORS whitelist;
 - rate limiting;
+- CSRF-защита cookie-auth запросов;
+- одноразовый OAuth state;
+- отдельный Bearer-сценарий для мобильных и desktop-клиентов;
 - email verification;
 - проверка прав доступа;
 - валидация входных данных;

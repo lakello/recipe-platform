@@ -25,7 +25,7 @@ class RecipeService:
     async def create_recipe(
         self, data: RecipeCreate, author_id: uuid.UUID
     ) -> RecipeRead:
-        recipe = await self.repository.create(
+        created_recipe = await self.repository.create(
             Recipe(
                 author_id=author_id,
                 title=data.title,
@@ -37,6 +37,10 @@ class RecipeService:
                 category_id=data.category_id,
             )
         )
+        await self.repository.session.commit()
+        recipe = await self.repository.get_by_id(created_recipe.id)
+        if recipe is None:
+            raise RuntimeError("Created recipe not found")
         return RecipeRead.model_validate(recipe)
 
     async def get_recipe(
@@ -68,6 +72,7 @@ class RecipeService:
         recipe = await self._get_owned(recipe_id, current_user_id)
         updates = data.model_dump(exclude_unset=True)
         recipe = await self.repository.update(recipe, updates)
+        await self.repository.session.commit()
         recipe_read = RecipeRead.model_validate(recipe)
         return await self._enrich_single(recipe_read, current_user_id)
 
@@ -76,6 +81,7 @@ class RecipeService:
     ) -> None:
         recipe = await self._get_owned(recipe_id, current_user_id)
         await self.repository.delete(recipe)
+        await self.repository.session.commit()
 
     async def get_by_ids(
         self, ids: list[uuid.UUID], current_user_id: uuid.UUID | None

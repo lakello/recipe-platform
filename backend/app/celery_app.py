@@ -6,7 +6,12 @@ celery_app = Celery(
     "recipe_platform",
     broker=settings.celery_broker_url,
     backend=settings.celery_result_backend_url,
-    include=["app.tasks.thumbnails", "app.tasks.shopping_list", "app.tasks.email"],
+    include=[
+        "app.tasks.thumbnails",
+        "app.tasks.shopping_list",
+        "app.tasks.email",
+        "app.tasks.auth",
+    ],
 )
 
 celery_app.conf.update(
@@ -16,5 +21,14 @@ celery_app.conf.update(
     result_expires=3600,
     timezone="UTC",
     enable_utc=True,
-    beat_schedule={},
+    beat_schedule={
+        "cleanup-refresh-tokens-daily": {
+            "task": "tasks.cleanup_refresh_tokens",
+            "schedule": 86400,
+        },
+        "cleanup-uploads-hourly": {
+            "task": "tasks.cleanup_uploads",
+            "schedule": 3600,
+        },
+    },
 )

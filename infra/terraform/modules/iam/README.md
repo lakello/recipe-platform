@@ -8,21 +8,24 @@ Terraform-модуль для централизованного управле�
 |--------|-----|------|
 | SA для кластера K8s | `{env}-k8s-cluster-sa` | `k8s.clusters.agent`, `k8s.tunnelClusters.agent`, `vpc.publicAdmin` |
 | SA для нод K8s | `{env}-k8s-node-sa` | `container-registry.images.puller` |
-| SA для Object Storage | `{env}-storage-sa` | `storage.editor` |
-| SA для CI/CD | `{env}-cicd-sa` | `container-registry.images.pusher`, `k8s.cluster-api.cluster-admin` |
+| SA для Object Storage | `{env}-storage-sa` | bucket-scoped `storage.editor` назначается модулем Object Storage |
+| SA для push образов | `{env}-image-pusher-sa` | `container-registry.images.pusher` |
+| SA для deployment | `{env}-deployer-sa` | доступ к кластеру назначается отдельно от provisioning |
 
 Для `storage-sa` дополнительно создаётся `yandex_iam_service_account_static_access_key` — статический ключ для S3-совместимого доступа к Object Storage.
 
 ## Принцип минимальных прав
 
-Кластерный SA и SA нод разделены намеренно: ноды не имеют прав `vpc.publicAdmin` — только доступ к Container Registry для pull образов.
+Кластерный SA, SA нод, runtime storage, image push и deployment разделены. GitHub Actions получает image-pusher и deployer identities через OIDC federation без постоянных CI-ключей.
 
 ## Переменные
 
 | Переменная  | Тип    | Описание                          |
 |-------------|--------|-----------------------------------|
 | `folder_id` | string | ID папки в Yandex Cloud           |
-| `env`       | string | Префикс окружения (dev, stage, prod) |
+| `env`       | string | Префикс окружения (dev, staging, prod) |
+| `github_oidc_audience` | string | Audience GitHub Actions OIDC |
+| `github_repository` | string | Репозиторий в формате `owner/name` |
 
 ## Outputs
 
@@ -31,7 +34,8 @@ Terraform-модуль для централизованного управле�
 | `k8s_cluster_sa_id`  | ID SA для управления кластером K8s        |
 | `k8s_node_sa_id`     | ID SA для нод K8s                         |
 | `storage_sa_id`      | ID SA для Object Storage                  |
-| `cicd_sa_id`         | ID SA для CI/CD pipeline                  |
+| `image_pusher_sa_id` | ID SA для публикации container images     |
+| `deployer_sa_id`     | ID SA для deployment                      |
 | `access_key_id`      | Access key ID для Object Storage (S3 API) |
 | `secret_access_key`  | Secret key для Object Storage (sensitive) |
 
@@ -39,9 +43,11 @@ Terraform-модуль для централизованного управле�
 
 ```hcl
 module "iam" {
-  source    = "../../modules/iam"
-  folder_id = var.folder_id
-  env       = var.environment
+  source               = "../../modules/iam"
+  folder_id            = var.folder_id
+  env                  = var.environment
+  github_oidc_audience = var.github_oidc_audience
+  github_repository    = var.github_repository
 }
 
 module "kubernetes" {
@@ -52,9 +58,8 @@ module "kubernetes" {
 }
 
 module "object_storage" {
-  source     = "../../modules/object-storage"
-  access_key = module.iam.access_key_id
-  secret_key = module.iam.secret_access_key
+  source        = "../../modules/object-storage"
+  storage_sa_id = module.iam.storage_sa_id
   # ...
 }
 ```

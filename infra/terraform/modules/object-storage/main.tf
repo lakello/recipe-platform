@@ -1,9 +1,8 @@
 resource "yandex_storage_bucket" "bucket" {
   for_each = var.bucket_config
 
-  bucket     = each.key
-  access_key = var.access_key
-  secret_key = var.secret_key
+  bucket = each.key
+
   versioning {
     enabled = each.value.versioning
   }
@@ -35,4 +34,12 @@ resource "yandex_storage_bucket" "bucket" {
 
     max_age_seconds = 3000
   }
+}
+
+resource "yandex_storage_bucket_iam_binding" "bucket_iam" {
+  for_each = yandex_storage_bucket.bucket
+
+  bucket  = yandex_storage_bucket.bucket[each.key].id
+  role    = "storage.editor"
+  members = ["serviceAccount:${var.storage_sa_id}"]
 }

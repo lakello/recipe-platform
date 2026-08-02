@@ -1,4 +1,5 @@
 import uuid
+from datetime import UTC, datetime
 
 from sqlalchemy import func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -21,6 +22,20 @@ class NotificationRepository:
             select(Notification).where(Notification.id == notification_id)
         )
         return result.scalar_one_or_none()
+
+    async def get_for_email_delivery(
+        self, notification_id: uuid.UUID
+    ) -> Notification | None:
+        result = await self.session.execute(
+            select(Notification)
+            .where(Notification.id == notification_id)
+            .with_for_update()
+        )
+        return result.scalar_one_or_none()
+
+    async def mark_email_sent(self, notification: Notification) -> None:
+        notification.email_sent_at = datetime.now(UTC)
+        await self.session.flush()
 
     async def list_for_user(
         self, user_id: uuid.UUID, offset: int, size: int

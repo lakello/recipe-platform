@@ -60,27 +60,37 @@ def make_report(**kwargs) -> Report:
 
 @pytest.fixture
 def mock_user_repo() -> AsyncMock:
-    return AsyncMock(spec=UserRepository)
+    repo = AsyncMock(spec=UserRepository)
+    repo.session = AsyncMock()
+    return repo
 
 
 @pytest.fixture
 def mock_recipe_repo() -> AsyncMock:
-    return AsyncMock(spec=RecipeRepository)
+    repo = AsyncMock(spec=RecipeRepository)
+    repo.session = AsyncMock()
+    return repo
 
 
 @pytest.fixture
 def mock_comment_repo() -> AsyncMock:
-    return AsyncMock(spec=CommentRepository)
+    repo = AsyncMock(spec=CommentRepository)
+    repo.session = AsyncMock()
+    return repo
 
 
 @pytest.fixture
 def mock_report_repo() -> AsyncMock:
-    return AsyncMock(spec=ReportRepository)
+    repo = AsyncMock(spec=ReportRepository)
+    repo.session = AsyncMock()
+    return repo
 
 
 @pytest.fixture
 def mock_audit_repo() -> AsyncMock:
-    return AsyncMock(spec=ModerationActionRepository)
+    repo = AsyncMock(spec=ModerationActionRepository)
+    repo.session = AsyncMock()
+    return repo
 
 
 @pytest.fixture
@@ -120,6 +130,8 @@ async def test_assign_role_success(
 
     assert result is not None
     mock_user_repo.update.assert_called_once()
+    mock_audit_repo.create.assert_awaited_once()
+    mock_user_repo.session.commit.assert_awaited_once()
 
 
 async def test_assign_role_cannot_change_own(

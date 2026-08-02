@@ -46,7 +46,9 @@ def make_recipe(**kwargs) -> Recipe:
 
 @pytest.fixture
 def repo() -> AsyncMock:
-    return AsyncMock(spec=RecipeRepository)
+    repository = AsyncMock(spec=RecipeRepository)
+    repository.session = AsyncMock()
+    return repository
 
 
 @pytest.fixture
@@ -56,13 +58,16 @@ def service(repo: AsyncMock) -> RecipeService:
 
 async def test_create_recipe(service: RecipeService, repo: AsyncMock) -> None:
     author_id = uuid.uuid4()
-    repo.create.return_value = make_recipe(author_id=author_id)
+    recipe = make_recipe(author_id=author_id)
+    repo.create.return_value = recipe
+    repo.get_by_id.return_value = recipe
 
     data = RecipeCreate(title="Борщ", visibility=RecipeVisibility.public)
     result = await service.create_recipe(data, author_id)
 
     assert result.title == "Test Recipe"
     repo.create.assert_called_once()
+    repo.get_by_id.assert_awaited_once_with(recipe.id)
 
 
 async def test_get_recipe_public(service: RecipeService, repo: AsyncMock) -> None:
@@ -176,13 +181,15 @@ async def test_create_recipe_with_all_fields(
     service: RecipeService, repo: AsyncMock
 ) -> None:
     author_id = uuid.uuid4()
-    repo.create.return_value = make_recipe(
+    recipe = make_recipe(
         author_id=author_id,
         title="Паста",
         cooking_time_minutes=30,
         servings=4,
         difficulty=Difficulty.easy,
     )
+    repo.create.return_value = recipe
+    repo.get_by_id.return_value = recipe
 
     data = RecipeCreate(
         title="Паста",

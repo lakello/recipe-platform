@@ -110,8 +110,7 @@ HTTP API слой.
 
 Содержит роутеры и endpoints:
 
-- `/api/auth` — регистрация, логин, refresh, logout
-- `/api/oauth` — Google и Яндекс OAuth callback
+- `/api/auth` — cookie-auth, Bearer auth, Google и Яндекс OAuth
 - `/api/users` — профили пользователей, подписки
 - `/api/recipes` — CRUD рецептов, лента
 - `/api/categories` — категории рецептов
@@ -123,7 +122,7 @@ HTTP API слой.
 - `/api/meal-plans` — недельный план питания
 - `/api/shopping-list` — список покупок
 - `/api/notifications` — уведомления
-- `/api/uploads` — presigned URL, привязка фото
+- `/api/uploads` — presigned POST, проверка и привязка фото
 - `/api/search` — полнотекстовый поиск (OpenSearch)
 - `/api/admin` — модерация и административные функции
 - `GET /health` — liveness probe
@@ -466,16 +465,15 @@ docker build -t recipe-backend:local .
 docker run --rm -p 8000:8000 --env-file .env recipe-backend:local
 ```
 
-В production image должны соблюдаться требования:
+В backend image реализованы:
 
 - multi-stage build;
-- non-root user;
-- минимальный base image;
+- запуск от системного non-root пользователя `app`;
+- runtime на `python:3.12-slim` без dev-зависимостей;
 - отсутствие секретов внутри image;
 - использование `.dockerignore`;
 - pinned dependencies;
-- healthcheck endpoint;
-- корректная обработка SIGTERM.
+- отдельный запуск миграций вне процесса API.
 
 ## Health checks
 
@@ -573,16 +571,18 @@ Backend должен поддерживать:
 
 ## Security
 
-Backend должен соблюдать следующие требования безопасности:
+Backend реализует следующие требования безопасности:
 
 - пароли хранятся только в виде хэшей;
 - использовать Argon2 или bcrypt;
 - JWT access token короткоживущий;
-- refresh token должен ротироваться;
-- refresh token хранится безопасно;
+- refresh token ротируется и хранится только в виде SHA-256 hash;
 - CORS ограничен whitelist-ом;
-- rate limiting для auth endpoints;
-- защита от brute force;
+- Redis rate limiting защищает auth, OAuth и presign endpoints;
+- login ограничивается одновременно по IP и идентификатору аккаунта;
+- cookie-auth мутации требуют double-submit CSRF token;
+- OAuth state одноразово извлекается из Redis;
+- Bearer auth выделен для Android и Desktop;
 - email verification;
 - валидация всех входных данных;
 - проверка прав доступа на уровне сервисов;
@@ -625,11 +625,11 @@ Backend не должен сохранять пользовательские ф
 
 Подход:
 
-1. 1.Backend валидирует запрос на загрузку.
-2. 2.Backend выдаёт pre-signed URL.
-3. 3.Клиент загружает файл напрямую в Object Storage.
-4. 4.Backend сохраняет metadata файла.
-5. 5.Worker генерирует thumbnail.
+1. Backend создаёт ограниченное по времени разрешение на загрузку.
+2. Клиент загружает файл напрямую в Object Storage через presigned POST.
+3. Backend проверяет наличие, размер и заявленный MIME-тип объекта.
+4. Worker декодирует изображение, проверяет фактический формат и число пикселей, затем перекодирует его без metadata.
+5. Только проверенный объект можно привязать к рецепту или профилю; невалидные и устаревшие загрузки удаляются.
 
 Для local-окружения используется MinIO.
 
@@ -848,28 +848,31 @@ Endpoints:
 
 ### Загрузка фото (feat/uploads)
 
-- `app/models/photo.py` — модель `RecipePhoto`: `key` (путь в Object Storage), `content_type`, FK на `recipes`
-- `app/repositories/photo.py` — `upsert` (одно фото на рецепт), `get_by_recipe`, `delete`
-- `app/services/upload.py` — `presign_upload`, `attach_recipe_photo`, `delete_recipe_photo`, `set_avatar`
-- `app/core/storage.py` — boto3-клиент для MinIO/S3; presigned URL подписываются с `s3_public_url` (иначе подпись не совпадёт с хостом браузера)
-- `app/schemas/upload.py` — `PresignRequest`, `PresignResponse`, `AttachPhotoRequest`
-- `app/tasks/thumbnails.py` — заглушка Celery-задачи `generate_thumbnail` (будет реализована позже)
+- `app/models/photo.py` — модели `RecipePhoto` и `UploadIntent`, связывающая загрузку с пользователем, назначением, ожидаемым MIME-типом, сроком и статусом
+- `app/repositories/photo.py` — операции с фотографиями и разрешениями на загрузку
+- `app/services/upload.py` — выдача presigned POST, подтверждение, проверка статуса и привязка только валидированных файлов
+- `app/core/storage.py` — boto3-клиент для MinIO/S3, presigned POST с ограничением размера 10 МБ и служебные операции с объектами
+- `app/schemas/upload.py` — запросы и ответы для разрешения, подтверждения, статуса и привязки загрузки
+- `app/tasks/thumbnails.py` — Celery-проверка изображения с декодированием и перекодированием без metadata, а также очистка устаревших загрузок
 
 Endpoints:
 
 | Метод | Путь | Auth | Описание |
 |---|---|---|---|
-| `POST` | `/api/uploads/presign` | 🔒 | Получить presigned PUT URL для загрузки файла |
-| `POST` | `/api/uploads/recipes/{id}/photo` | 🔒 автор | Привязать загруженное фото к рецепту |
+| `POST` | `/api/uploads/presign` | 🔒 | Создать разрешение и получить presigned POST для загрузки |
+| `POST` | `/api/uploads/{upload_id}/confirm` | 🔒 | Подтвердить загрузку и запустить проверку |
+| `GET` | `/api/uploads/status/{upload_id}` | 🔒 | Получить статус проверки |
+| `POST` | `/api/uploads/recipes/{id}/photo` | 🔒 автор | Привязать валидированную загрузку к рецепту |
 | `DELETE` | `/api/uploads/recipes/{id}/photo` | 🔒 автор | Удалить фото рецепта |
 | `POST` | `/api/uploads/avatar` | 🔒 | Установить аватар пользователя |
 | `GET` | `/api/uploads/view?key=` | — | Редирект на presigned GET URL фото |
 
 Сценарий загрузки:
-1. Клиент запрашивает presigned URL (`POST /api/uploads/presign`)
-2. Клиент загружает файл напрямую в MinIO (`PUT <presigned_url>`)
-3. Клиент сообщает бэкенду ключ файла (`POST /api/uploads/recipes/{id}/photo`)
-4. Бэкенд сохраняет metadata и ставит задачу на генерацию thumbnail
+1. Клиент получает `upload_id`, URL и поля формы (`POST /api/uploads/presign`)
+2. Клиент отправляет multipart-форму напрямую в MinIO/S3
+3. Клиент подтверждает загрузку (`POST /api/uploads/{upload_id}/confirm`)
+4. Worker проверяет и безопасно перекодирует изображение
+5. Клиент дожидается статуса `validated` и прикрепляет файл по `upload_id`
 
 Переменные окружения:
 
@@ -936,8 +939,10 @@ UPDATE users SET role = 'superadmin' WHERE email = 'your@email.com';
 - `app/models/oauth_account.py` — модель `UserOAuthAccount`: `provider`, `provider_user_id`, FK на `users` с CASCADE; уникальное ограничение `(provider, provider_user_id)`
 - `app/models/user.py` — `password_hash` сделан nullable для поддержки OAuth-only пользователей
 - `app/repositories/oauth_account.py` — `OAuthAccountRepository`: поиск по провайдеру и `provider_user_id`, создание
-- `app/services/oauth.py` — `OAuthService`: обмен authorization code на access token (aiohttp), получение профиля, поиск существующего OAuth-аккаунта, привязка по email или автосоздание нового пользователя, выдача JWT; CSRF-защита через state-параметр
-- `app/api/oauth.py` — OAuth endpoints; state хранится в short-lived httpOnly cookie (5 мин); при ошибке — редирект на `/login?error=oauth_error`; при успехе — установка auth cookies и редирект на `FRONTEND_URL`
+- `app/services/oauth.py` — `OAuthService`: обмен authorization code на access token через общую lifespan HTTP-сессию с connect/read/total timeout, получение профиля, привязка по email или создание пользователя и выдача JWT
+- `app/api/oauth.py` — OAuth endpoints; state сопоставляется с short-lived httpOnly cookie и атомарно удаляется из Redis; редирект ошибки не содержит внутренний текст исключения
+- `app/core/rate_limit.py` — Redis rate limiting для auth, OAuth и presign; login учитывает IP и SHA-256 идентификатора аккаунта
+- `app/core/auth_cookies.py` и `CSRFMiddleware` — единые параметры cookies и double-submit CSRF-защита
 - `alembic/versions/m1e2f3a4b5c6` — создаёт таблицу `user_oauth_accounts`; делает `password_hash` nullable
 - `app/core/config.py` — добавлены OAuth credentials и `FRONTEND_URL`
 - `docker-compose.yml` — OAuth переменные и `FRONTEND_URL` передаются в контейнер backend
@@ -966,6 +971,7 @@ Endpoints:
 | `YANDEX_CLIENT_ID` / `YANDEX_CLIENT_SECRET` | Яндекс OAuth credentials |
 | `YANDEX_REDIRECT_URI` | Callback URI (по умолчанию `http://localhost:8000/api/auth/yandex/callback`) |
 | `FRONTEND_URL` | URL фронтенда для редиректа после OAuth (по умолчанию `http://localhost:5173`) |
+| `OAUTH_CONNECT_TIMEOUT_SECONDS` / `OAUTH_READ_TIMEOUT_SECONDS` / `OAUTH_TOTAL_TIMEOUT_SECONDS` | Таймауты внешних OAuth-запросов |
 
 ### Роли, модерация и админка (feat/admin-moderation)
 
@@ -1020,14 +1026,14 @@ docker compose exec backend sh -c "ADMIN_EMAIL=admin@example.com ADMIN_PASSWORD=
 - `app/models/ingredient_category.py` — модель `IngredientCategory`: `name` (unique), `created_at`
 - `app/models/shopping_list.py` — модели `ShoppingList` (один на пользователя, unique FK) и `ShoppingListItem` (`name`, `amount`, `unit`, `is_bought`, `is_manual`, `ingredient_id` nullable FK)
 - `app/repositories/ingredient_category.py` / `app/services/ingredient_category.py` — CRUD категорий ингредиентов (409 при дубликате)
-- `app/repositories/shopping_list.py` — `get_or_create_list`, `get_item`, `get_item_by_ingredient`, `add_item`, `update_item`, `delete_item`, `get_meal_plan_items_for_dates` (группирует даты по неделям для эффективного OR-запроса)
-- `app/services/shopping_list.py` — умный merge: нормализация единиц (kg↔g, l↔ml), `max(existing, generated)` — добавляет только разницу; генерация из 3 режимов (today, week, custom); CRUD элементов
+- `app/repositories/shopping_list.py` — конкурентно-безопасный `get_or_create_list`, блокировка списка на время генерации, batch-загрузка существующих позиций, CRUD элементов и загрузка плана питания
+- `app/services/shopping_list.py` — умный merge: нормализация единиц (kg↔g, l↔ml), `max(existing, generated)` — добавляет только разницу; генерация из 3 режимов (today, week, custom) выполняется одной транзакцией с полным rollback при ошибке
 - `app/tasks/shopping_list.py` — Celery-таск `tasks.generate_shopping_list`: запускает async-сервис через `asyncio.run()` внутри синхронного воркера
 - `app/models/__init__.py` — импортирует все модули моделей, чтобы SQLAlchemy резолвил все relationship-ссылки до маппинга (нужно для Celery-воркера)
 - `app/api/ingredient_categories.py` — роутер `/api/ingredient-categories`
 - `app/api/shopping_list.py` — роутер `/api/shopping-list`; генерация асинхронная (202 + task_id); polling статуса через Celery result backend (Redis DB 2)
 - `app/celery_app.py` — включён result backend (`CELERY_RESULT_BACKEND_URL`); результаты хранятся 1 час
-- `tests/test_shopping_list_service.py` — 21 тест: unit (нормализация единиц, режимы дат) + integration (merge-алгоритм)
+- `tests/test_shopping_list_service.py` — unit-тесты нормализации, режимов дат, merge-алгоритма, единственного commit и rollback генерации
 - Миграции: `k9c0d1e2f3a4` (ingredient_categories + FK в ingredients), `l0d1e2f3a4b5` (shopping_lists, shopping_list_items)
 
 Endpoints:
@@ -1072,13 +1078,13 @@ Endpoints:
 
 ### Поиск рецептов (feat/search)
 
-- `app/core/opensearch.py` — `AsyncOpenSearch`-клиент, маппинг индекса `recipes` (title, description, ingredient_names, category, cooking_time_minutes, difficulty, status, visibility, likes_count)
-- `app/services/search.py` — `SearchService`: `index_recipe` (пропускает непубличные/не-published → удаляет из индекса), `remove_recipe`, `search` с построением `bool`-запроса
-- `app/api/search.py` — `GET /api/search/recipes`: полнотекстовый поиск, фильтры, исключение ингредиентов, сортировка, пагинация; возвращает полные `RecipeRead` из БД по ids из OpenSearch
+- `app/core/opensearch.py` — `AsyncOpenSearch`-клиент, versioned-индекс `recipes-v1` и alias `recipes-current`; при старте создаёт индекс и переносит данные из прежнего `recipes`
+- `app/services/search.py` — `SearchService`: индексация публичных рецептов, удаление, `bool`-поиск, `search_after`-пагинация и ограниченный retry только временных ошибок OpenSearch; недоступность поиска возвращается как 503
+- `app/api/search.py` — `GET /api/search/recipes`: полнотекстовый поиск, фильтры, исключение ингредиентов, сортировка и cursor-пагинация; возвращает полные `RecipeRead` из БД по ids из OpenSearch
 - `app/schemas/search.py` — `SearchParams`, `SearchResult`
 - `app/api/recipes.py` — хуки: `index_recipe` при create/update, `remove_recipe` при delete
 - `app/main.py` — `os_client` инициализируется в lifespan, создаёт индекс при старте
-- `tests/test_search_service.py` — 9 unit-тестов
+- `tests/test_search_service.py` — unit-тесты запросов, alias, cursor-пагинации, retry и обработки отказа OpenSearch
 - `scripts/reindex_opensearch.py` — разовый скрипт переиндексации всех существующих рецептов
 
 Endpoint:
@@ -1087,7 +1093,7 @@ Endpoint:
 |---|---|---|---|
 | `GET` | `/api/search/recipes` | опц. | Поиск рецептов по названию, ингредиентам, категории, сложности, времени; исключение ингредиентов; сортировка; пагинация |
 
-Параметры поиска: `q`, `category_id`, `min_time`, `max_time`, `difficulty`, `include_ingredients[]`, `exclude_ingredients[]`, `sort` (relevance/newest/popular), `page`, `size`.
+Параметры поиска: `q`, `category_id`, `min_time`, `max_time`, `difficulty`, `include_ingredients[]`, `exclude_ingredients[]`, `sort` (relevance/newest/popular), `size`, `cursor`. Ответ содержит `next_cursor` для следующей страницы.
 
 ### Уведомления (feat/notifications)
 
@@ -1098,11 +1104,12 @@ Endpoint:
 - `app/services/notification.py` — `NotificationService`: list, mark_read, mark_all_read, count_unread, create_like_notification (без уведомления себе), create_comment_notification (comment или reply в зависимости от parent_id), create_follow_notification, create_moderation_notification
 - `app/api/notifications.py` — роутер уведомлений
 - `app/api/likes.py`, `app/api/comments.py`, `app/api/follows.py`, `app/api/admin.py` — вызов `create_*_notification` + `send_notification_email.delay()` после успешного действия
-- `app/tasks/email.py` — Celery-задача `tasks.send_notification_email`: загружает уведомление из БД, проверяет email-настройки пользователя, отправляет письмо через SMTP; retry до 5 раз с exponential backoff (max 600s)
+- `app/tasks/email.py` — Celery-задача `tasks.send_notification_email`: блокирует уведомление на время доставки, пропускает уже отправленное письмо, проверяет email-настройки пользователя и выполняет retry до 5 раз с exponential backoff (max 600s)
 - `app/core/config.py` — добавлены SMTP-настройки (`smtp_host`, `smtp_port`, `smtp_tls`, `smtp_user`, `smtp_password`, `smtp_from`) и `email_notifications_enabled`
 - `docker-compose.yml` — добавлен сервис `mailhog` (SMTP :1025, Web UI :8025); добавлены `SMTP_HOST`/`SMTP_PORT` в окружение `celery-worker`
 - `alembic/versions/o3g4h5i6j7k8` — создаёт таблицу `notifications` с enum `notification_type`
 - `alembic/versions/p4h5i6j7k8l9` — создаёт таблицу `notification_preferences`
+- `alembic/versions/t9l0m1n2o3p4` — добавляет маркер успешной email-доставки для идемпотентных повторных запусков
 
 Endpoints:
 
@@ -1129,8 +1136,11 @@ Endpoints:
 
 ### Docker (feat/docker-compose-local)
 
-- `Dockerfile` — `python:3.12-slim`, кэш зависимостей (requirements.txt отдельным слоем), применение миграций и запуск uvicorn в одной CMD через `sh -c`
-- `.dockerignore` — исключены `__pycache__`, `*.pyc`, `.pytest_cache`, `*.egg-info`, `.env`, `.git`
+- `Dockerfile` — multi-stage сборка на `python:3.12-slim`; runtime содержит
+  только production-зависимости и запускает Uvicorn от пользователя `app`
+- миграции выполняются отдельным одноразовым сервисом `alembic` в Compose;
+  backend, Celery worker и beat переиспользуют один backend image
+- `.dockerignore` — исключены локальные окружения, кэши, тесты, `.env`, `.git`
 
 Сборка и запуск через Docker Compose из корня проекта:
 
@@ -1161,30 +1171,37 @@ Endpoints:
 
 ### Регистрация и логин (feat/backend-auth)
 
-- `app/core/security.py` — создание/валидация JWT access token, генерация refresh token
-- `app/models/refresh_token.py` — модель `RefreshToken` с FK на users, `expires_at`, `is_revoked`
+- `app/core/security.py` — создание/валидация JWT access token, криптографически стойкая генерация и SHA-256 hash refresh token
+- `app/models/refresh_token.py` — модель `RefreshToken` с `token_hash`, `family_id`, `expires_at`, `is_revoked` и FK на users
 - `alembic/versions/be4c1adff2ba` — миграция создаёт таблицу `refresh_tokens`
-- `app/repositories/refresh_token.py` — create, get_by_token, revoke, is_valid
-- `app/services/auth.py` — register, login, refresh (ротация), logout
+- `alembic/versions/r6j7k8l9m0n1` — миграция удаляет старые raw-токены и добавляет hash-хранение и token families
+- `app/repositories/refresh_token.py` — создание, атомарная ротация через `FOR UPDATE`, отзыв family при reuse и очистка после TTL
+- `app/services/auth.py` — register, login, атомарный refresh и logout
+- `app/tasks/auth.py` — ежедневная очистка истёкших refresh tokens через Celery Beat
 - `app/api/deps.py` — dependency `get_current_user` для защищённых endpoints
-- `app/api/auth.py` — роутер с prefix `/api/auth`
+- `app/api/auth.py` — cookie-auth endpoints для web и отдельные `/token/*` endpoints для Bearer-клиентов
 - `app/api/users.py` — роутер с prefix `/api/users`
-- `tests/test_auth_service.py` — 9 unit-тестов
+- `tests/test_auth_service.py`, `tests/test_refresh_token_repository.py` — тесты выпуска, TTL, ротации, reuse, конкурентного refresh и logout
 
 Endpoints:
 
 | Метод | Путь | Описание |
 |---|---|---|
-| `POST` | `/api/auth/register` | Регистрация, возвращает токены |
-| `POST` | `/api/auth/login` | Вход по email/паролю |
-| `POST` | `/api/auth/refresh` | Обновление токенов с ротацией |
-| `POST` | `/api/auth/logout` | Инвалидация refresh token |
+| `POST` | `/api/auth/register` | Web-регистрация, устанавливает auth и CSRF cookies |
+| `POST` | `/api/auth/login` | Web-вход, устанавливает auth и CSRF cookies |
+| `POST` | `/api/auth/refresh` | Cookie refresh с CSRF и ротацией |
+| `POST` | `/api/auth/logout` | Cookie logout с CSRF |
+| `POST` | `/api/auth/token/register` | Bearer-регистрация для Android/Desktop |
+| `POST` | `/api/auth/token/login` | Bearer-вход, возвращает токены |
+| `POST` | `/api/auth/token/refresh` | Bearer refresh с ротацией |
+| `POST` | `/api/auth/token/logout` | Bearer logout |
 | `GET` | `/api/users/me` | Данные текущего пользователя 🔒 |
 | `PATCH` | `/api/users/me` | Обновление username 🔒 |
 
-**Обновлено в feat/frontend-auth:**
-- Токены устанавливаются в httpOnly cookies (`access_token`, `refresh_token`)
-- `get_current_user` читает токен из cookie ИЛИ `Authorization: Bearer`
+**Web и native-клиенты:**
+- Web получает токены только в httpOnly cookies; изменяющие запросы передают `X-CSRF-Token`
+- Android и Desktop используют отдельные Bearer endpoints и получают токены в JSON
+- При наличии Bearer header `get_current_user` не использует auth cookie
 - CORS: `allow_credentials=True`
 
 ### Модель пользователей (feat/backend-user-model)
@@ -1233,6 +1250,9 @@ alembic current               # текущая ревизия
 | `JWT_ACCESS_TOKEN_EXPIRE_MINUTES` | `15` | Время жизни access token |
 | `JWT_REFRESH_TOKEN_EXPIRE_DAYS` | `30` | Время жизни refresh token |
 | `CORS_ORIGINS` | localhost:3000, localhost:5173 | Разрешённые CORS-источники (JSON-массив) |
+| `COOKIE_SECURE` | `false` | Передавать auth cookies только по HTTPS |
+| `COOKIE_SAMESITE` | `lax` | SameSite для auth и CSRF cookies |
+| `COOKIE_DOMAIN` | — | Необязательный общий домен cookies; без значения cookies host-only |
 
 ### Инициализация проекта (feat/backend-fastapi-init)
 
@@ -1294,5 +1314,5 @@ tests/
 Планируется в следующих этапах:
 
 - Observability (Prometheus metrics, OpenTelemetry, Loki).
-- Security hardening (rate limiting, email verification).
+- Email verification.
 - CI/CD и деплой в Kubernetes.

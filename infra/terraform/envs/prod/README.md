@@ -13,8 +13,10 @@ envs/prod/
   providers.tf              # Yandex Cloud provider
   backend.tf                # S3 remote backend (Yandex Object Storage)
   backend.hcl.example       # шаблон credentials для backend (не коммитится)
-  variables.tf              # входные переменные (cloud_id, folder_id)
-  outputs.tf                # пусто — требует заполнения
+  data.tf                   # data sources (образ bastion VM)
+  main.tf                   # подключение Terraform-модулей
+  variables.tf              # входные переменные окружения
+  outputs.tf                # outputs окружения
   terraform.tfvars.example  # пример значений переменных
   terraform.tfvars          # реальные значения (не коммитится)
   Makefile                  # команды init/plan/apply/destroy/fmt/validate
@@ -23,18 +25,9 @@ envs/prod/
 
 ## Текущий статус
 
-🚧 **Базовая структура создана, конфигурация модулей не реализована.**
+🚧 **Конфигурация подготовлена и проходит `terraform validate`; развёртывание окружения отложено.**
 
-Создано:
-- Remote backend (S3 в Yandex Object Storage).
-- Yandex Cloud provider.
-- Makefile с командами.
-
-Отсутствует:
-- `main.tf` — подключение модулей (`network`, `kubernetes`, `postgres`, `redis`, `object-storage`, `compute`, `dns`).
-- Полный `variables.tf` — переменные всех модулей.
-- Полный `outputs.tf` — outputs окружения.
-- `data.tf` — data sources.
+Подключены модули `network`, `iam`, `kubernetes`, `postgres`, `redis`, `object-storage`, `compute` и `dns`. Реальные cloud-ресурсы не создавались.
 
 ## Связи с проектом
 
@@ -53,7 +46,9 @@ make validate # terraform validate
 
 ## Важно для разработки
 
-- Никогда не коммитить `terraform.tfvars`, `authorized_key.json`, `backend.hcl` — они в `.gitignore`.
+- Никогда не коммитить `terraform.tfvars`, `authorized_key.json`, `backend.hcl` — они в `.gitignore`; `backend.hcl` содержит секреты доступа к backend.
+- Для production должен использоваться отдельный ключ `prod/terraform.tfstate` в state bucket.
+- State и plan-файлы считаются секретами: их нельзя публиковать в Git, задачах или CI-логах.
 - `terraform apply` в production выполняется только после успешного staging-деплоя и manual approval.
 - `terraform destroy` в production недопустим без явного согласования.
 - БД и Redis должны иметь `deletion_protection = true`.

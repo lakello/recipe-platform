@@ -44,8 +44,8 @@ Frontend отвечает за:
 - поиск и фильтрацию рецептов;
 - регистрацию и авторизацию;
 - OAuth login через Google и Яндекс;
-- хранение и обновление access token;
-- работу с refresh token через backend;
+- cookie-auth без доступа JavaScript к access/refresh token;
+- CSRF-защиту изменяющих запросов;
 - отображение профиля пользователя;
 - редактирование профиля;
 - загрузку аватара;
@@ -74,7 +74,8 @@ frontend/
     app/
       providers/        — QueryProvider (TanStack Query)
       router/           — ProtectedRoute, AdminRoute
-      App.tsx           — BrowserRouter + маршруты + GlobalBell
+      App.tsx           — BrowserRouter + lazy-маршруты + GlobalBell
+      ErrorBoundary.tsx — глобальная обработка ошибок React
     pages/              — страницы (каждая: index.ts + ui/<PageName>.tsx)
       login-page/
       register-page/
@@ -118,7 +119,8 @@ frontend/
       admin/
     entities/           — зарезервировано (пусто)
     shared/
-      api/client.ts     — базовый fetch-клиент с auto-refresh на 401
+      api/client.ts     — fetch-клиент с общим refresh Promise, нормализованными ошибками и безопасным retry
+      lib/reportWebVitals.ts — сбор CLS, INP и LCP
       config/env.ts     — VITE_API_BASE_URL
       ui/               — Button, Input, UserLink
   Dockerfile
@@ -246,44 +248,44 @@ export async function getRecipes() {
 
 ## Аутентификация
 
-Frontend работает с JWT-токенами, которые выдаёт backend.
+Web frontend работает с JWT в `HttpOnly` cookies и не получает access/refresh token в JSON.
 
 Общий сценарий:
 
-1. 1.Пользователь выполняет login.
-2. 2.Backend возвращает access token и refresh token или устанавливает refresh token в cookie.
-3. 3.Frontend использует access token для запросов к API.
-4. 4.При истечении access token выполняется refresh.
-5. 5.При logout токены удаляются, backend инвалидирует refresh session.
+1. Пользователь выполняет login.
+2. Backend устанавливает `HttpOnly` auth cookies и доступную JavaScript CSRF cookie.
+3. Frontend добавляет `X-CSRF-Token` к изменяющим запросам.
+4. При истечении access token выполняется cookie refresh с ротацией.
+5. При logout cookies удаляются, backend инвалидирует refresh session.
 
-Рекомендуемый подход:
+Реализованный подход:
 
-- access token хранить в памяти приложения или в безопасном state-слое;
-- refresh token по возможности хранить в `HttpOnly Secure SameSite` cookie;
-- не хранить чувствительные токены в localStorage для production;
+- access и refresh token хранятся только в `HttpOnly Secure SameSite` cookies;
+- токены не сохраняются в localStorage и не возвращаются web-клиенту в JSON;
+- double-submit CSRF token передаётся заголовком `X-CSRF-Token`;
 - обрабатывать `401 Unauthorized` централизованно;
 - использовать route guards для защищённых страниц.
 
 ## OAuth
 
-Frontend должен поддерживать вход через:
+Frontend поддерживает вход через:
 
 - Google OAuth;
 - Яндекс OAuth.
 
 Сценарий:
 
-1. 1.Пользователь нажимает кнопку входа через провайдера.
-2. 2.Frontend перенаправляет пользователя на backend endpoint:
+1. Пользователь нажимает кнопку входа через провайдера.
+2. Frontend перенаправляет пользователя на backend endpoint:
 
 ```
 /api/auth/google/login
 /api/auth/yandex/login
 ```
 
-1. 1.Backend выполняет OAuth flow.
-2. 2.После успешного входа пользователь возвращается на frontend callback page.
-3. 3.Frontend обновляет состояние авторизации.
+3. Backend проверяет и одноразово удаляет OAuth state, затем выполняет OAuth flow.
+4. После успешного входа backend устанавливает auth/CSRF cookies и возвращает пользователя на frontend.
+5. Frontend обновляет состояние авторизации.
 
 ## Переменные окружения
 
@@ -430,11 +432,11 @@ Frontend не загружает файлы через backend напрямую.
    - тип файла;
    - расширение.
 
-3. 3.Frontend запрашивает у backend pre-signed upload URL.
-4. 4.Frontend загружает файл напрямую в Object Storage.
-5. 5.Frontend сообщает backend metadata загруженного файла.
-6. 6.Backend сохраняет запись в БД.
-7. 7.Worker создаёт thumbnail.
+3. Frontend запрашивает у backend presigned POST и `upload_id`.
+4. Frontend загружает multipart-форму напрямую в Object Storage.
+5. Frontend подтверждает загрузку и опрашивает статус серверной проверки.
+6. После статуса `validated` frontend прикрепляет загрузку по `upload_id`.
+7. Backend отклоняет и удаляет невалидные или просроченные загрузки.
 
 Поддерживаемые форматы:
 
@@ -500,15 +502,15 @@ Frontend должен скрывать или блокировать интер�
 
 ## Тестирование
 
-Для frontend-тестов используются:
+Подключены Vitest, Testing Library, jsdom и axe-core.
 
-Тестовый фреймворк (Vitest / Testing Library) пока не подключён.
-
-Планируется в следующих этапах разработки.
+- `npm test` запускает unit- и accessibility-тесты;
+- API-клиент проверяется на параллельные 401, единственный refresh и защиту от refresh loop;
+- критические страницы входа и регистрации проходят автоматическую axe-проверку.
 
 ## Accessibility
 
-Frontend должен учитывать базовые требования доступности:
+Frontend учитывает базовые требования доступности:
 
 - корректная семантика HTML;
 - label для form controls;
@@ -524,13 +526,12 @@ Frontend должен учитывать базовые требования д�
 Требования к производительности:
 
 - главная страница открывается до 2 секунд;
-- использовать code splitting;
-- lazy loading страниц;
+- route-level code splitting и lazy loading страниц, включая отдельные admin-чанки;
 - оптимизация изображений;
-- cache-control для static assets;
+- `no-cache` для `index.html` и долгий immutable cache для hashed assets;
 - минимизация bundle size;
 - избегать лишних rerender;
-- использовать TanStack Query cache;
+- использовать TanStack Query cache с настроенными `staleTime`, `gcTime` и retry временных ошибок;
 - отображать skeleton loading.
 
 ## Observability
@@ -699,18 +700,18 @@ Backend API:
 
 ### OAuth Google и Яндекс (feat/oauth-google-yandex)
 
-- `src/pages/login-page/ui/LoginPage.tsx` — кнопки «Войти через Google» и «Войти через Яндекс» с SVG-иконками провайдеров; клик перенаправляет браузер на backend login endpoint (`/api/auth/google/login`, `/api/auth/yandex/login`); OAuth-ошибки из query-параметра `?error=oauth_error&message=...` отображаются на форме
+- `src/pages/login-page/ui/LoginPage.tsx` — кнопки «Войти через Google» и «Войти через Яндекс» перенаправляют браузер на backend login endpoint; OAuth-ошибка передаётся только безопасным кодом `?error=oauth_error`
 
 Поведение:
 - Клик по кнопке выполняет `window.location.href` на backend endpoint (не AJAX-запрос)
 - Backend выполняет OAuth flow, устанавливает auth cookies и редиректит на `FRONTEND_URL`
 - Frontend подхватывает авторизацию через существующий `useCurrentUser` (куки установлены)
-- При ошибке OAuth backend редиректит на `/login?error=oauth_error&message=...`
+- При ошибке OAuth backend редиректит на `/login?error=oauth_error` без внутреннего текста исключения
 
 ### Авторизация (feat/frontend-auth)
 
 - **Зависимости:** react-hook-form, zod, @hookform/resolvers
-- `src/shared/api/client.ts` — `credentials: 'include'`, автоматический refresh при 401
+- `src/shared/api/client.ts` — `credentials: 'include'`, CSRF header для мутаций и автоматический refresh при 401
 - `src/features/auth/` — API и хуки: `useLogin`, `useRegister`, `useLogout`
 - `src/features/profile/` — API и хуки: `useCurrentUser`, `useUpdateProfile`
 - `src/app/router/ProtectedRoute.tsx` — защищённые маршруты (редирект на `/login`)
@@ -745,20 +746,22 @@ Backend API:
 ### Docker (feat/docker-compose-local)
 
 - `Dockerfile` — multi-stage: Node 22 сборка → Nginx 1.25 раздача статики
-- `nginx.conf` — SPA fallback (`try_files`), cache headers для статических ассетов
+- `nginx.conf` — SPA fallback (`try_files`), `no-cache` для `index.html`, immutable cache для hashed assets
 - `.dockerignore` — исключены `node_modules`, `dist`, `.env`, `.git`
 
 ### Загрузка фото (feat/uploads)
 
-- `src/features/uploads/api/uploadsApi.ts` — методы: `presign`, `uploadToS3`, `attachRecipePhoto`, `deleteRecipePhoto`, `setAvatar`, `getViewUrl`
-- `src/features/uploads/hooks/useUpload.ts` — хук `useRecipePhotoUpload` (presign → PUT в MinIO → attach)
+- `src/features/uploads/api/uploadsApi.ts` — методы: `presign`, `uploadToS3`, `confirm`, `status`, `attachRecipePhoto`, `deleteRecipePhoto`, `setAvatar`, `getViewUrl`
+- `src/features/uploads/hooks/useUpload.ts` — хуки загрузки фото и аватара (presign → POST в MinIO/S3 → confirm → polling → attach)
 - `src/features/uploads/ui/PhotoUpload.tsx` — компонент выбора и предпросмотра фото с кнопками «Добавить» / «Удалить»
 - `RecipePage` — интегрирован `PhotoUpload` с отображением текущего фото рецепта
 
-Сценарий загрузки (3 шага):
-1. `POST /api/uploads/presign` — получить presigned PUT URL
-2. `PUT <presigned_url>` — загрузить файл напрямую в MinIO (без прокси через бэкенд)
-3. `POST /api/uploads/recipes/{id}/photo` — сообщить бэкенду ключ загруженного файла
+Сценарий загрузки:
+1. `POST /api/uploads/presign` — получить `upload_id`, presigned POST URL и поля формы
+2. `POST <presigned_url>` — загрузить multipart-форму напрямую в MinIO/S3
+3. `POST /api/uploads/{upload_id}/confirm` — запустить серверную проверку
+4. `GET /api/uploads/status/{upload_id}` — дождаться статуса `validated`
+5. `POST /api/uploads/recipes/{id}/photo` — прикрепить проверенную загрузку по `upload_id`
 
 ### Ингредиенты и шаги (feat/ingredients-steps)
 
@@ -976,7 +979,7 @@ npm run lint       # ESLint
 5. ~~Recipes CRUD + список + детали.~~ ✓
 6. ~~Категории + фильтрация + admin UI.~~ ✓
 7. ~~Ингредиенты и шаги (DnD-сортировка).~~ ✓
-8. ~~Загрузка фото (presign → MinIO → attach).~~ ✓
+8. ~~Доверенная загрузка фото (presign → Object Storage → validate → attach).~~ ✓
 9. ~~Likes, favorites.~~ ✓
 10. ~~Comments (ответы, модерация).~~ ✓
 11. ~~Public user profiles, redesigned recipe cards.~~ ✓
@@ -988,9 +991,9 @@ npm run lint       # ESLint
 17. ~~Moderation UI (reports, hide/show).~~ ✓
 18. ~~Admin UI (users, categories, comments).~~ ✓
 19. ~~Уведомления (колокольчик, список, email-настройки).~~ ✓
+20. ~~Надёжность API-клиента, lazy routes, Web Vitals и accessibility-тесты.~~ ✓
 
 Планируется в следующих этапах:
 
-- Тесты (Vitest, Testing Library).
-- UI polish, accessibility, performance.
-- Мобильная адаптация.
+- Расширение тестового покрытия остальных страниц.
+- Дальнейший UI polish и мобильная адаптация.

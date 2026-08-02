@@ -93,7 +93,9 @@ def _make_repo(existing_item=None):
     repo.get_or_create_list.return_value = sl
     repo.get_list.return_value = sl
     repo.get_meal_plan_items_for_dates.return_value = []
-    repo.get_item_by_ingredient.return_value = existing_item
+    repo.get_items_by_ingredients.side_effect = lambda shopping_list_id, ids: (
+        {next(iter(ids)): existing_item} if existing_item and ids else {}
+    )
     repo.add_item.return_value = MagicMock()
     repo.update_item.return_value = MagicMock()
     return repo
@@ -137,6 +139,28 @@ async def test_generate_adds_new_item():
     assert call_kwargs.args[1] == "Морковь"
     assert call_kwargs.kwargs["amount"] == 500.0
     assert call_kwargs.kwargs["unit"] == "g"
+    repo.get_items_by_ingredients.assert_awaited_once()
+    repo.get_item_by_ingredient.assert_not_called()
+    repo.session.commit.assert_awaited_once()
+
+
+@pytest.mark.anyio
+async def test_generate_rolls_back_everything_on_error():
+    ing_id = uuid.uuid4()
+    repo = _make_repo(existing_item=None)
+    repo.get_meal_plan_items_for_dates.return_value = [
+        _make_meal_item(ing_id, "Морковь", 500, "g")
+    ]
+    repo.add_item.side_effect = RuntimeError("write failed")
+    svc = ShoppingListService(repo)
+
+    from app.schemas.shopping_list import GenerateRequest
+
+    with pytest.raises(RuntimeError, match="write failed"):
+        await svc.generate(uuid.uuid4(), GenerateRequest(mode="today"))
+
+    repo.session.commit.assert_not_awaited()
+    repo.session.rollback.assert_awaited_once()
 
 
 @pytest.mark.anyio

@@ -1,0 +1,11 @@
+migration:
+  enabled: true
+  image:
+    repository: recipe-platform
+    tag: 1.0.0
+    pullPolicy: IfNotPresent
+  databaseSecret:
+    name: recipe-platform-db-secret
+    key: DATABASE_URL
+  activeDeadlineSeconds: 300
+  backoffLimit: 3

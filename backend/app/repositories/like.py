@@ -19,12 +19,12 @@ class LikeRepository:
     async def add(self, user_id: uuid.UUID, recipe_id: uuid.UUID) -> Like:
         like = Like(user_id=user_id, recipe_id=recipe_id)
         self.session.add(like)
-        await self.session.commit()
+        await self.session.flush()
         return like
 
     async def remove(self, like: Like) -> None:
         await self.session.delete(like)
-        await self.session.commit()
+        await self.session.flush()
 
     async def count(self, recipe_id: uuid.UUID) -> int:
         result = await self.session.execute(
@@ -70,12 +70,12 @@ class FavoriteRepository:
     async def add(self, user_id: uuid.UUID, recipe_id: uuid.UUID) -> Favorite:
         favorite = Favorite(user_id=user_id, recipe_id=recipe_id)
         self.session.add(favorite)
-        await self.session.commit()
+        await self.session.flush()
         return favorite
 
     async def remove(self, favorite: Favorite) -> None:
         await self.session.delete(favorite)
-        await self.session.commit()
+        await self.session.flush()
 
     async def list_by_user(self, user_id: uuid.UUID) -> list[uuid.UUID]:
         result = await self.session.execute(

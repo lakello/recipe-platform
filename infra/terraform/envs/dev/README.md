@@ -45,6 +45,13 @@ make clean    # удалить .terraform/ и *.tfplan
 make help     # список команд
 ```
 
+## Terraform state
+
+- `backend.hcl` содержит секреты доступа к backend и не коммитится.
+- Для dev должен использоваться отдельный ключ `dev/terraform.tfstate` в state bucket.
+- State и plan-файлы считаются секретами: их нельзя публиковать в Git, задачах
+  или CI-логах.
+
 ## Переменные
 
 | Переменная            | Описание                            |
@@ -61,6 +68,6 @@ make help     # список команд
 | `database_user`       | Имя пользователя БД                 |
 | `database_password`   | Пароль пользователя БД (sensitive)  |
 | `redis_password`      | Пароль доступа к Redis (sensitive)  |
-| `alloved_ssh_cidr`    | CIDR вашего IP для доступа к bastion по SSH (например, `1.2.3.4/32`) |
+| `admin_cidr`          | CIDR вашего IP для доступа к bastion и Kubernetes API (например, `1.2.3.4/32`) |
 | `ssh_public_key`      | Публичный SSH-ключ для авторизации на bastion |
 | `dns_zone_name`       | DNS-зона в формате FQDN с точкой на конце (например, `example.com.`) |
