@@ -2,7 +2,7 @@ cloud_id  = "YCAGV1234567890"
 folder_id = "YCAGV1234567890"
 
 environment = "dev"
-availability_zones = ["1", "2"]
+availability_zones = ["ru-central1-a", "ru-central1-b"]
 instance_tags = {
   "env" = "dev"
   "project" = "recipe-platform"

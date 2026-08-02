@@ -1,9 +1,17 @@
 output "k8s_cluster_sa_id" {
   value = yandex_iam_service_account.k8s_cluster.id
+
+  depends_on = [
+    yandex_resourcemanager_folder_iam_member.k8s_cluster_roles,
+  ]
 }
 
 output "k8s_node_sa_id" {
   value = yandex_iam_service_account.k8s_node.id
+
+  depends_on = [
+    yandex_resourcemanager_folder_iam_member.k8s_node_roles,
+  ]
 }
 
 output "storage_sa_id" {
