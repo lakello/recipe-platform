@@ -38,6 +38,7 @@ module "kubernetes" {
 
   control_plane_sg_ids = [
     module.network.control_plane_sg_id,
+    module.network.nodes_sg_id,
   ]
 
   nodes_sg_ids = [
