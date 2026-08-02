@@ -53,6 +53,8 @@ make validate # terraform validate
 
 ## Важно для разработки
 
-- Никогда не коммитить `terraform.tfvars`, `authorized_key.json`, `backend.hcl` — они в `.gitignore`.
+- Никогда не коммитить `terraform.tfvars`, `authorized_key.json`, `backend.hcl` — они в `.gitignore`; `backend.hcl` содержит секреты доступа к backend.
+- Для staging должен использоваться отдельный ключ `staging/terraform.tfstate` в state bucket.
+- State и plan-файлы считаются секретами: их нельзя публиковать в Git, задачах или CI-логах.
 - При создании `main.tf` опираться на `envs/dev/main.tf` как на образец, увеличив ресурсы до production-like.
 - Staging должен максимально повторять production-конфигурацию, чтобы деплои на staging были репрезентативными.

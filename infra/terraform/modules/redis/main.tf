@@ -3,8 +3,8 @@ resource "yandex_mdb_redis_cluster" "redis" {
   environment         = var.environment == "prod" ? "PRODUCTION" : "PRESTABLE"
   network_id          = var.network_id
   security_group_ids  = var.security_group_ids
-  deletion_protection = var.environment == "prod" ? true : false
-  persistence_mode    = var.environment == "prod" ? "ON" : "OFF"
+  deletion_protection = var.environment != "dev"
+  persistence_mode    = var.environment == "dev" ? "OFF" : "ON"
 
   config {
     version          = "6.2"

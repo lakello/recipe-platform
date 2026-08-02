@@ -12,7 +12,7 @@ resource "yandex_vpc_security_group" "bastion_sg" {
   ingress {
     protocol       = "TCP"
     description    = "Доступ по SSH из разрешенного IP"
-    v4_cidr_blocks = [var.allowed_ssh_cidr]
+    v4_cidr_blocks = [var.admin_cidr]
     port           = 22
   }
 

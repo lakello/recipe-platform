@@ -5,6 +5,7 @@ resource "yandex_kubernetes_cluster" "this" {
 
   service_account_id      = var.cluster_sa_id
   node_service_account_id = var.node_sa_id
+  cluster_ipv4_range      = var.cluster_ipv4_range
 
   master {
     version = var.k8s_version
@@ -14,7 +15,7 @@ resource "yandex_kubernetes_cluster" "this" {
       subnet_id = var.subnet_ids[0]
     }
 
-    security_group_ids = var.security_group_ids
+    security_group_ids = var.control_plane_sg_ids
 
     public_ip = true
   }
@@ -42,7 +43,7 @@ resource "yandex_kubernetes_node_group" "system" {
     network_interface {
       nat                = false
       subnet_ids         = [var.subnet_ids[1]]
-      security_group_ids = var.security_group_ids
+      security_group_ids = var.nodes_sg_ids
     }
 
     scheduling_policy {
@@ -85,11 +86,11 @@ resource "yandex_kubernetes_node_group" "app" {
     network_interface {
       nat                = false
       subnet_ids         = [var.subnet_ids[1]]
-      security_group_ids = var.security_group_ids
+      security_group_ids = var.nodes_sg_ids
     }
 
     scheduling_policy {
-      preemptible = var.environment == "prod" ? false : true
+      preemptible = var.environment == "dev"
     }
   }
 
