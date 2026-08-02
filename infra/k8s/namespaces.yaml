@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: recipe-dev
+  labels:
+    app.kubernetes.io/part-of: recipe-platform
+    environment: dev
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: recipe-staging
+  labels:
+    app.kubernetes.io/part-of: recipe-platform
+    environment: staging
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: recipe-prod
+  labels:
+    app.kubernetes.io/part-of: recipe-platform
+    environment: prod
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+  labels:
+    app.kubernetes.io/part-of: recipe-platform
+    environment: shared
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: logging
+  labels:
+    app.kubernetes.io/part-of: recipe-platform
+    environment: shared
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ingress-nginx
+  labels:
+    app.kubernetes.io/part-of: recipe-platform
+    environment: shared
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: cert-manager
+  labels:
+    app.kubernetes.io/part-of: recipe-platform
+    environment: shared
+
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: external-secrets
+  labels:
+    app.kubernetes.io/part-of: recipe-platform
+    environment: shared
+
+---

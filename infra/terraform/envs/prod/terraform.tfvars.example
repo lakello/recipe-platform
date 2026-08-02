@@ -1,10 +1,10 @@
 cloud_id  = "YCAGV1234567890"
 folder_id = "YCAGV1234567890"
 
-environment = "staging"
-availability_zones = ["1", "2"]
+environment = "prod"
+availability_zones = ["ru-central1-a", "ru-central1-b"]
 instance_tags = {
-  "env" = "staging"
+  "env" = "prod"
   "project" = "recipe-platform"
 }
 public_subnet_cidr  = "10.30.1.0/24"
@@ -21,7 +21,7 @@ redis_password    = "secure_redis_password" # pragma: allowlist secret
 admin_cidr = ""
 ssh_public_key = ""
 
-dns_zone_name = "recipe-platform-staging."
+dns_zone_name = "recipe-platform-prod."
 
 github_oidc_audience = "recipe-platform"
 github_repository    = "lakello/recipe-platform"
